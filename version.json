@@ -1,5 +1,5 @@
 {
-  "version": "1.0.0",
-  "notes": "Version base limpia con sistema Cloud OTA",
+  "version": "1.0.2",
+  "notes": "Compilacion automatica (24/10/2026 17:14)",
   "url": "https://raw.githubusercontent.com/AlexGremory255/esp32customclock/main/firmware.bin"
 }
