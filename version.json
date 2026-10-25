@@ -1,9 +1,12 @@
 {
-  "version": "1.0.13",
-  "build_time": "25/10/2026 14:50",
-  "notes": "25/10/2026 14:50",
+  "version": "1.0.14",
+  "build_time": "25/10/2026 15:29",
+  "notes": "25/10/2026 15:29",
   "changelog": [
-    "Nuevo modal informativo de actualización con lista detallada de cambios.",
+    "Selector de tipografías independientes para Hora (Moderna, Retro 7-Seg, Compacta), Fecha y Clima.",
+    "Selector de estilos de texto: Blanco Sólido, Negro Sólido, Frosted Blanco y Frosted Negro (Humo traslúcido).",
+    "Vista previa 1:1 en vivo en el panel de control web con renderizado dinámico de fuentes.",
+    "Nuevo modal informativo de actualización con lista detallada de mejoras.",
     "Eliminación del aviso emergente del navegador con botones nativos Actualizar y Cancelar.",
     "Migración a sincronización de hora SNTP nativa no bloqueante en Core 0.",
     "Renderizado ininterrumpido a 60 FPS ante caídas o reinicios del router Wi-Fi.",
