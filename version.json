@@ -1,7 +1,7 @@
 {
-  "version": "1.0.14",
-  "build_time": "25/10/2026 15:29",
-  "notes": "25/10/2026 15:29",
+  "version": "1.0.15",
+  "build_time": "25/10/2026 15:49",
+  "notes": "25/10/2026 15:49",
   "changelog": [
     "Selector de tipografías independientes para Hora (Moderna, Retro 7-Seg, Compacta), Fecha y Clima.",
     "Selector de estilos de texto: Blanco Sólido, Negro Sólido, Frosted Blanco y Frosted Negro (Humo traslúcido).",
