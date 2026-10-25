@@ -1,5 +1,15 @@
 {
-  "version": "1.0.12",
-  "notes": "Compilacion automatica (25/10/2026 14:31)",
+  "version": "1.0.13",
+  "build_time": "25/10/2026 14:50",
+  "notes": "25/10/2026 14:50",
+  "changelog": [
+    "Nuevo modal informativo de actualización con lista detallada de cambios.",
+    "Eliminación del aviso emergente del navegador con botones nativos Actualizar y Cancelar.",
+    "Migración a sincronización de hora SNTP nativa no bloqueante en Core 0.",
+    "Renderizado ininterrumpido a 60 FPS ante caídas o reinicios del router Wi-Fi.",
+    "Eliminación del parpadeo (flickering) en la animación de arranque y transiciones.",
+    "Cálculo de fase continua en animaciones de Cortina y Plasma sin saltos bruscos.",
+    "Detección precisa de barras de estado y áreas seguras (Dynamic Island y notch)."
+  ],
   "url": "https://raw.githubusercontent.com/AlexGremory255/esp32customclock/main/firmware.bin"
 }
