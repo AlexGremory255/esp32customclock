@@ -1,18 +1,17 @@
 {
-  "version": "1.0.15",
-  "build_time": "25/10/2026 15:49",
-  "notes": "25/10/2026 15:49",
+  "version": "1.0.14",
+  "build_time": "25/10/2026 16:25",
+  "notes": "25/10/2026 16:25",
   "changelog": [
-    "Selector de tipografías independientes para Hora (Moderna, Retro 7-Seg, Compacta), Fecha y Clima.",
-    "Selector de estilos de texto: Blanco Sólido, Negro Sólido, Frosted Blanco y Frosted Negro (Humo traslúcido).",
-    "Vista previa 1:1 en vivo en el panel de control web con renderizado dinámico de fuentes.",
-    "Nuevo modal informativo de actualización con lista detallada de mejoras.",
-    "Eliminación del aviso emergente del navegador con botones nativos Actualizar y Cancelar.",
-    "Migración a sincronización de hora SNTP nativa no bloqueante en Core 0.",
-    "Renderizado ininterrumpido a 60 FPS ante caídas o reinicios del router Wi-Fi.",
-    "Eliminación del parpadeo (flickering) en la animación de arranque y transiciones.",
-    "Cálculo de fase continua en animaciones de Cortina y Plasma sin saltos bruscos.",
-    "Detección precisa de barras de estado y áreas seguras (Dynamic Island y notch)."
+    "Nuevo modal informativo de actualizacion con lista detallada de mejoras y registro desplazable.",
+    "Notificaciones de firmware limpias mostrando version y hora de compilacion exacta.",
+    "Botones integrados Actualizar y Cancelar sin alertas emergentes del navegador.",
+    "Migracion a sincronizacion de hora SNTP nativa no bloqueante en Core 0.",
+    "Renderizado ininterrumpido a 60 FPS ante caidas o reinicios del router Wi-Fi.",
+    "Eliminacion del parpadeo (flickering) en la animacion de arranque y transiciones.",
+    "Calculo de fase continua en animaciones de Cortina y Plasma sin saltos bruscos.",
+    "Deteccion precisa de barras de estado y areas seguras (Dynamic Island y notch en iOS/Android).",
+    "Optimizacion del rendimiento general del reloj y estabilidad continua."
   ],
   "url": "https://raw.githubusercontent.com/AlexGremory255/esp32customclock/main/firmware.bin"
 }
