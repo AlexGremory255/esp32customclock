@@ -1,0 +1,1381 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<title>ESP32 Matrix 64×64 Studio & OTA Hub</title>
+<style>
+:root {
+  --bg: #070709;
+  --card: #131317;
+  --card-elev: #1d1d24;
+  --border: rgba(255,255,255,0.09);
+  --text: #f5f5f7;
+  --sub: #8e8e98;
+  --accent: #0a84ff;
+  --green: #30d158;
+  --orange: #ff9f0a;
+  --pink: #ff2d55;
+}
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", "Segoe UI", Roboto, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+body {
+  background: radial-gradient(circle at 50% 0%, #161826 0%, #070709 62%);
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+}
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(13, 13, 17, 0.82);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 24px;
+}
+.topbar-inner {
+  max-width: 1260px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.brand-badge {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #ff2d55, #5e5ce6, #0a84ff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: -0.03em;
+  box-shadow: 0 4px 16px rgba(94, 92, 230, 0.45);
+}
+.brand-title {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.brand-sub {
+  font-size: 12px;
+  color: var(--sub);
+}
+.top-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.ver-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--border);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text);
+}
+.dot-green {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 8px var(--green);
+}
+.btn {
+  border: none;
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.16s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  text-decoration: none;
+}
+.btn:active { transform: scale(0.96); }
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(10, 132, 255, 0.35);
+}
+.btn-ghost {
+  background: rgba(255,255,255,0.08);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+.btn-ghost:hover { background: rgba(255,255,255,0.13); }
+.btn-boot {
+  background: linear-gradient(135deg, #ff2d55, #5e5ce6);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(255, 45, 85, 0.35);
+}
+
+.layout-grid {
+  max-width: 1260px;
+  margin: 0 auto;
+  padding: 24px;
+  display: grid;
+  grid-template-columns: 440px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+@media (max-width: 980px) {
+  .layout-grid {
+    grid-template-columns: 1fr;
+    padding: 16px;
+  }
+}
+
+.panel {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+}
+.sticky-stage {
+  position: sticky;
+  top: 76px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+@media (max-width: 980px) {
+  .sticky-stage { position: static; }
+}
+
+.matrix-frame {
+  background: #040406;
+  padding: 14px;
+  border-radius: 22px;
+  border: 1.5px solid #272730;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.85), inset 0 0 0 1px rgba(255,255,255,0.05);
+  position: relative;
+}
+#led_canvas {
+  width: 360px;
+  height: 360px;
+  max-width: calc(100vw - 76px);
+  max-height: calc(100vw - 76px);
+  display: block;
+  border-radius: 8px;
+}
+.stage-meta {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12.5px;
+  color: var(--sub);
+  padding: 0 4px;
+}
+.stage-btns {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.stage-btns .btn {
+  justify-content: center;
+  padding: 11px 12px;
+  border-radius: 12px;
+}
+
+.sec-title {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--sub);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.control-block {
+  margin-bottom: 22px;
+}
+.control-block:last-child { margin-bottom: 0; }
+
+.seg {
+  display: flex;
+  background: var(--card-elev);
+  padding: 3px;
+  border-radius: 11px;
+  gap: 3px;
+}
+.seg-btn {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: var(--sub);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.seg-btn.active {
+  background: #3a3a44;
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+}
+.seg-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.chips-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+@media (max-width: 560px) {
+  .chips-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+.chip {
+  background: var(--card-elev);
+  border: 1.5px solid transparent;
+  border-radius: 11px;
+  padding: 10px 10px;
+  color: var(--text);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.14s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.chip span.c-sub {
+  font-size: 11px;
+  color: var(--sub);
+  font-weight: 400;
+}
+.chip:hover { background: #262630; }
+.chip.active {
+  border-color: var(--accent);
+  background: rgba(10, 132, 255, 0.14);
+}
+
+.toggles-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 10px;
+}
+.toggle-card {
+  background: var(--card-elev);
+  border-radius: 12px;
+  padding: 11px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13.5px;
+  font-weight: 500;
+}
+.switch {
+  position: relative;
+  width: 44px;
+  height: 26px;
+  display: inline-block;
+}
+.switch input { opacity: 0; width: 0; height: 0; }
+.trk {
+  position: absolute;
+  inset: 0;
+  background: #393942;
+  border-radius: 26px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.trk::before {
+  content: "";
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  left: 2px;
+  bottom: 2px;
+  background: #fff;
+  border-radius: 50%;
+  transition: 0.2s;
+}
+.switch input:checked + .trk { background: var(--green); }
+.switch input:checked + .trk::before { transform: translateX(18px); }
+
+.swatch-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+@media (max-width: 560px) {
+  .swatch-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+.sw-item {
+  background: var(--card-elev);
+  border: 1.5px solid transparent;
+  border-radius: 12px;
+  padding: 10px 6px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.14s ease;
+}
+.sw-item:hover { background: #262630; }
+.sw-item.active {
+  border-color: var(--accent);
+  background: rgba(10, 132, 255, 0.14);
+}
+.sw-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.22), 0 3px 8px rgba(0,0,0,0.4);
+}
+.sw-name {
+  font-size: 11.5px;
+  font-weight: 500;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+
+.lan-bar {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.lan-input {
+  flex: 1;
+  min-width: 160px;
+  background: var(--card-elev);
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  padding: 10px 14px;
+  color: var(--text);
+  font-size: 14px;
+  outline: none;
+}
+.lan-input:focus { border-color: var(--accent); }
+.lan-status {
+  font-size: 12.5px;
+  margin-top: 8px;
+  color: var(--sub);
+}
+
+.ota-list {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-top: 10px;
+  max-height: 190px;
+  overflow-y: auto;
+}
+.ota-item {
+  font-size: 13px;
+  color: #d8d8e2;
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+.ota-item::before {
+  content: "•";
+  color: var(--accent);
+  font-weight: bold;
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <div class="brand-badge">64²</div>
+      <div>
+        <div class="brand-title">ESP32 LED Matrix 64×64 Studio</div>
+        <div class="brand-sub">Simulador Interactivo 60 FPS · 18 Layouts · 20 Efectos · 40 Paletas · Centro OTA</div>
+      </div>
+    </div>
+    <div class="top-actions">
+      <div class="ver-pill"><span class="dot-green"></span><span id="ota_ver_badge">Cargando versión...</span></div>
+      <a class="btn btn-primary" id="dl_fw_btn" href="./firmware.bin" download="firmware.bin">Descargar firmware.bin</a>
+    </div>
+  </div>
+</header>
+
+<main class="layout-grid">
+  <!-- COLUMNA IZQUIERDA: MATRIZ LED 64x64 EN TIEMPO REAL -->
+  <section class="panel sticky-stage">
+    <div class="stage-meta">
+      <span id="stage_lbl">Clásico · Minimal · Esferas Orbitales</span>
+      <span id="fps_lbl">60 FPS</span>
+    </div>
+    <div class="matrix-frame">
+      <canvas id="led_canvas" width="384" height="384"></canvas>
+    </div>
+    <div class="stage-btns">
+      <button type="button" class="btn btn-boot" onclick="triggerBootPreview()">⚡ Animación de Inicio</button>
+      <button type="button" class="btn btn-ghost" onclick="randomizeShowcase()">🎲 Combinación Aleatoria</button>
+    </div>
+
+    <!-- PUENTE LAN DIRECTO AL RELOJ FÍSICO -->
+    <div style="width:100%;border-top:1px solid var(--border);padding-top:14px;margin-top:4px;">
+      <div class="sec-title">
+        <span>Sincronización en Red Local (LAN)</span>
+        <span style="font-size:11px;text-transform:none;font-weight:400;">CORS Directo</span>
+      </div>
+      <div class="lan-bar">
+        <input type="text" class="lan-input" id="esp_ip" placeholder="IP del reloj (ej. 192.168.1.75)">
+        <button type="button" class="btn btn-ghost" onclick="pullFromClock()">Leer</button>
+        <button type="button" class="btn btn-primary" onclick="pushToClock()">Enviar al Reloj</button>
+      </div>
+      <div class="lan-status" id="lan_st">Ingresa la IP local de tu ESP32 para leer o enviar el diseño actual en vivo.</div>
+    </div>
+
+    <!-- CENTRO OTA -->
+    <div style="width:100%;border-top:1px solid var(--border);padding-top:14px;">
+      <div class="sec-title">
+        <span>Último Release OTA</span>
+        <span id="ota_date_lbl" style="font-size:11px;text-transform:none;font-weight:400;"></span>
+      </div>
+      <div class="ota-list" id="ota_changelog">
+        <div class="ota-item">Consultando version.json del repositorio...</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- COLUMNA DERECHA: ESTUDIO DE PERSONALIZACIÓN -->
+  <section class="panel">
+    <!-- 1. LAYOUTS (18 PROPUESTAS) -->
+    <div class="control-block">
+      <div class="sec-title">
+        <span>1. Orientación y Estilo de Interfaz (18 Layouts)</span>
+        <span id="cur_lay_badge" style="color:var(--accent)">Layout #0</span>
+      </div>
+      <div class="seg">
+        <button type="button" class="seg-btn active" id="ori_h" onclick="setOrientation(0)">Horizontal (9 Estilos)</button>
+        <button type="button" class="seg-btn" id="ori_v" onclick="setOrientation(1)">Vertical (9 Estilos)</button>
+      </div>
+      <div class="chips-grid" id="layouts_grid"></div>
+    </div>
+
+    <!-- 2. EFECTOS DE FONDO (16 ANIMADOS + 4 ESTÁTICOS = 20) -->
+    <div class="control-block">
+      <div class="sec-title">
+        <span>2. Motor de Fondo (16 Animados + 4 Estáticos)</span>
+        <span id="cur_anim_badge" style="color:var(--accent)">Efecto #0</span>
+      </div>
+      <div class="chips-grid" id="anims_grid"></div>
+      <div class="toggles-row">
+        <div class="toggle-card">
+          <span>Pantalla Completa</span>
+          <label class="switch">
+            <input type="checkbox" id="full_chk" onchange="state.fullScreen=this.checked?1:0;syncUI()">
+            <span class="trk"></span>
+          </label>
+        </div>
+        <div class="toggle-card">
+          <span>Efecto Frosted (Cristal)</span>
+          <label class="switch">
+            <input type="checkbox" id="frost_chk" checked onchange="state.frostClk=this.checked?1:0;syncUI()">
+            <span class="trk"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. PALETAS DE COLOR (40 DEGRADADOS + 2 SÓLIDOS) -->
+    <div class="control-block">
+      <div class="sec-title">
+        <span>3. Paletas de Color (40 Degradados + 2 Sólidos)</span>
+        <span id="cur_pal_badge" style="color:var(--accent)">Cálido</span>
+      </div>
+      <div id="mod_tabs_box" style="margin-bottom:10px;">
+        <div class="seg">
+          <button type="button" class="seg-btn active" id="tab_clk" onclick="setTab('clock')">Módulo Reloj</button>
+          <button type="button" class="seg-btn" id="tab_wx" onclick="setTab('weather')">Módulo Clima</button>
+        </div>
+      </div>
+      <div class="seg">
+        <button type="button" class="seg-btn" id="cat_solid" onclick="setCat('solid')">Sólido (2)</button>
+        <button type="button" class="seg-btn" id="cat_mono" onclick="setCat('mono')">Único (13)</button>
+        <button type="button" class="seg-btn active" id="cat_dual" onclick="setCat('dual')">Doble (18)</button>
+        <button type="button" class="seg-btn" id="cat_triple" onclick="setCat('triple')">Triple (9)</button>
+      </div>
+      <div class="swatch-grid" id="swatches_grid"></div>
+    </div>
+  </section>
+</main>
+
+<script>
+function $(id){ return document.getElementById(id); }
+
+var state = {
+  fullScreen: 0,
+  layout: 2,
+  grad: 24,
+  clockBg: 26, // grad 24 + 2
+  animMode: 0,
+  frostClk: 1,
+  activeTab: 'clock',
+  activeCat: 'triple',
+  bootStartMs: -1
+};
+
+var LAYOUTS_H = [
+  { id: 0, name: 'Clásico Minimal',    desc: 'Equilibrio original 64×64' },
+  { id: 2, name: 'Bento Watch',        desc: 'Cápsulas Apple Watch Ultra' },
+  { id: 3, name: 'Nothing Dot-Matrix', desc: 'Tipografía perforada LED' },
+  { id: 4, name: 'Swiss Chrono',       desc: 'Escala taquimétrica + seg' },
+  { id: 5, name: 'Editorial Panorama', desc: 'Hora izquierda + columna' },
+  { id: 6, name: 'Cyber HUD',          desc: 'Retícula y telemetría neón' },
+  { id: 7, name: 'Flip Studio',        desc: 'Tarjetas mecánicas divididas' },
+  { id: 8, name: 'Zen Minimal',        desc: 'Aire limpio y horizonte' },
+  { id: 9, name: 'Dual Pill',          desc: 'Cápsulas flotantes suaves' }
+];
+
+var LAYOUTS_V = [
+  { id: 1,  name: 'Clásico Columna',    desc: 'Doble columna clásica' },
+  { id: 10, name: 'Bento Split Pro',    desc: '3 celdas modulares de cristal' },
+  { id: 11, name: 'Nothing Dot V',      desc: 'Matriz punteada vertical' },
+  { id: 12, name: 'Swiss Gallery',      desc: 'Regla lateral de precisión' },
+  { id: 13, name: 'Cyber Tower',        desc: 'Torre HUD con barra viva' },
+  { id: 14, name: 'Flip Stack',         desc: 'Tarjetas apiladas HH / MM' },
+  { id: 15, name: 'Brutalist Bold',     desc: 'Dígitos ultra-anchos' },
+  { id: 16, name: 'Chrono Dial',        desc: 'Anillo orbital de segundos' },
+  { id: 17, name: 'Zen Pillar',         desc: 'Pilar minimalista puro' }
+];
+
+var ANIMS = [
+  { id: 0,  name: 'Esferas Orbitales', type: 'Animado' },
+  { id: 1,  name: 'Cortina Boreal',    type: 'Animado' },
+  { id: 2,  name: 'Plasma Líquido',    type: 'Animado' },
+  { id: 3,  name: 'Pulso Radial',      type: 'Animado' },
+  { id: 4,  name: 'Espiral Galáctica', type: 'Animado' },
+  { id: 5,  name: 'Prisma Diamante',   type: 'Animado' },
+  { id: 6,  name: 'Horizonte Zen',     type: 'Animado' },
+  { id: 7,  name: 'Campo Cuántico',    type: 'Animado' },
+  { id: 8,  name: 'Respiración Aura',  type: 'Animado' },
+  { id: 9,  name: 'Marea Profunda',    type: 'Animado' },
+  { id: 10, name: 'Caleidoscopio',     type: 'Animado' },
+  { id: 11, name: 'Cintas de Seda',    type: 'Animado' },
+  { id: 12, name: 'Vórtice Hiper',     type: 'Animado' },
+  { id: 13, name: 'Lluvia Estelar',    type: 'Animado' },
+  { id: 14, name: 'Duna Solar',        type: 'Animado' },
+  { id: 15, name: 'Latido Supernova',  type: 'Animado' },
+  { id: 16, name: 'Seda Diagonal',     type: 'Estático' },
+  { id: 17, name: 'Viñeta Estudio',    type: 'Estático' },
+  { id: 18, name: 'Horizonte Puro',    type: 'Estático' },
+  { id: 19, name: 'Prisma Central',    type: 'Estático' }
+];
+
+var GRADIENTS = [
+  { id: 21, cat: 'triple', name: 'Nebulosa',         css: 'linear-gradient(135deg,#c91882 0%,#4b128f 50%,#0eb8d6 100%)' },
+  { id: 22, cat: 'triple', name: 'Synthwave',        css: 'linear-gradient(135deg,#ff7b00 0%,#d6189c 52%,#1632ad 100%)' },
+  { id: 23, cat: 'triple', name: 'Prisma Boreal',    css: 'linear-gradient(135deg,#10c458 0%,#1462db 52%,#961cba 100%)' },
+  { id: 24, cat: 'triple', name: 'Tokyo Night',      css: 'linear-gradient(135deg,#dc146e 0%,#731ed2 50%,#0ac8dc 100%)' },
+  { id: 25, cat: 'triple', name: 'Solsticio',        css: 'linear-gradient(135deg,#ffaa0c 0%,#dc1e46 50%,#3c0f73 100%)' },
+  { id: 26, cat: 'triple', name: 'Glaciar Nórdico',  css: 'linear-gradient(135deg,#0adcd2 0%,#145adc 50%,#6414b4 100%)' },
+  { id: 27, cat: 'triple', name: 'Bioluminiscencia', css: 'linear-gradient(135deg,#14dc50 0%,#0aaab4 50%,#141e82 100%)' },
+  { id: 28, cat: 'triple', name: 'Supernova',        css: 'linear-gradient(135deg,#fa8c14 0%,#d21478 50%,#143cd2 100%)' },
+  { id: 29, cat: 'triple', name: 'Pacífico Sunset',  css: 'linear-gradient(135deg,#f04628 0%,#aa238c 50%,#0f78be 100%)' },
+  { id: 0,  cat: 'dual', name: 'Cálido',               css: 'linear-gradient(135deg,#c93478,#2c1fb8)' },
+  { id: 1,  cat: 'dual', name: 'Frío',                 css: 'linear-gradient(135deg,#18bdcc,#1b3fb5)' },
+  { id: 2,  cat: 'dual', name: 'Aurora',               css: 'linear-gradient(135deg,#2dd48f,#6f34b8)' },
+  { id: 3,  cat: 'dual', name: 'Cyberpunk',            css: 'linear-gradient(135deg,#e01b84,#00b4d8)' },
+  { id: 4,  cat: 'dual', name: 'Esmeralda',            css: 'linear-gradient(135deg,#1bb854,#d4901b)' },
+  { id: 5,  cat: 'dual', name: 'Crepúsculo',           css: 'linear-gradient(135deg,#db3b2b,#5c1bb8)' },
+  { id: 6,  cat: 'dual', name: 'Fuego',                css: 'linear-gradient(135deg,#eb2113,#e88d14)' },
+  { id: 7,  cat: 'dual', name: 'Vaporwave',            css: 'linear-gradient(135deg,#a339c9,#2cc9a9)' },
+  { id: 14, cat: 'dual', name: 'Atardecer',            css: 'linear-gradient(135deg,#2160db,#eb7d14)' },
+  { id: 18, cat: 'dual', name: 'Océano Tropical',      css: 'linear-gradient(135deg,#0ed4ae,#1838db)' },
+  { id: 19, cat: 'dual', name: 'Sakura',               css: 'linear-gradient(135deg,#e0328c,#d4871c)' },
+  { id: 20, cat: 'dual', name: 'Abismo Neón',          css: 'linear-gradient(135deg,#1ed44e,#4f16db)' },
+  { id: 30, cat: 'dual', name: 'Champagne & Noche',    css: 'linear-gradient(135deg,#e6be6e,#141e5a)' },
+  { id: 31, cat: 'dual', name: 'Kyoto Matcha',         css: 'linear-gradient(135deg,#28c850,#a0196e)' },
+  { id: 32, cat: 'dual', name: 'Obsidiana & Magma',    css: 'linear-gradient(135deg,#f03c0f,#3c0f46)' },
+  { id: 33, cat: 'dual', name: 'Ultravioleta & Láser', css: 'linear-gradient(135deg,#7814e6,#0ae182)' },
+  { id: 34, cat: 'dual', name: 'Cobre & Verdigris',    css: 'linear-gradient(135deg,#dc6e1e,#14af8c)' },
+  { id: 35, cat: 'dual', name: 'Rosa Boreal',          css: 'linear-gradient(135deg,#eb3282,#1e8ce6)' },
+  { id: 8,  cat: 'mono', name: 'Azul Noche',     css: 'radial-gradient(circle at 35% 35%,#2962eb,#091536)' },
+  { id: 9,  cat: 'mono', name: 'Verde Bosque',   css: 'radial-gradient(circle at 35% 35%,#19bd47,#072912)' },
+  { id: 10, cat: 'mono', name: 'Carmesí',        css: 'radial-gradient(circle at 35% 35%,#db1f32,#30070c)' },
+  { id: 11, cat: 'mono', name: 'Amatista',       css: 'radial-gradient(circle at 35% 35%,#a81ceb,#230636)' },
+  { id: 12, cat: 'mono', name: 'Ámbar',          css: 'radial-gradient(circle at 35% 35%,#db8314,#331c04)' },
+  { id: 13, cat: 'mono', name: 'Cyan Glaciar',   css: 'radial-gradient(circle at 35% 35%,#16bfd9,#052a33)' },
+  { id: 15, cat: 'mono', name: 'Rosa Cuarzo',    css: 'radial-gradient(circle at 35% 35%,#e03e82,#330b1c)' },
+  { id: 16, cat: 'mono', name: 'Azul Cobalto',   css: 'radial-gradient(circle at 35% 35%,#1c78fc,#061938)' },
+  { id: 17, cat: 'mono', name: 'Grafito Plata',  css: 'radial-gradient(circle at 35% 35%,#7c8fb0,#1c212b)' },
+  { id: 36, cat: 'mono', name: 'Titanio Natural',css: 'radial-gradient(circle at 35% 35%,#968c7d,#1e1b18)' },
+  { id: 37, cat: 'mono', name: 'Jade Imperial',  css: 'radial-gradient(circle at 35% 35%,#14b96e,#042516)' },
+  { id: 38, cat: 'mono', name: 'Oro Real',       css: 'radial-gradient(circle at 35% 35%,#dca519,#2c2105)' },
+  { id: 39, cat: 'mono', name: 'Lavanda Zen',    css: 'radial-gradient(circle at 35% 35%,#914be1,#1d0f2d)' }
+];
+
+function isVertLayout(l){ return l === 1 || (l >= 10 && l <= 17); }
+function isMonoModeJS(m){ return (m>=8 && m<=13) || (m>=15 && m<=17) || (m>=36 && m<=39); }
+
+function findGradObj(id){
+  for(var i=0;i<GRADIENTS.length;i++) if(GRADIENTS[i].id===id) return GRADIENTS[i];
+  return GRADIENTS[0];
+}
+
+function setOrientation(ori){
+  var isV = isVertLayout(state.layout);
+  if(ori === 1 && !isV){
+    var idx = 0;
+    for(var i=0;i<LAYOUTS_H.length;i++) if(LAYOUTS_H[i].id===state.layout) idx=i;
+    state.layout = LAYOUTS_V[idx].id;
+  } else if(ori === 0 && isV){
+    var idx2 = 0;
+    for(var j=0;j<LAYOUTS_V.length;j++) if(LAYOUTS_V[j].id===state.layout) idx2=j;
+    state.layout = LAYOUTS_H[idx2].id;
+  }
+  syncUI();
+}
+
+function setTab(t){
+  state.activeTab = t;
+  var isClk = (state.fullScreen === 0 && t === 'clock');
+  if(isClk){
+    state.activeCat = (state.clockBg < 2) ? 'solid' : findGradObj(state.clockBg - 2).cat;
+  } else {
+    state.activeCat = findGradObj(state.grad).cat;
+  }
+  syncUI();
+}
+
+function setCat(c){
+  state.activeCat = c;
+  syncUI();
+}
+
+function triggerBootPreview(){
+  state.bootStartMs = performance.now();
+}
+
+function randomizeShowcase(){
+  var allLay = LAYOUTS_H.concat(LAYOUTS_V);
+  state.layout = allLay[Math.floor(Math.random()*allLay.length)].id;
+  state.animMode = Math.floor(Math.random()*20);
+  state.grad = Math.floor(Math.random()*40);
+  state.clockBg = Math.floor(Math.random()*40) + 2;
+  state.activeCat = findGradObj(state.grad).cat;
+  syncUI();
+}
+
+function syncUI(){
+  var isV = isVertLayout(state.layout);
+  $('ori_h').className = 'seg-btn' + (!isV ? ' active' : '');
+  $('ori_v').className = 'seg-btn' + (isV ? ' active' : '');
+
+  var lList = isV ? LAYOUTS_V : LAYOUTS_H;
+  var lHtml = '';
+  var curLayName = '';
+  lList.forEach(function(l){
+    if(l.id === state.layout) curLayName = l.name;
+    lHtml += '<button type="button" class="chip'+(l.id===state.layout?' active':'')+'" onclick="state.layout='+l.id+';syncUI()">' +
+             '<span>'+l.name+'</span><span class="c-sub">'+l.desc+'</span></button>';
+  });
+  $('layouts_grid').innerHTML = lHtml;
+  $('cur_lay_badge').textContent = curLayName + ' (#' + state.layout + ')';
+
+  var aHtml = '';
+  ANIMS.forEach(function(a){
+    aHtml += '<button type="button" class="chip'+(a.id===state.animMode?' active':'')+'" onclick="state.animMode='+a.id+';syncUI()">' +
+             '<span>'+a.name+'</span><span class="c-sub">'+a.type+'</span></button>';
+  });
+  $('anims_grid').innerHTML = aHtml;
+  $('cur_anim_badge').textContent = ANIMS[state.animMode].name;
+
+  $('full_chk').checked = (state.fullScreen === 1);
+  $('frost_chk').checked = (state.frostClk === 1);
+  $('mod_tabs_box').style.display = state.fullScreen ? 'none' : 'block';
+  $('tab_clk').className = 'seg-btn' + (state.activeTab === 'clock' ? ' active' : '');
+  $('tab_wx').className  = 'seg-btn' + (state.activeTab === 'weather' ? ' active' : '');
+
+  var isClockTab = (state.fullScreen === 0 && state.activeTab === 'clock');
+  $('cat_solid').disabled = !isClockTab;
+  if(!isClockTab && state.activeCat === 'solid') state.activeCat = findGradObj(state.grad).cat;
+
+  ['solid','mono','dual','triple'].forEach(function(c){
+    $('cat_'+c).className = 'seg-btn' + (state.activeCat === c ? ' active' : '');
+  });
+
+  var sHtml = '';
+  if(state.activeCat === 'solid' && isClockTab){
+    sHtml += '<div class="sw-item'+(state.clockBg===0?' active':'')+'" onclick="state.clockBg=0;syncUI()"><div class="sw-dot" style="background:#f2f2f7"></div><div class="sw-name">Blanco</div></div>';
+    sHtml += '<div class="sw-item'+(state.clockBg===1?' active':'')+'" onclick="state.clockBg=1;syncUI()"><div class="sw-dot" style="background:#050507"></div><div class="sw-name">Negro</div></div>';
+  } else {
+    GRADIENTS.filter(function(g){ return g.cat === state.activeCat; }).forEach(function(g){
+      var sel = isClockTab ? (state.clockBg === g.id + 2) : (state.grad === g.id);
+      var clickCode = isClockTab ? ('state.clockBg='+(g.id+2)) : ('state.grad='+g.id);
+      sHtml += '<div class="sw-item'+(sel?' active':'')+'" onclick="'+clickCode+';syncUI()">' +
+               '<div class="sw-dot" style="background:'+g.css+'"></div><div class="sw-name">'+g.name+'</div></div>';
+    });
+  }
+  $('swatches_grid').innerHTML = sHtml;
+
+  var gWx = findGradObj(state.grad);
+  $('cur_pal_badge').textContent = gWx.name;
+  $('stage_lbl').textContent = curLayName + ' · ' + ANIMS[state.animMode].name;
+}
+
+// ── MOTOR MATEMÁTICO 64x64 ──
+var ditherTab = [-3,1,-2,2, 3,-1,4,0, -2,2,-3,1, 4,0,3,-1];
+
+function evalGradRatiosJS(x, y, dr1, dr2, mode){
+  var d = ditherTab[(x & 3) | ((y & 3) << 2)];
+  var w1 = 1.0 - dr1, w2 = 1.0 - dr2;
+  var r=0, g=0, b=0;
+  if(mode===39){ r=145*(0.2+0.8*w1)+d/2; g=75*(0.2+0.8*w1)+d/2; b=225*(0.2+0.8*w1)+d; }
+  else if(mode===38){ r=220*(0.2+0.8*w1)+d; g=165*(0.2+0.8*w1)+d/2; b=25*(0.2+0.8*w1)+d/2; }
+  else if(mode===37){ r=20*(0.2+0.8*w1)+d/2; g=185*(0.2+0.8*w1)+d; b=110*(0.2+0.8*w1)+d/2; }
+  else if(mode===36){ r=150*(0.2+0.8*w1)+d/2; g=140*(0.2+0.8*w1)+d/2; b=125*(0.2+0.8*w1)+d/2; }
+  else if(mode===35){ r=235*w1+30*w2+d; g=50*w1+140*w2+d/2; b=130*w1+230*w2+d; }
+  else if(mode===34){ r=220*w1+20*w2+d; g=110*w1+175*w2+d; b=30*w1+140*w2+d/2; }
+  else if(mode===33){ r=120*w1+10*w2+d/2; g=20*w1+225*w2+d; b=230*w1+130*w2+d; }
+  else if(mode===32){ r=240*w1+60*w2+d; g=60*w1+15*w2+d/2; b=15*w1+70*w2+d/2; }
+  else if(mode===31){ r=40*w1+160*w2+d/2; g=200*w1+25*w2+d; b=80*w1+110*w2+d/2; }
+  else if(mode===30){ r=230*w1+20*w2+d; g=190*w1+30*w2+d/2; b=110*w1+90*w2+d/2; }
+  else if(mode===29){ var w3=dr1*dr2*0.85; r=240*w1+170*w2+15*w3+d; g=70*w1+35*w2+120*w3+d/2; b=40*w1+140*w2+190*w3+d; }
+  else if(mode===28){ var w3=dr1*dr2*0.85; r=250*w1+210*w2+20*w3+d; g=140*w1+20*w2+60*w3+d/2; b=20*w1+120*w2+210*w3+d; }
+  else if(mode===27){ var w3=dr1*dr2*0.85; r=20*w1+10*w2+20*w3+d/2; g=220*w1+170*w2+30*w3+d; b=80*w1+180*w2+130*w3+d; }
+  else if(mode===26){ var w3=dr1*dr2*0.85; r=10*w1+20*w2+100*w3+d/2; g=220*w1+90*w2+20*w3+d; b=210*w1+220*w2+180*w3+d; }
+  else if(mode===25){ var w3=dr1*dr2*0.85; r=255*w1+220*w2+60*w3+d; g=170*w1+30*w2+15*w3+d/2; b=12*w1+70*w2+115*w3+d; }
+  else if(mode===24){ var w3=dr1*dr2*0.85; r=220*w1+10*w2+115*w3+d; g=20*w1+200*w2+30*w3+d/2; b=110*w1+220*w2+210*w3+d; }
+  else if(mode===23){ var w3=dr1*dr2*0.85; r=8*w1+10*w2+72*w3+d/2; g=88*w1+42*w2+12*w3+d; b=38*w1+102*w2+85*w3+d; }
+  else if(mode===22){ var w3=dr1*dr2*0.85; r=102*w1+88*w2+12*w3+d; g=48*w1+10*w2+24*w3+d/2; b=6*w1+72*w2+88*w3+d; }
+  else if(mode===21){ var w3=dr1*dr2*0.85; r=95*w1+8*w2+44*w3+d; g=12*w1+82*w2+10*w3+d; b=65*w1+95*w2+82*w3+d; }
+  else if(mode===20){ r=12*w1+38*w2+d/2; g=92*w1+10*w2+d; b=35*w1+105*w2+d; }
+  else if(mode===19){ r=100*w1+85*w2+d; g=20*w1+52*w2+d/2; b=62*w1+10*w2+d; }
+  else if(mode===18){ r=6*w1+12*w2+d/2; g=95*w1+24*w2+d; b=78*w1+108*w2+d; }
+  else if(mode===17){ r=52-dr1*42+d/2; g=60-dr1*48+d/2; b=78-dr1*62+d; }
+  else if(mode===16){ r=12-dr1*10+d/2; g=52-dr1*42+d; b=115-dr1*92+d; }
+  else if(mode===15){ r=98-dr1*78+d; g=26-dr1*21+d/2; b=56-dr1*45+d; }
+  else if(mode===14){ r=15*w1+105*w2+d; g=45*w1+55*w2+d/2; b=105*w1+8*w2+d; }
+  else if(mode===13){ r=8-dr1*7+d/2; g=80-dr1*65+d; b=95-dr1*75+d; }
+  else if(mode===12){ r=95-dr1*75+d; g=55-dr1*45+d/2; b=8-dr1*6+d/2; }
+  else if(mode===11){ r=75-dr1*60+d; g=10-dr1*8+d/2; b=98-dr1*80+d; }
+  else if(mode===10){ r=98-dr1*80+d; g=12-dr1*10+d/2; b=20-dr1*16+d/2; }
+  else if(mode===9){ r=8-dr1*6+d/2; g=85-dr1*70+d; b=25-dr1*20+d/2; }
+  else if(mode===8){ r=10-dr1*8+d/2; g=28-dr1*24+d/2; b=105-dr1*85+d; }
+  else if(mode===7){ r=70-dr1*62+d; g=18*w1+70*w2+d; b=78*w1+58*w2+d; }
+  else if(mode===6){ r=115-dr1*100+d; g=45-dr2*40+d/2; b=10-dr1*8+d/2; }
+  else if(mode===5){ r=98*w1+32*w2+d; g=28-dr1*24+d/2; b=98-dr2*85+d; }
+  else if(mode===4){ r=92-dr2*85+d; g=80*w1+48*w2+d; b=24-dr1*20+d/2; }
+  else if(mode===3){ r=98-dr1*90+d; g=68-dr2*60+d/2; b=52*w1+102*w2+d; }
+  else if(mode===2){ r=25-dr1*20+d/2; g=95-dr1*60+d; b=90-dr2*55+d; }
+  else if(mode===1){ r=12-dr1*10+d/2; g=90-dr1*75+d; b=110-dr2*85+d; }
+  else { r=95-dr1*85+d; g=25-dr1*20+d/2; b=130-dr2*105+d; }
+  return [Math.max(0,Math.min(255,r|0)), Math.max(0,Math.min(255,g|0)), Math.max(0,Math.min(255,b|0))];
+}
+
+function evalGradColorJS(x, y, w, h, rev, mode, t_ms){
+  var phase = rev ? Math.PI : 0.0;
+  var dir = rev ? -1.0 : 1.0;
+  var cx1 = w*0.5 + Math.cos(dir*t_ms*0.0005 + phase)*(w*0.3333);
+  var cy1 = h*0.5 + Math.sin(dir*t_ms*0.000666 + phase)*(h*0.3333);
+  var cx2 = w*0.5 + Math.cos(dir*t_ms*0.000434 + phase)*(w*0.3333);
+  var cy2 = h*0.5 + Math.sin(dir*t_ms*0.000555 + phase)*(h*0.3333);
+  var maxD = w > 40 ? 38.0 : 25.0;
+  var invD = 1.0 / maxD;
+  var dr1 = 0, dr2 = 0;
+  var am = state.animMode;
+  var t = dir * t_ms * 0.001 + phase;
+
+  if(am === 1){
+    var w1 = Math.sin(x*0.11 + y*0.07 + t + Math.sin(y*0.09 - t*0.7));
+    var w2 = Math.cos(x*0.08 - y*0.12 - t*0.85 + Math.cos(x*0.10 + t*0.6));
+    dr1 = 1.0 - (w1*0.5 + 0.5); dr2 = 1.0 - (w2*0.5 + 0.5);
+  } else if(am === 2){
+    var p1 = (Math.sin(x*0.13+t)+Math.sin(y*0.13+t*0.8)+Math.sin((x+y)*0.09-t*1.1))/3.0;
+    var p2 = (Math.cos(x*0.12-t*0.9)+Math.cos(y*0.14+t*0.7)+Math.cos((x-y)*0.09+t))/3.0;
+    dr1 = 1.0 - (p1*0.5 + 0.5); dr2 = 1.0 - (p2*0.5 + 0.5);
+  } else if(am === 3){
+    var mx = (cx1+cx2)*0.5, my = (cy1+cy2)*0.5;
+    var d = Math.hypot(x-mx, y-my);
+    var r1 = Math.sin(d*0.24 - t*2.5)*0.5 + 0.5;
+    var r2 = Math.cos(d*0.24 - t*2.5)*0.5 + 0.5;
+    var at = Math.max(0.2, 1.0 - d*invD*0.65);
+    dr1 = 1.0 - r1*at; dr2 = 1.0 - r2*at;
+  } else if(am === 4){
+    var dx = x - w*0.5, dy = y - h*0.5;
+    var d = Math.hypot(dx, dy), ang = Math.atan2(dy, dx);
+    dr1 = 1.0 - (Math.sin(ang*2 + d*0.18 - t*2.2)*0.5 + 0.5);
+    dr2 = 1.0 - (Math.cos(ang*2 - d*0.16 + t*1.8)*0.5 + 0.5);
+  } else if(am === 5){
+    var md = Math.abs(x - cx1) + Math.abs(y - cy1);
+    dr1 = 1.0 - (Math.sin(md*0.22 - t*2.4)*0.5 + 0.5);
+    dr2 = 1.0 - (Math.cos((Math.abs(x-cx2)+Math.abs(y-cy2))*0.20 + t*2.0)*0.5 + 0.5);
+  } else if(am === 6){
+    var hy = h*0.5 + Math.sin(x*0.1 + t)*5.0;
+    dr1 = Math.min(1.0, Math.abs(y - hy) / (h*0.55));
+    dr2 = Math.min(1.0, y / Math.max(1, h));
+  } else if(am === 7){
+    var q1 = Math.sin(x*0.22 + t*1.8) * Math.cos(y*0.22 - t*1.5);
+    var q2 = Math.cos(x*0.19 - t*1.4) * Math.sin(y*0.24 + t*1.9);
+    dr1 = 1.0 - (q1*0.5 + 0.5); dr2 = 1.0 - (q2*0.5 + 0.5);
+  } else if(am === 8){
+    var breath = 0.68 + 0.32*Math.sin(t*1.8);
+    var d = Math.hypot(x - w*0.5, y - h*0.5);
+    dr1 = Math.min(1.0, d / (maxD * breath));
+    dr2 = Math.min(1.0, d / (maxD * (1.35 - breath*0.4)));
+  } else if(am === 9){
+    var wave1 = Math.sin(x*0.12 + t*1.7) * 5.0 + Math.cos(x*0.22 - t*1.1) * 3.0;
+    var wave2 = Math.cos(x*0.10 - t*1.4) * 5.0 + Math.sin(x*0.18 + t*1.9) * 3.0;
+    dr1 = Math.min(1.0, Math.abs(y - (h*0.38 + wave1)) / (h*0.55));
+    dr2 = Math.min(1.0, Math.abs(y - (h*0.62 + wave2)) / (h*0.55));
+  } else if(am === 10){
+    var fx = Math.abs(x - w*0.5), fy = Math.abs(y - h*0.5);
+    var hi = Math.max(fx, fy), lo = Math.min(fx, fy);
+    dr1 = 1.0 - (Math.sin((hi*0.25 + lo*0.12) - t*2.2)*0.5 + 0.5);
+    dr2 = 1.0 - (Math.cos((hi*0.15 - lo*0.25) + t*1.9)*0.5 + 0.5);
+  } else if(am === 11){
+    var rib1 = Math.sin((x + y)*0.12 + Math.sin(x*0.1 - t)*1.2 + t*1.6);
+    var rib2 = Math.cos((x - y)*0.12 + Math.cos(y*0.1 + t)*1.2 - t*1.4);
+    dr1 = 1.0 - (rib1*0.5 + 0.5); dr2 = 1.0 - (rib2*0.5 + 0.5);
+  } else if(am === 12){
+    var d = Math.hypot(x - w*0.5, y - h*0.5);
+    var twist = Math.atan2(y - h*0.5, x - w*0.5) + d*0.15 - t*2.8;
+    dr1 = 1.0 - (Math.sin(twist)*0.5 + 0.5);
+    dr2 = Math.min(1.0, d * invD);
+  } else if(am === 13){
+    var colPhase = ((x * 37) & 63) / 10.0;
+    var drop1 = Math.sin(y*0.15 - t*3.0 + colPhase);
+    var drop2 = Math.cos(y*0.12 - t*2.3 - colPhase*0.7);
+    dr1 = 1.0 - (drop1*0.5 + 0.5); dr2 = 1.0 - (drop2*0.5 + 0.5);
+  } else if(am === 14){
+    var ridge = Math.sin(x*0.09 + y*0.05 + t*1.2) * 6.0;
+    dr1 = Math.min(1.0, Math.abs(y - (h*0.48 + ridge)) / (h*0.55));
+    dr2 = Math.min(1.0, (x + y) / Math.max(1, w + h));
+  } else if(am === 15){
+    var d = Math.hypot(x - w*0.5, y - h*0.5);
+    var ring = Math.abs(d - ((t*14) % maxD));
+    dr1 = Math.min(1.0, ring / (maxD*0.42));
+    dr2 = Math.min(1.0, d * invD);
+  } else if(am === 16){
+    dr1 = Math.min(1.0, (x + y) / Math.max(1, w + h));
+    dr2 = 1.0 - dr1;
+  } else if(am === 17){
+    var d = Math.hypot(x - w*0.5, y - h*0.5);
+    dr1 = Math.min(1.0, d / (maxD * 0.88));
+    dr2 = Math.min(1.0, (d * d) / (maxD * maxD * 0.78));
+  } else if(am === 18){
+    dr1 = Math.min(1.0, y / Math.max(1, h - 1));
+    dr2 = 1.0 - dr1;
+  } else if(am === 19){
+    var md = Math.abs(x - w*0.5) + Math.abs(y - h*0.5);
+    dr1 = Math.min(1.0, md / Math.max(1, (w + h)*0.5));
+    dr2 = Math.min(1.0, Math.abs(x - y) / Math.max(1, Math.max(w, h)));
+  } else {
+    dr1 = Math.min(1.0, Math.hypot(x-cx1, y-cy1) * (isMonoModeJS(mode) ? (1/45.0) : invD));
+    dr2 = Math.min(1.0, Math.hypot(x-cx2, y-cy2) * invD);
+  }
+  if(isMonoModeJS(mode)) dr2 = dr1;
+  return evalGradRatiosJS(x, y, dr1, dr2, mode);
+}
+
+var FONT_5X7 = {
+  '0':[0x1E,0x21,0x21,0x21,0x21,0x21,0x1E], '1':[0x08,0x18,0x08,0x08,0x08,0x08,0x1C],
+  '2':[0x1E,0x21,0x01,0x06,0x18,0x20,0x3F], '3':[0x1E,0x21,0x01,0x0E,0x01,0x21,0x1E],
+  '4':[0x02,0x06,0x0A,0x12,0x22,0x3F,0x02], '5':[0x3F,0x20,0x3E,0x01,0x01,0x21,0x1E],
+  '6':[0x1E,0x21,0x20,0x3E,0x21,0x21,0x1E], '7':[0x3F,0x01,0x02,0x04,0x08,0x10,0x20],
+  '8':[0x1E,0x21,0x21,0x1E,0x21,0x21,0x1E], '9':[0x1E,0x21,0x21,0x1F,0x01,0x21,0x1E],
+  ':':[0x00,0x0C,0x0C,0x00,0x0C,0x0C,0x00], '/':[0x01,0x02,0x04,0x08,0x10,0x20,0x00],
+  'C':[0x1E,0x21,0x20,0x20,0x20,0x21,0x1E], 'L':[0x10,0x10,0x10,0x10,0x10,0x10,0x1F],
+  'U':[0x11,0x11,0x11,0x11,0x11,0x11,0x0E], 'N':[0x11,0x19,0x15,0x13,0x11,0x11,0x11]
+};
+
+var BIG_DIGS = {
+  '0':[0x7E,0xC3,0xC3,0xC3,0xC3,0xC3,0xC3,0xC3,0xC3,0xC3,0xC3,0x7E],
+  '1':[0x18,0x38,0x18,0x18,0x18,0x18,0x18,0x18,0x18,0x18,0x18,0x3C],
+  '2':[0x7E,0xC3,0x03,0x03,0x06,0x1C,0x38,0x60,0xC0,0xC0,0xC3,0xFF],
+  '3':[0x7E,0xC3,0x03,0x03,0x06,0x3C,0x06,0x03,0x03,0x03,0xC3,0x7E],
+  '4':[0x06,0x0E,0x1E,0x36,0x66,0xC6,0xFF,0x06,0x06,0x06,0x06,0x0F],
+  '5':[0xFF,0xC0,0xC0,0xC0,0xFC,0x06,0x03,0x03,0x03,0x03,0xC3,0x7E],
+  '6':[0x7E,0xC3,0xC0,0xC0,0xFC,0xC3,0xC3,0xC3,0xC3,0xC3,0xC3,0x7E],
+  '7':[0xFF,0x03,0x06,0x06,0x0C,0x0C,0x18,0x18,0x30,0x30,0x60,0x60],
+  '8':[0x7E,0xC3,0xC3,0xC3,0x7E,0xC3,0xC3,0xC3,0xC3,0xC3,0xC3,0x7E],
+  '9':[0x7E,0xC3,0xC3,0xC3,0xC3,0xC3,0x7F,0x03,0x03,0x03,0xC3,0x7E]
+};
+
+function buildSteadyFrame(t_ms){
+  var fb = new Array(4096);
+  for(var i=0;i<4096;i++) fb[i] = [0,0,0];
+
+  function setPx(x, y, rgb){
+    x = x|0; y = y|0;
+    if(x>=0 && x<64 && y>=0 && y<64) fb[y*64+x] = rgb;
+  }
+  function blendPx(x, y, rgb, a){
+    x = x|0; y = y|0;
+    if(x<0 || x>=64 || y<0 || y>=64) return;
+    var cur = fb[y*64+x];
+    fb[y*64+x] = [
+      Math.min(255, Math.max(0, Math.round(cur[0]*(1-a) + rgb[0]*a))),
+      Math.min(255, Math.max(0, Math.round(cur[1]*(1-a) + rgb[1]*a))),
+      Math.min(255, Math.max(0, Math.round(cur[2]*(1-a) + rgb[2]*a)))
+    ];
+  }
+  function insideRound(i, j, w, h, r){
+    if(r<=0) return true;
+    var rsq = (r-0.5)*(r-0.5);
+    if(i<r && j<r){ var dx=r-1-i, dy=r-1-j; return dx*dx+dy*dy<=rsq; }
+    if(i>=w-r && j<r){ var dx=i-(w-r), dy=r-1-j; return dx*dx+dy*dy<=rsq; }
+    if(i<r && j>=h-r){ var dx=r-1-i, dy=j-(h-r); return dx*dx+dy*dy<=rsq; }
+    if(i>=w-r && j>=h-r){ var dx=i-(w-r), dy=j-(h-r); return dx*dx+dy*dy<=rsq; }
+    return true;
+  }
+  function fillCardGrad(x, y, w, h, r, mode, rev, invY){
+    for(var j=0;j<h;j++){
+      var ej = invY ? (h-1-j) : j;
+      for(var i=0;i<w;i++) if(insideRound(i, j, w, h, r)) setPx(x+i, y+j, evalGradColorJS(i, ej, w, h, rev, mode, t_ms));
+    }
+  }
+  function fillCardSolid(x, y, w, h, r, rgb){
+    for(var j=0;j<h;j++) for(var i=0;i<w;i++) if(insideRound(i, j, w, h, r)) setPx(x+i, y+j, rgb);
+  }
+  function fillGlassPill(x, y, w, h, r, tint, a){
+    for(var j=0;j<h;j++) for(var i=0;i<w;i++) if(insideRound(i, j, w, h, r)) blendPx(x+i, y+j, tint, a);
+  }
+  function strokeRect(x, y, w, h, col){
+    for(var i=0;i<w;i++){ setPx(x+i, y, col); setPx(x+i, y+h-1, col); }
+    for(var j=0;j<h;j++){ setPx(x, y+j, col); setPx(x+w-1, y+j, col); }
+  }
+
+  var lay = state.layout;
+  var isFull = state.fullScreen === 1;
+  var isVert = isVertLayout(lay);
+  var isFrost = (state.frostClk === 1) && (isFull || state.clockBg >= 2);
+  var clkGrad = isFull ? state.grad : (state.clockBg >= 2 ? state.clockBg - 2 : 0);
+
+  if(isFull){
+    fillCardGrad(0, 0, 64, 64, 0, state.grad, true, false);
+  } else if(isVert){
+    if(state.clockBg === 0) fillCardSolid(1, 1, 29, 62, 4, [255,255,255]);
+    else if(state.clockBg === 1) fillCardSolid(1, 1, 29, 62, 4, [0,0,0]);
+    else fillCardGrad(1, 1, 29, 62, 4, clkGrad, true, true);
+    fillCardGrad(33, 1, 30, 62, 4, state.grad, false, false);
+  } else {
+    if(state.clockBg === 0) fillCardSolid(1, 0, 62, 31, 4, [255,255,255]);
+    else if(state.clockBg === 1) fillCardSolid(1, 0, 62, 31, 4, [0,0,0]);
+    else fillCardGrad(1, 0, 62, 31, 4, clkGrad, true, false);
+    fillCardGrad(1, 32, 62, 31, 4, state.grad, false, false);
+  }
+
+  var isSolidWhite = (!isFull && state.clockBg === 0);
+  var inkMain = isSolidWhite ? [15,15,20] : [255,255,255];
+  var inkSub  = isSolidWhite ? [70,70,85] : [185,195,215];
+  var inkCyan = isSolidWhite ? [0,115,180] : [90,235,255];
+  var pillTint = isSolidWhite ? [0,0,0] : [8,10,16];
+
+  function frostedColorAt(px, py, vr){
+    if(!isFrost) return inkMain;
+    var cardW = isFull ? 64 : (isVert ? 29 : 62);
+    var cardH = isFull ? 64 : (isVert ? 62 : 31);
+    var lx = isFull ? px : (px - 1);
+    var ly = (isFull || !isVert) ? py : (py - 1);
+    if(isVert && !isFull) ly = cardH - 1 - ly;
+    var c = evalGradColorJS(lx, ly, cardW, cardH, true, clkGrad, t_ms);
+    var gleam = Math.round(20 * (1 - vr));
+    var glassInv = 255 - (125 + gleam);
+    return [
+      Math.min(255, 255 - Math.round((255 - c[0]) * glassInv / 255)),
+      Math.min(255, 255 - Math.round((255 - c[1]) * glassInv / 255)),
+      Math.min(255, 255 - Math.round((255 - c[2]) * glassInv / 255))
+    ];
+  }
+
+  function drawSmallStr(str, x, y, useFrost, col, stepX){
+    var cx = x, adv = stepX || 5;
+    for(var si=0;si<str.length;si++){
+      var glyph = FONT_5X7[str[si]];
+      if(glyph){
+        for(var r=0;r<7;r++){
+          var row = glyph[r];
+          for(var c=0;c<6;c++) if(row & (0x20 >> c)) setPx(cx+c, y+r, useFrost ? frostedColorAt(cx+c, y+r, r/6.0) : col);
+        }
+        cx += adv;
+      } else cx += 3;
+    }
+  }
+
+  function drawBigDigit(dChar, x, y, style){
+    var rows = BIG_DIGS[dChar];
+    if(!rows) return;
+    for(var r=0;r<12;r++){
+      var row = rows[r];
+      for(var c=0;c<8;c++){
+        if(row & (0x80 >> c)){
+          if(style === 'dot' && ((r & 1) === 1 && (c & 1) === 1)) continue;
+          setPx(x+c, y+r, frostedColorAt(x+c, y+r, r/12.0));
+        }
+      }
+    }
+  }
+
+  function drawSunMini(cx, cy){
+    var yel = [255,220,20];
+    for(var dy=-2;dy<=2;dy++) for(var dx=-2;dx<=2;dx++) if(dx*dx+dy*dy<=5) setPx(cx+dx, cy+dy, yel);
+  }
+
+  var now = new Date();
+  var h = now.getHours() % 12; if(h === 0) h = 12;
+  var m = now.getMinutes(), s = now.getSeconds();
+  var hPad = (h < 10 ? '0' : '') + h, mStr = (m < 10 ? '0' : '') + m, sPad = (s < 10 ? '0' : '') + s;
+  var dStr = (now.getDate() < 10 ? '0' : '') + now.getDate() + '/' + ((now.getMonth()+1) < 10 ? '0' : '') + (now.getMonth()+1);
+
+  if(!isVert){
+    if(lay === 2){
+      fillGlassPill(3, 2, 19, 7, 2, pillTint, 0.35);
+      fillGlassPill(40, 2, 21, 7, 2, pillTint, 0.35);
+      drawSmallStr("LUN", 5, 2, false, inkSub, 4);
+      drawSmallStr(dStr, 41, 2, false, inkMain, 4);
+      fillGlassPill(6, 10, 52, 18, 4, pillTint, 0.28);
+      drawBigDigit(hPad[0], 11, 13); drawBigDigit(hPad[1], 20, 13);
+      setPx(31, 16, inkCyan); setPx(32, 16, inkCyan); setPx(31, 21, inkCyan); setPx(32, 21, inkCyan);
+      drawBigDigit(mStr[0], 35, 13); drawBigDigit(mStr[1], 44, 13);
+    } else if(lay === 3){
+      for(var gx=3;gx<61;gx+=4){ setPx(gx, 2, inkSub); setPx(gx, 28, inkSub); }
+      drawSmallStr(dStr, 4, 3, false, inkSub, 4);
+      drawBigDigit(hPad[0], 11, 13, 'dot'); drawBigDigit(hPad[1], 20, 13, 'dot');
+      setPx(31, 16, [255,45,55]); setPx(32, 16, [255,45,55]); setPx(31, 21, [255,45,55]); setPx(32, 21, [255,45,55]);
+      drawBigDigit(mStr[0], 35, 13, 'dot'); drawBigDigit(mStr[1], 44, 13, 'dot');
+    } else if(lay === 4){
+      for(var tx=4;tx<60;tx+=2) setPx(tx, 1, (tx%10===4)?inkMain:inkSub);
+      drawSmallStr(dStr, 22, 3, false, inkSub, 4);
+      drawBigDigit(hPad[0], 7, 13); drawBigDigit(hPad[1], 16, 13);
+      setPx(26, 17, inkMain); setPx(26, 21, inkMain);
+      drawBigDigit(mStr[0], 29, 13); drawBigDigit(mStr[1], 38, 13);
+      fillGlassPill(49, 13, 12, 12, 2, pillTint, 0.38);
+      drawSmallStr(sPad, 51, 16, false, inkCyan, 5);
+    } else if(lay === 5){
+      drawBigDigit(hPad[0], 3, 9); drawBigDigit(hPad[1], 12, 9);
+      setPx(22, 13, inkCyan); setPx(22, 18, inkCyan);
+      drawBigDigit(mStr[0], 25, 9); drawBigDigit(mStr[1], 34, 9);
+      for(var vy=4;vy<=26;vy++) setPx(44, vy, inkSub);
+      drawSmallStr("LUN", 47, 5, false, inkCyan, 4);
+      drawSmallStr(dStr, 46, 14, false, inkMain, 3);
+    } else if(lay === 6){
+      for(var k=0;k<5;k++){ setPx(2+k,1,inkCyan); setPx(2,1+k,inkCyan); setPx(61-k,1,inkCyan); setPx(61,1+k,inkCyan); }
+      drawSmallStr(dStr, 22, 3, false, inkCyan, 4);
+      drawBigDigit(hPad[0], 11, 13); drawBigDigit(hPad[1], 20, 13);
+      setPx(31, 16, inkCyan); setPx(32, 16, inkCyan); setPx(31, 21, inkCyan); setPx(32, 21, inkCyan);
+      drawBigDigit(mStr[0], 35, 13); drawBigDigit(mStr[1], 44, 13);
+    } else if(lay === 7){
+      fillGlassPill(7, 9, 23, 19, 3, pillTint, 0.48);
+      fillGlassPill(34, 9, 23, 19, 3, pillTint, 0.48);
+      drawBigDigit(hPad[0], 10, 12); drawBigDigit(hPad[1], 19, 12);
+      drawBigDigit(mStr[0], 37, 12); drawBigDigit(mStr[1], 46, 12);
+      for(var fx=7;fx<30;fx++) setPx(fx, 18, [0,0,0]);
+      for(var fx2=34;fx2<57;fx2++) setPx(fx2, 18, [0,0,0]);
+    } else if(lay === 8){
+      drawBigDigit(hPad[0], 11, 6); drawBigDigit(hPad[1], 20, 6);
+      setPx(31, 10, inkCyan); setPx(31, 14, inkCyan);
+      drawBigDigit(mStr[0], 35, 6); drawBigDigit(mStr[1], 44, 6);
+      for(var zx=14;zx<50;zx++) setPx(zx, 21, inkSub);
+      drawSmallStr(dStr, 22, 23, false, inkSub, 4);
+    } else if(lay === 9){
+      fillGlassPill(17, 1, 30, 7, 3, pillTint, 0.35);
+      drawSmallStr(dStr, 22, 1, false, inkMain, 4);
+      fillGlassPill(4, 10, 56, 18, 6, pillTint, 0.35);
+      drawBigDigit(hPad[0], 11, 13); drawBigDigit(hPad[1], 20, 13);
+      setPx(31, 16, inkCyan); setPx(32, 16, inkCyan); setPx(31, 21, inkCyan); setPx(32, 21, inkCyan);
+      drawBigDigit(mStr[0], 35, 13); drawBigDigit(mStr[1], 44, 13);
+    } else {
+      drawSmallStr(dStr, 22, 3, isFrost, inkMain, 4);
+      drawBigDigit(hPad[0], 11, 13); drawBigDigit(hPad[1], 20, 13);
+      setPx(31, 16, inkMain); setPx(32, 16, inkMain); setPx(31, 22, inkMain); setPx(32, 22, inkMain);
+      drawBigDigit(mStr[0], 35, 13); drawBigDigit(mStr[1], 44, 13);
+    }
+    for(var sx=2;sx<42;sx++) setPx(sx, 31, inkCyan);
+
+    var wy = 32;
+    if(lay === 2){
+      fillGlassPill(3, wy+2, 22, 27, 4, [8,10,16], 0.35);
+      fillGlassPill(27, wy+2, 34, 27, 4, [8,10,16], 0.28);
+    } else if(lay === 6){
+      strokeRect(2, wy+1, 23, 28, [80,220,255]);
+      strokeRect(27, wy+1, 35, 28, [60,150,210]);
+    } else if(lay === 7){
+      for(var fi=0;fi<3;fi++) fillGlassPill(27+fi*11, wy+2, 10, 27, 2, [8,10,16], 0.42);
+    } else if(lay === 9){
+      fillGlassPill(3, wy+3, 22, 25, 6, [8,10,16], 0.36);
+      fillGlassPill(27, wy+3, 34, 25, 6, [8,10,16], 0.30);
+    }
+    drawSunMini(13, wy+9);
+    drawSmallStr("24C", 7, wy+16, false, [255,255,255], 5);
+    var cols = [32, 43, 54], hrs = ["3","6","9"], tps = ["25","22","19"];
+    for(var ci=0;ci<3;ci++){
+      drawSmallStr(hrs[ci], cols[ci], wy+3, false, [190,195,215], 4);
+      drawSunMini(cols[ci]+1, wy+13);
+      drawSmallStr(tps[ci], cols[ci]-2, wy+21, false, [255,255,255], 4);
+    }
+  } else {
+    if(lay === 10){
+      fillGlassPill(3, 2, 25, 10, 3, pillTint, 0.35);
+      fillGlassPill(3, 14, 25, 22, 4, pillTint, 0.30);
+      fillGlassPill(3, 38, 25, 22, 4, pillTint, 0.30);
+      drawSmallStr(dStr, 5, 4, false, inkMain, 4);
+      drawBigDigit(hPad[0], 7, 19); drawBigDigit(hPad[1], 16, 19);
+      drawBigDigit(mStr[0], 7, 43); drawBigDigit(mStr[1], 16, 43);
+    } else if(lay === 11){
+      for(var gy=3;gy<61;gy+=4){ setPx(2, gy, inkSub); setPx(28, gy, inkSub); }
+      drawSmallStr(dStr, 5, 4, false, inkSub, 4);
+      drawBigDigit(hPad[0], 7, 16, 'dot'); drawBigDigit(hPad[1], 16, 16, 'dot');
+      setPx(14, 33, [255,45,55]); setPx(16, 33, [255,45,55]);
+      drawBigDigit(mStr[0], 7, 38, 'dot'); drawBigDigit(mStr[1], 16, 38, 'dot');
+    } else if(lay === 12){
+      for(var sy0=3;sy0<61;sy0+=2) setPx(2, sy0, (sy0%10===3)?inkMain:inkSub);
+      drawSmallStr(dStr, 6, 4, false, inkSub, 4);
+      drawBigDigit(hPad[0], 8, 16); drawBigDigit(hPad[1], 17, 16);
+      for(var sx2=7;sx2<=24;sx2++) setPx(sx2, 33, inkCyan);
+      drawBigDigit(mStr[0], 8, 38); drawBigDigit(mStr[1], 17, 38);
+    } else if(lay === 13){
+      strokeRect(2, 2, 27, 60, inkCyan);
+      drawSmallStr(dStr, 5, 5, false, inkCyan, 4);
+      drawBigDigit(hPad[0], 7, 17); drawBigDigit(hPad[1], 16, 17);
+      drawBigDigit(mStr[0], 7, 39); drawBigDigit(mStr[1], 16, 39);
+    } else if(lay === 14){
+      fillGlassPill(3, 13, 25, 22, 3, pillTint, 0.48);
+      fillGlassPill(3, 37, 25, 22, 3, pillTint, 0.48);
+      drawSmallStr(dStr, 5, 3, false, inkSub, 4);
+      drawBigDigit(hPad[0], 7, 18); drawBigDigit(hPad[1], 16, 18);
+      drawBigDigit(mStr[0], 7, 42); drawBigDigit(mStr[1], 16, 42);
+      for(var fx3=3;fx3<28;fx3++){ setPx(fx3, 24, [0,0,0]); setPx(fx3, 48, [0,0,0]); }
+    } else if(lay === 16){
+      for(var a=0;a<60;a+=3){
+        var rad = a * Math.PI / 30;
+        setPx(Math.round(15 + Math.cos(rad)*12), Math.round(35 + Math.sin(rad)*12), inkSub);
+      }
+      drawSmallStr(dStr, 5, 4, false, inkSub, 4);
+      drawBigDigit(hPad[0], 7, 20); drawBigDigit(hPad[1], 16, 20);
+      drawBigDigit(mStr[0], 7, 38); drawBigDigit(mStr[1], 16, 38);
+    } else {
+      drawSmallStr(dStr, 5, 4, isFrost, inkMain, 4);
+      drawBigDigit(hPad[0], 7, 16); drawBigDigit(hPad[1], 16, 16);
+      drawBigDigit(mStr[0], 7, 38); drawBigDigit(mStr[1], 16, 38);
+    }
+    for(var sy=1;sy<44;sy++) setPx(31, sy, inkCyan);
+
+    if(lay === 10){
+      fillGlassPill(35, 3, 26, 26, 4, [8,10,16], 0.35);
+      fillGlassPill(35, 31, 26, 29, 4, [8,10,16], 0.28);
+    } else if(lay === 13){
+      strokeRect(34, 2, 28, 27, [80,220,255]);
+      strokeRect(34, 31, 28, 30, [60,150,210]);
+    } else if(lay === 14){
+      fillGlassPill(35, 3, 26, 25, 3, [8,10,16], 0.45);
+      for(var fi2=0;fi2<3;fi2++) fillGlassPill(34+fi2*9, 31, 8, 29, 2, [8,10,16], 0.42);
+    }
+    drawSunMini(48, 10);
+    drawSmallStr("24C", 41, 19, false, [255,255,255], 5);
+    for(var hx=36;hx<60;hx++) setPx(hx, 30, [160,165,185]);
+    var vcols = [38, 48, 58], hrsV = ["3","6","9"], tpsV = ["25","22","19"];
+    for(var ci2=0;ci2<3;ci2++){
+      drawSmallStr(hrsV[ci2], vcols[ci2]-1, 34, false, [190,195,215], 4);
+      drawSunMini(vcols[ci2], 45);
+      drawSmallStr(tpsV[ci2], vcols[ci2]-3, 53, false, [255,255,255], 4);
+    }
+  }
+  return fb;
+}
+
+// ── SIMULADOR DE ANIMACIÓN DE INICIO (SINGULARIDAD PRISMÁTICA) ──
+function buildBootFrame(elapsed, t_ms){
+  var TOTAL = 3200;
+  var p = Math.min(1.0, elapsed / TOTAL);
+  var steady = buildSteadyFrame(t_ms);
+  var fb = new Array(4096);
+  var gradBottom = state.grad;
+  var gradTop = (state.clockBg >= 2) ? (state.clockBg - 2) : state.grad;
+
+  if(p < 0.72){
+    var sp = p / 0.72;
+    var ease = sp * sp * (3 - 2 * sp);
+    var orbitR = (1.0 - ease) * 26.0;
+    var spin = sp * 10.5;
+    var shockR = (sp > 0.35) ? ((sp - 0.35) / 0.65) * 48.0 : -10.0;
+    for(var y=0;y<64;y++){
+      for(var x=0;x<64;x++){
+        var dx = x - 31.5, dy = y - 31.5;
+        var d = Math.hypot(dx, dy);
+        var ang = Math.atan2(dy, dx);
+        var dr1 = Math.min(1.0, Math.abs(d - orbitR) / 22.0);
+        var dr2 = 1.0 - (Math.sin(ang * 3 - spin + d * 0.18) * 0.5 + 0.5);
+        var c1 = evalGradRatiosJS(x, y, dr1, dr2, gradTop);
+        var c2 = evalGradRatiosJS(x, y, dr2, dr1, gradBottom);
+        var shockGlow = Math.max(0, 1.0 - Math.abs(d - shockR) / 5.5);
+        var fadeIn = Math.min(1.0, sp * 2.2);
+        fb[y*64+x] = [
+          Math.min(255, Math.round(((c1[0]+c2[0])*0.5 + shockGlow*180) * fadeIn)),
+          Math.min(255, Math.round(((c1[1]+c2[1])*0.5 + shockGlow*195) * fadeIn)),
+          Math.min(255, Math.round(((c1[2]+c2[2])*0.5 + shockGlow*220) * fadeIn))
+        ];
+      }
+    }
+  } else {
+    var mp = (p - 0.72) / 0.28;
+    var mEase = mp * mp * (3 - 2 * mp);
+    var shockFrame = buildBootFrame(0.719 * TOTAL, t_ms);
+    for(var i=0;i<4096;i++){
+      var a = shockFrame[i], b = steady[i];
+      fb[i] = [
+        Math.round(a[0]*(1-mEase) + b[0]*mEase),
+        Math.round(a[1]*(1-mEase) + b[1]*mEase),
+        Math.round(a[2]*(1-mEase) + b[2]*mEase)
+      ];
+    }
+  }
+  return fb;
+}
+
+function renderLoop(now){
+  var cv = $('led_canvas');
+  if(cv){
+    var ctx = cv.getContext('2d');
+    var fb;
+    if(state.bootStartMs >= 0){
+      var el = now - state.bootStartMs;
+      if(el >= 3200){
+        state.bootStartMs = -1;
+        fb = buildSteadyFrame(now);
+      } else {
+        fb = buildBootFrame(el, now);
+      }
+    } else {
+      fb = buildSteadyFrame(now);
+    }
+
+    ctx.fillStyle = '#050507';
+    ctx.fillRect(0, 0, 384, 384);
+    for(var py=0;py<64;py++){
+      for(var px=0;px<64;px++){
+        var c = fb[py*64+px];
+        if(c[0]===0 && c[1]===0 && c[2]===0){
+          ctx.fillStyle = '#101015';
+        } else {
+          ctx.fillStyle = 'rgb('+c[0]+','+c[1]+','+c[2]+')';
+        }
+        ctx.fillRect(px*6 + 0.5, py*6 + 0.5, 4.9, 4.9);
+      }
+    }
+  }
+  requestAnimationFrame(renderLoop);
+}
+
+// ── PUENTE LAN DIRECTO AL ESP32 ──
+function getCleanIp(){
+  var ip = ($('esp_ip').value || '').trim().replace(/^https?:\/\//,'').replace(/\/.*$/,'');
+  if(ip) localStorage.setItem('esp32_clock_ip', ip);
+  return ip;
+}
+
+function pullFromClock(){
+  var ip = getCleanIp();
+  if(!ip){ $('lan_st').textContent = 'Escribe la IP local de tu reloj primero.'; return; }
+  $('lan_st').textContent = 'Conectando con http://' + ip + '/config ...';
+  fetch('http://' + ip + '/config')
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d.layout !== undefined) state.layout = Number(d.layout);
+      if(d.anim_mode !== undefined) state.animMode = Number(d.anim_mode);
+      if(d.grad !== undefined) state.grad = Number(d.grad);
+      if(d.clock_bg !== undefined) state.clockBg = Number(d.clock_bg);
+      if(d.full_screen !== undefined) state.fullScreen = Number(d.full_screen);
+      if(d.frost_clk !== undefined) state.frostClk = Number(d.frost_clk);
+      syncUI();
+      $('lan_st').style.color = 'var(--green)';
+      $('lan_st').textContent = '✓ Configuración leída del reloj (Firmware v' + (d.fw_ver || '?') + ')';
+    })
+    .catch(function(){
+      $('lan_st').style.color = 'var(--orange)';
+      $('lan_st').textContent = 'No se pudo conectar. Asegúrate de estar en la misma red Wi-Fi (y permitir HTTP local).';
+    });
+}
+
+function pushToClock(){
+  var ip = getCleanIp();
+  if(!ip){ $('lan_st').textContent = 'Escribe la IP local de tu reloj primero.'; return; }
+  $('lan_st').textContent = 'Enviando diseño a http://' + ip + '/config ...';
+  var body = 'full_screen=' + state.fullScreen +
+             '&grad=' + state.grad +
+             '&clock_bg=' + state.clockBg +
+             '&frost_clk=' + (state.frostClk ? 1 : 0) +
+             '&layout=' + state.layout +
+             '&anim_mode=' + state.animMode;
+  fetch('http://' + ip + '/config', {
+    method: 'POST',
+    headers: {'Content-Type':'application/x-www-form-urlencoded'},
+    body: body
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(){
+    $('lan_st').style.color = 'var(--green)';
+    $('lan_st').textContent = '✓ ¡Diseño aplicado en vivo en tu matriz física!';
+  })
+  .catch(function(){
+    $('lan_st').style.color = 'var(--orange)';
+    $('lan_st').textContent = 'Error al enviar. Verifica la IP del reloj en tu red local.';
+  });
+}
+
+// ── CONSULTA OTA ──
+fetch('./version.json?t=' + Date.now())
+  .then(function(r){ return r.ok ? r.json() : null; })
+  .then(function(info){
+    if(!info) return;
+    $('ota_ver_badge').textContent = 'Firmware v' + info.version;
+    $('ota_date_lbl').textContent = info.build_time || '';
+    var box = $('ota_changelog');
+    box.innerHTML = '';
+    (info.changelog || []).forEach(function(line){
+      var d = document.createElement('div');
+      d.className = 'ota-item';
+      d.textContent = line;
+      box.appendChild(d);
+    });
+  }).catch(function(){
+    $('ota_ver_badge').textContent = 'Studio Online';
+  });
+
+var savedIp = localStorage.getItem('esp32_clock_ip');
+if(savedIp) $('esp_ip').value = savedIp;
+syncUI();
+requestAnimationFrame(renderLoop);
+</script>
+</body>
+</html>
