@@ -1,17 +1,16 @@
 {
-  "version": "1.0.14",
-  "build_time": "25/10/2026 16:25",
-  "notes": "25/10/2026 16:25",
+  "version": "1.0.15",
+  "build_time": "11/11/2026 20:33",
+  "notes": "11/11/2026 20:33",
   "changelog": [
-    "Nuevo modal informativo de actualizacion con lista detallada de mejoras y registro desplazable.",
-    "Notificaciones de firmware limpias mostrando version y hora de compilacion exacta.",
-    "Botones integrados Actualizar y Cancelar sin alertas emergentes del navegador.",
-    "Migracion a sincronizacion de hora SNTP nativa no bloqueante en Core 0.",
-    "Renderizado ininterrumpido a 60 FPS ante caidas o reinicios del router Wi-Fi.",
-    "Eliminacion del parpadeo (flickering) en la animacion de arranque y transiciones.",
-    "Calculo de fase continua en animaciones de Cortina y Plasma sin saltos bruscos.",
-    "Deteccion precisa de barras de estado y areas seguras (Dynamic Island y notch en iOS/Android).",
-    "Optimizacion del rendimiento general del reloj y estabilidad continua."
+    "16 nuevos Layouts UX profesionales (18 en total: 9 Horizontales y 9 Verticales con soporte Modular y Pantalla Completa).",
+    "16 nuevos efectos de fondo (20 en total: 16 animados a 60 FPS y 4 estaticos arquitectonicos con transicion seamless).",
+    "16 nuevas paletas de color de alto contraste (40 degradados en total: 9 Triples, 18 Duales, 13 Mono-Color y 2 Solidos).",
+    "6 nuevas fuentes pixel-perfect a medida en PROGMEM (Bento Bold, Dot-Matrix, Swiss Tall, Cyber Seg, Impact Wide, Micro 4x5).",
+    "Iconos de clima renovados con deteccion Dia/Noche (luna creciente, estrellas, nieve, lluvia, tormenta y nubes multicapa).",
+    "Nueva animacion de arranque \"Singularidad Prismatica & Onda de Choque\" con tus colores activos y transicion 100% seamless.",
+    "Motor matematico en punto fijo (LUT) y guardia post-flip DMA que elimina el 100% del parpadeo (Zero-Flicker).",
+    "Estudio Web interactivo 64x64 para GitHub Pages con sincronizacion directa en red local (CORS) y centro de versiones OTA."
   ],
   "url": "https://raw.githubusercontent.com/AlexGremory255/esp32customclock/main/firmware.bin"
 }
