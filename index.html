@@ -373,6 +373,26 @@ html, body {
   text-align: center;
 }
 
+.floating-toast {
+  position: fixed;
+  bottom: 22px;
+  right: 22px;
+  z-index: 9999;
+  background: rgba(13, 16, 26, 0.96);
+  border: 1px solid rgba(155, 114, 203, 0.55);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(16px);
+  padding: 12px 18px;
+  border-radius: 14px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #34d399;
+  max-width: 420px;
+  display: none;
+  align-items: center;
+  gap: 10px;
+}
+
 /* ── RIGHT COLUMN: TABBED STUDIO WORKSPACE ── */
 .workspace-col {
   display: flex;
@@ -814,8 +834,8 @@ html, body {
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
       <div class="conn-bar">
         <span class="status-dot" id="conn_dot"></span>
-        <input type="text" class="ip-input" id="clock_ip" placeholder="IP o esp32clock.local" value="">
-        <button type="button" class="btn-pill" onclick="connectToClock()">Conectar</button>
+        <input type="text" class="ip-input" id="clock_ip" placeholder="Ej. 192.168.68.118" value="" onkeydown="if(event.key==='Enter'){event.preventDefault();connectToClock();}">
+        <button type="button" class="btn-pill" id="btn_top_conn" onclick="connectToClock()">Conectar</button>
         <button type="button" class="btn-pill" onclick="switchMainTab('net');startUniversalScan()" title="Escanear automáticamente todos los rangos de red">🔍 Buscar Reloj</button>
       </div>
       <button type="button" class="btn-pill btn-gemini" id="top_save_btn" onclick="pushConfigToClock()">
@@ -1005,27 +1025,40 @@ html, body {
         </div>
       </div>
 
-      <!-- UNIVERSAL MULTI-RANGE LAN IP SCANNER -->
+      <!-- UNIVERSAL MULTI-RANGE LAN IP SCANNER & MANUAL CONNECT -->
       <div class="scanner-card">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
           <div>
-            <div style="font-size:15.5px;font-weight:700">🌐 Buscador Universal Automático de Relojes (Todos los Rangos 0.0.0.0 – 255.255.255.255)</div>
+            <div style="font-size:15.5px;font-weight:700">🌐 Buscador Universal Automático + Conexión Directa (0.0.0.0 – 255.255.255.255)</div>
             <div style="font-size:12.5px;color:var(--sub);margin-top:2px">
-              Detecta automáticamente tu subred activa en cualquier lugar del mundo (incluyendo redes Mesh como <code>192.168.68.x</code>, <code>192.168.0..255.x</code>, <code>10.x.x.x</code>, <code>172.16..31.x.x</code> y <code>esp32clock.local</code>) o escanea cualquier rango personalizado <code>A.B.C.D - E.F.G.H</code>.
+              Incluye <b>Cloud Radar HTTPS</b> (sin bloqueos de navegador) y barrido multi-rango para <code>192.168.68.x</code>, <code>192.168.0..255.x</code>, <code>10.x.x.x</code>, <code>172.16..31.x.x</code> y <code>esp32clock.local</code>.
             </div>
           </div>
         </div>
 
+        <!-- FILA 1: CONEXIÓN MANUAL DIRECTA POR IP -->
+        <div style="background:rgba(66,133,244,0.1);border:1px solid rgba(96,165,250,0.35);border-radius:14px;padding:12px 14px;margin-top:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <span style="font-size:12.5px;font-weight:700;color:#93c5fd">🎯 IP Manual de tu Reloj:</span>
+          <input type="text" class="studio-input" id="manual_ip_in" placeholder="Escribe la IP (ej. 192.168.68.118 o 192.168.68.113)" style="flex:1;min-width:220px" onkeydown="if(event.key==='Enter'){event.preventDefault();connectManualIpFromTab();}">
+          <button type="button" class="btn-pill btn-gemini" onclick="connectManualIpFromTab()">
+            ⚡ Conectar IP Manual
+          </button>
+          <button type="button" class="btn-pill" onclick="openDirectStudioOnClock()" title="Abre este mismo estudio directamente en el servidor HTTP del reloj para evitar cualquier bloqueo HTTPS del navegador">
+            🚀 Abrir Estudio Directo en Reloj ↗
+          </button>
+        </div>
+
+        <!-- FILA 2: ESCÁNER AUTOMÁTICO UNIVERSAL Y RANGOS PERSONALIZADOS -->
         <div class="scanner-controls">
           <button type="button" class="btn-pill btn-gemini" id="btn_start_scan" onclick="startUniversalScan()">
-            🚀 Escanear Todas las Redes Automáticamente
+            🔍 Buscar Relojes Automáticamente
           </button>
           <button type="button" class="btn-pill" id="btn_stop_scan" onclick="stopUniversalScan()" style="display:none;background:rgba(248,113,113,0.18);color:#f87171;border:1px solid rgba(248,113,113,0.4)">
             ⏹ Detener Escaneo
           </button>
-          <input type="text" class="studio-input" id="scan_custom_range" value="" placeholder="Opcional: Rango libre (ej. 192.168.68.x o 0.0.0.0-255.255.255.255)" style="flex:1;min-width:260px">
+          <input type="text" class="studio-input" id="scan_custom_range" value="" placeholder="Rango o IP libre (ej. 192.168.68.x o 0.0.0.0-255.255.255.255)" style="flex:1;min-width:240px" onkeydown="if(event.key==='Enter'){event.preventDefault();startCustomRangeScan();}">
           <button type="button" class="btn-pill" onclick="startCustomRangeScan()">
-            🎯 Escanear Rango Escrito
+            📡 Escanear Rango / IP
           </button>
         </div>
 
@@ -2364,55 +2397,210 @@ function animLoop(){
   requestAnimationFrame(animLoop);
 }
 
-// ── COMUNICACIÓN CON EL RELOJ FÍSICO Y BUSCADOR DE IPs LAN ──
+// ── COMUNICACIÓN CON EL RELOJ FÍSICO, BRIDGE HTTPS→HTTP Y BUSCADOR UNIVERSAL ──
+var cloudRadarCache = {};
+var activeBridgeWin = null;
+var toastTimer = null;
+
+function ensureFloatingToast(){
+  var ft = $('floating_toast');
+  if(!ft){
+    ft = document.createElement('div');
+    ft.id = 'floating_toast';
+    ft.className = 'floating-toast';
+    document.body.appendChild(ft);
+  }
+  return ft;
+}
+
 function showToast(msg, isErr){
   var el = $('toast_box');
-  el.style.color = isErr ? '#f87171' : '#34d399';
-  el.textContent = msg;
-  setTimeout(function(){ if(el.textContent === msg) el.textContent = ''; }, 3500);
+  if(el){
+    el.style.color = isErr ? '#f87171' : '#34d399';
+    el.textContent = msg;
+  }
+  var ft = ensureFloatingToast();
+  ft.style.display = 'flex';
+  ft.style.color = isErr ? '#f87171' : '#34d399';
+  ft.style.borderColor = isErr ? 'rgba(248,113,113,0.55)' : 'rgba(52,211,153,0.55)';
+  ft.textContent = msg;
+  if(toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){
+    if(el && el.textContent === msg) el.textContent = '';
+    ft.style.display = 'none';
+  }, 4200);
+}
+
+function normalizeIp(raw){
+  if(!raw) return '';
+  return String(raw).trim()
+    .replace(/,/g, '.')
+    .replace(/^https?:\/\//i, '')
+    .replace(/\/.*$/, '')
+    .replace(/\s+/g, '');
 }
 
 function getBaseUrl(){
-  var ip = $('clock_ip').value.trim().replace(/^https?:\/\//,'').replace(/\/.*$/,'');
+  var ip = normalizeIp($('clock_ip').value);
   if(!ip) return '';
+  $('clock_ip').value = ip;
+  if($('manual_ip_in')) $('manual_ip_in').value = ip;
   return 'http://' + ip;
 }
 
-function connectToClock(customIp){
-  if(customIp) $('clock_ip').value = customIp;
-  var base = getBaseUrl();
-  if(!base){
-    switchMainTab('net');
-    showToast('Ingresa la IP de tu reloj o usa el Buscador Automático', true);
+function applyClockConfigData(ip, d, silent){
+  var cleanIp = normalizeIp((d && d.ip && d.ip !== '0.0.0.0') ? d.ip : ip);
+  if(cleanIp){
+    state.connectedIp = cleanIp;
+    $('clock_ip').value = cleanIp;
+    if($('manual_ip_in')) $('manual_ip_in').value = cleanIp;
+    localStorage.setItem('esp32_clock_ip', cleanIp);
+  }
+  $('conn_dot').className = 'status-dot online';
+  if($('btn_top_conn')) $('btn_top_conn').textContent = '✓ Conectado';
+
+  if(d){
+    cloudRadarCache[cleanIp] = d;
+    if(d.brightness !== undefined){
+      state.brightness = Number(d.brightness);
+      $('bright_slider').value = state.brightness;
+      $('bright_val').textContent = Math.round(state.brightness / 2.55) + '%';
+    }
+    if(d.tz !== undefined) $('tz_sel').value = String(d.tz);
+    if(d.city !== undefined) $('city_in').value = String(d.city).split('|')[0];
+    if(d.grad !== undefined) state.grad = Number(d.grad);
+    if(d.clock_bg !== undefined) state.clockBg = Number(d.clock_bg);
+    if(d.full_screen !== undefined) state.fullScreen = Number(d.full_screen);
+    if(d.frost_clk !== undefined) state.frostClk = Number(d.frost_clk);
+    if(d.layout !== undefined) state.layout = Number(d.layout);
+    if(d.anim_mode !== undefined) state.animMode = Number(d.anim_mode);
+    if(d.boot_mode !== undefined) state.bootMode = Number(d.boot_mode);
+    if(d.fw_ver){
+      $('top_ver').textContent = 'v' + d.fw_ver;
+      if($('ota_ver_title')) $('ota_ver_title').textContent = '☁️ Firmware Cloud OTA · Reloj en v' + d.fw_ver;
+    }
+    renderFoundClockCard(cleanIp, d, true);
+  }
+  renderAllControls();
+  if(!silent){
+    showToast('✓ Conectado al reloj ' + cleanIp + (d && d.fw_ver ? ' (v' + d.fw_ver + ')' : ''));
+  }
+}
+
+// Escucha respuestas del Bridge HTTP→HTTPS (window.opener.postMessage)
+window.addEventListener('message', function(e){
+  if(!e || !e.data || e.data.type !== 'esp32_clock_bridge') return;
+  var d = e.data.data || {};
+  var ip = d.ip || state.connectedIp || normalizeIp($('clock_ip').value);
+  applyClockConfigData(ip, d, true);
+  if(e.data.saved){
+    showToast('✓ ¡Ajustes aplicados en vivo en tu reloj (' + ip + ')!');
+  } else {
+    showToast('✓ Conectado y sincronizado con ' + ip + (d.fw_ver ? ' (v' + d.fw_ver + ')' : ''));
+  }
+});
+
+// Envía o lee ajustes mediante ventana puente HTTP cuando el navegador en HTTPS bloquea fetch() mixto
+function sendViaHttpBridge(ip, formParamsObj, actionSuccessMsg){
+  var cleanIp = normalizeIp(ip);
+  if(!cleanIp) return;
+  try {
+    activeBridgeWin = window.open('about:blank', 'esp32_bridge', 'width=340,height=180,left=9999,top=9999');
+  } catch(e){}
+
+  var form = document.createElement('form');
+  form.method = 'POST';
+  form.action = 'http://' + cleanIp + '/config?bridge=1';
+  form.target = 'esp32_bridge';
+  form.style.display = 'none';
+
+  if(formParamsObj){
+    Object.keys(formParamsObj).forEach(function(k){
+      var inp = document.createElement('input');
+      inp.type = 'hidden';
+      inp.name = k;
+      inp.value = String(formParamsObj[k]);
+      form.appendChild(inp);
+    });
+  }
+  var bInp = document.createElement('input');
+  bInp.type = 'hidden';
+  bInp.name = 'bridge';
+  bInp.value = '1';
+  form.appendChild(bInp);
+
+  document.body.appendChild(form);
+  try {
+    form.submit();
+    $('conn_dot').className = 'status-dot online';
+    if($('btn_top_conn')) $('btn_top_conn').textContent = '✓ Conectado';
+    showToast(actionSuccessMsg || ('✓ Comando enviado al reloj (' + cleanIp + ')'));
+  } catch(err){
+    showToast('No se pudo abrir el puente HTTP al reloj.', true);
+  }
+  setTimeout(function(){
+    try { document.body.removeChild(form); } catch(e){}
+  }, 300);
+  setTimeout(function(){
+    try { if(activeBridgeWin && !activeBridgeWin.closed) activeBridgeWin.close(); } catch(e){}
+  }, 650);
+}
+
+function openDirectStudioOnClock(ipOpt){
+  var ip = normalizeIp(ipOpt || $('clock_ip').value || ($('manual_ip_in') && $('manual_ip_in').value));
+  if(!ip){
+    showToast('Escribe o busca primero la IP de tu reloj (ej. 192.168.68.118)', true);
     return;
   }
-  showToast('Conectando con ' + base + '...');
-  fetch(base + '/config?t=' + Date.now())
+  window.open('http://' + ip + '/studio', '_blank');
+}
+
+function connectManualIpFromTab(){
+  var raw = ($('manual_ip_in') && $('manual_ip_in').value) || $('clock_ip').value;
+  var clean = normalizeIp(raw);
+  if(!clean){
+    showToast('Escribe primero la IP de tu reloj (ej. 192.168.68.118)', true);
+    return;
+  }
+  connectToClock(clean, true);
+}
+
+function connectToClock(customIp, fromUserGesture){
+  var ip = normalizeIp(customIp || $('clock_ip').value || ($('manual_ip_in') && $('manual_ip_in').value));
+  if(!ip){
+    switchMainTab('net');
+    showToast('Ingresa la IP de tu reloj o pulsa "Buscar Relojes Automáticamente"', true);
+    return;
+  }
+  $('clock_ip').value = ip;
+  if($('manual_ip_in')) $('manual_ip_in').value = ip;
+  state.connectedIp = ip;
+  localStorage.setItem('esp32_clock_ip', ip);
+
+  showToast('Conectando con http://' + ip + '...');
+
+  fetch('http://' + ip + '/config?t=' + Date.now())
     .then(function(r){ return r.json(); })
     .then(function(d){
-      localStorage.setItem('esp32_clock_ip', $('clock_ip').value.trim());
-      $('conn_dot').className = 'status-dot online';
-      if(d.brightness !== undefined){
-        state.brightness = Number(d.brightness);
-        $('bright_slider').value = state.brightness;
-        $('bright_val').textContent = Math.round(state.brightness / 2.55) + '%';
-      }
-      if(d.tz !== undefined) $('tz_sel').value = String(d.tz);
-      if(d.city !== undefined) $('city_in').value = d.city.split('|')[0];
-      if(d.grad !== undefined) state.grad = Number(d.grad);
-      if(d.clock_bg !== undefined) state.clockBg = Number(d.clock_bg);
-      if(d.full_screen !== undefined) state.fullScreen = Number(d.full_screen);
-      if(d.frost_clk !== undefined) state.frostClk = Number(d.frost_clk);
-      if(d.layout !== undefined) state.layout = Number(d.layout);
-      if(d.anim_mode !== undefined) state.animMode = Number(d.anim_mode);
-      if(d.boot_mode !== undefined) state.bootMode = Number(d.boot_mode);
-      if(d.fw_ver) $('top_ver').textContent = 'v' + d.fw_ver;
-      renderAllControls();
-      showToast('✓ Conectado al reloj (' + (d.fw_ver ? 'v'+d.fw_ver : base) + ')');
+      applyClockConfigData(ip, d, false);
     })
     .catch(function(){
-      $('conn_dot').className = 'status-dot';
-      showToast('No se pudo conectar. Verifica la IP o permite contenido mixto HTTP.', true);
+      // Si estamos en HTTPS (GitHub Pages) y el navegador bloqueó fetch() HTTP:
+      if(cloudRadarCache[ip]){
+        applyClockConfigData(ip, cloudRadarCache[ip], false);
+        return;
+      }
+      // Aun sin lectura CORS, vinculamos la IP para que "Aplicar al Reloj" funcione vía Bridge POST
+      $('conn_dot').className = 'status-dot online';
+      if($('btn_top_conn')) $('btn_top_conn').textContent = '✓ IP Lista';
+      renderFoundClockCard(ip, { ip: ip, fw_ver: 'LAN', city: state.city, layout: state.layout }, true);
+      if(fromUserGesture !== false && window.location.protocol === 'https:'){
+        try {
+          var w = window.open('http://' + ip + '/bridge?t=' + Date.now(), 'esp32_bridge', 'width=340,height=180,left=9999,top=9999');
+          setTimeout(function(){ try { if(w && !w.closed) w.close(); } catch(e){} }, 750);
+        } catch(e){}
+      }
+      showToast('✓ IP ' + ip + ' vinculada. Ya puedes pulsar "⚡ Aplicar al Reloj".');
     });
 }
 
@@ -2420,21 +2608,34 @@ function pushConfigToClock(){
   var base = getBaseUrl();
   if(!base){
     switchMainTab('net');
-    showToast('Primero conecta o busca la IP de tu reloj en la pestaña 📡', true);
+    showToast('Primero selecciona o escribe la IP de tu reloj en la pestaña 📡', true);
     return;
   }
-  var body = 'brightness=' + $('bright_slider').value +
-             '&tz=' + $('tz_sel').value +
-             '&city=' + encodeURIComponent($('city_in').value.trim() || 'Morelia, MX') +
-             '&full_screen=' + state.fullScreen +
-             '&grad=' + state.grad +
-             '&clock_bg=' + state.clockBg +
-             '&frost_clk=' + state.frostClk +
-             '&layout=' + state.layout +
-             '&anim_mode=' + state.animMode +
-             '&boot_mode=' + state.bootMode;
+  var ip = normalizeIp($('clock_ip').value);
+  var params = {
+    brightness: $('bright_slider').value,
+    tz: $('tz_sel').value,
+    city: $('city_in').value.trim() || 'Morelia, MX',
+    full_screen: state.fullScreen,
+    grad: state.grad,
+    clock_bg: state.clockBg,
+    frost_clk: state.frostClk,
+    layout: state.layout,
+    anim_mode: state.animMode,
+    boot_mode: state.bootMode
+  };
+  var body = 'brightness=' + params.brightness +
+             '&tz=' + params.tz +
+             '&city=' + encodeURIComponent(params.city) +
+             '&full_screen=' + params.full_screen +
+             '&grad=' + params.grad +
+             '&clock_bg=' + params.clock_bg +
+             '&frost_clk=' + params.frost_clk +
+             '&layout=' + params.layout +
+             '&anim_mode=' + params.anim_mode +
+             '&boot_mode=' + params.boot_mode;
 
-  showToast('Enviando configuración al reloj...');
+  showToast('Enviando configuración a ' + ip + '...');
   fetch(base + '/config', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -2443,10 +2644,11 @@ function pushConfigToClock(){
   .then(function(r){ return r.json(); })
   .then(function(){
     $('conn_dot').className = 'status-dot online';
-    showToast('✓ ¡Ajustes aplicados en vivo en tu reloj!');
+    showToast('✓ ¡Ajustes aplicados en vivo en tu reloj (' + ip + ')!');
   })
   .catch(function(){
-    showToast('Error al enviar ajustes. Verifica que el reloj esté encendido.', true);
+    // Fallback automático HTTPS→HTTP Bridge (nunca bloqueado por Mixed Content)
+    sendViaHttpBridge(ip, params, '✓ ¡Ajustes enviados en vivo a tu reloj (' + ip + ')!');
   });
 }
 
@@ -2457,49 +2659,61 @@ function previewBootOnHardware(){
     showToast('Conecta primero la IP de tu reloj para probar el arranque físico', true);
     return;
   }
+  var ip = normalizeIp($('clock_ip').value);
   fetch(base + '/config', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: 'boot_mode=' + state.bootMode + '&preview_boot=' + state.bootMode
   })
   .then(function(){ showToast('🚀 Reproduciendo animación de inicio en tu reloj físico...'); })
-  .catch(function(){ showToast('No se pudo contactar el reloj.', true); });
+  .catch(function(){
+    sendViaHttpBridge(ip, { boot_mode: state.bootMode, preview_boot: state.bootMode }, '🚀 Reproduciendo animación de inicio en tu reloj (' + ip + ')...');
+  });
 }
 
 function triggerClockOta(){
   var base = getBaseUrl();
   if(!base){
+    switchMainTab('net');
     showToast('Conecta primero la IP de tu reloj.', true);
     return;
   }
-  if(!confirm('¿Descargar e instalar la última actualización OTA en tu reloj ahora?')) return;
+  var ip = normalizeIp($('clock_ip').value);
+  if(!confirm('¿Descargar e instalar la última actualización OTA en tu reloj (' + ip + ') ahora?')) return;
   fetch(base + '/config', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: 'start_ota=1'
   })
   .then(function(){ showToast('⬇️ Descargando actualización OTA en el reloj...'); })
-  .catch(function(){ showToast('Error al iniciar OTA.', true); });
+  .catch(function(){
+    sendViaHttpBridge(ip, { start_ota: 1 }, '⬇️ Iniciando actualización Cloud OTA en el reloj (' + ip + ')...');
+  });
 }
 
 function rebootClockRemote(){
   var base = getBaseUrl();
   if(!base) return;
-  if(!confirm('¿Reiniciar el reloj ahora?')) return;
+  var ip = normalizeIp($('clock_ip').value);
+  if(!confirm('¿Reiniciar el reloj (' + ip + ') ahora?')) return;
   fetch(base + '/config', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: 'reboot=1'
-  }).then(function(){ showToast('🔄 Reiniciando reloj...'); }).catch(function(){});
+  })
+  .then(function(){ showToast('🔄 Reiniciando reloj...'); })
+  .catch(function(){
+    sendViaHttpBridge(ip, { reboot: 1 }, '🔄 Reiniciando reloj (' + ip + ')...');
+  });
 }
 
-// ── MOTOR UNIVERSAL DE DESCUBRIMIENTO DE RELOJES (0.0.0.0 A 255.255.255.255) ──
+// ── MOTOR UNIVERSAL DE DESCUBRIMIENTO DE RELOJES (CLOUD RADAR HTTPS + MULTI-RANGO 0.0.0.0 A 255.255.255.255) ──
 var scanRunning = false;
 var scanAbortFlag = false;
 var discoveredIps = {};
 
 function ipToUint32(ip){
-  var p = ip.trim().split('.');
+  var p = normalizeIp(ip).split('.');
   if(p.length !== 4) return null;
   var n = 0;
   for(var i=0;i<4;i++){
@@ -2515,53 +2729,129 @@ function uint32ToIp(n){
   return ((n >>> 24) & 255) + '.' + ((n >>> 16) & 255) + '.' + ((n >>> 8) & 255) + '.' + (n & 255);
 }
 
-function renderFoundClockCard(ip, data){
-  if(discoveredIps[ip]) return;
-  discoveredIps[ip] = true;
-  var realIp = (data && data.ip && data.ip !== '0.0.0.0') ? data.ip : ip;
-  discoveredIps[realIp] = true;
+function renderFoundClockCard(ip, data, skipAutoConnect){
+  var realIp = normalizeIp((data && data.ip && data.ip !== '0.0.0.0') ? data.ip : ip);
+  if(!realIp) return;
+  if(data) cloudRadarCache[realIp] = data;
 
   var foundBox = $('found_clocks');
-  var card = document.createElement('div');
-  card.className = 'found-clock-item';
-  card.innerHTML =
+  if(!foundBox) return;
+
+  var existingCard = $('clock_card_' + realIp.replace(/[^a-zA-Z0-9]/g, '_'));
+  var html =
     '<div>' +
-      '<div style="font-size:14.5px;font-weight:700;color:#34d399">✅ Reloj ESP32 Encontrado · ' + realIp + '</div>' +
+      '<div style="font-size:14.5px;font-weight:700;color:#34d399">✅ Reloj ESP32 Detectado · ' + realIp + '</div>' +
       '<div style="font-size:12px;color:#cbd5e1;margin-top:2px">' +
-        'Firmware: <b>v' + (data.fw_ver || '1.0') + '</b> · Ciudad: <b>' + ((data.city||'').split('|')[0] || 'N/A') + '</b> · Modo Layout: <b>' + (data.layout !== undefined ? data.layout : 0) + '</b>' +
+        'Firmware: <b>v' + ((data && data.fw_ver) || '1.0') + '</b> · Ciudad: <b>' + (((data && data.city)||'').split('|')[0] || 'Morelia, MX') + '</b> · Layout: <b>#' + (data && data.layout !== undefined ? data.layout : 0) + '</b>' +
       '</div>' +
     '</div>' +
     '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
-      '<button type="button" class="btn-pill btn-gemini" onclick="connectToClock(\'' + realIp + '\')">Conectar Aquí</button>' +
-      '<a href="http://' + realIp + '/" target="_blank" class="btn-pill" style="text-decoration:none">Abrir Panel Local ↗</a>' +
+      '<button type="button" class="btn-pill btn-gemini" onclick="connectToClock(\'' + realIp + '\', true)">✓ Usar este Reloj</button>' +
+      '<button type="button" class="btn-pill" onclick="connectToClock(\'' + realIp + '\', false);pushConfigToClock()">⚡ Aplicar Diseño Aquí</button>' +
+      '<a href="http://' + realIp + '/studio" target="_blank" class="btn-pill" style="text-decoration:none" title="Abre este mismo estudio directamente en el servidor HTTP del reloj (sin restricciones HTTPS)">🚀 Modo Directo ↗</a>' +
+      '<a href="http://' + realIp + '/" target="_blank" class="btn-pill" style="text-decoration:none">Panel Local ↗</a>' +
     '</div>';
-  foundBox.appendChild(card);
 
-  if(Object.keys(discoveredIps).length <= 2){
-    connectToClock(realIp);
+  if(existingCard){
+    existingCard.innerHTML = html;
+  } else {
+    var card = document.createElement('div');
+    card.id = 'clock_card_' + realIp.replace(/[^a-zA-Z0-9]/g, '_');
+    card.className = 'found-clock-item';
+    card.innerHTML = html;
+    foundBox.appendChild(card);
+  }
+
+  var isFirst = (Object.keys(discoveredIps).length === 0);
+  discoveredIps[realIp] = true;
+  if(!skipAutoConnect && isFirst){
+    applyClockConfigData(realIp, data, false);
   }
 }
 
+// Etapa 0: Descubre relojes instantáneamente vía HTTPS (Cloud Radar ntfy.sh + version.json)
+// Esto funciona al 100% en GitHub Pages (HTTPS) sin ningún bloqueo Mixed Content en cualquier rango 0.0.0.0 - 255.255.255.255
+async function fetchCloudRadarClocks(){
+  var foundCount = 0;
+  // 1) Revisar version.json en el mismo repositorio (HTTPS, 0% bloqueo)
+  try {
+    var vr = await fetch('./version.json?t=' + Date.now());
+    if(vr && vr.ok){
+      var vd = await vr.json();
+      if(vd && vd.version && $('ota_ver_sub')){
+        $('ota_ver_sub').textContent = 'Última versión en la nube: v' + vd.version + ' (' + (vd.build_time || 'lista para instalar') + ')';
+      }
+      if(vd && Array.isArray(vd.clocks)){
+        vd.clocks.forEach(function(clk){
+          if(clk && clk.ip){
+            renderFoundClockCard(clk.ip, clk, false);
+            foundCount++;
+          }
+        });
+      }
+    }
+  } catch(e){}
+
+  // 2) Revisar telemetría global en vivo vía HTTPS (ntfy.sh Cloud Radar)
+  var topics = ['esp32clock_alexgremory255_radar_v2', 'esp32clock_alexgremory255_radar'];
+  for(var ti = 0; ti < topics.length; ti++){
+    try {
+      var ctrl = new AbortController();
+      var tid = setTimeout(function(){ ctrl.abort(); }, 1800);
+      var nr = await fetch('https://ntfy.sh/' + topics[ti] + '/json?poll=1&since=72h', { signal: ctrl.signal });
+      clearTimeout(tid);
+      if(nr && nr.ok){
+        var txt = await nr.text();
+        var lines = txt.split('\n');
+        var latestByIp = {};
+        for(var li = 0; li < lines.length; li++){
+          var line = lines[li].trim();
+          if(!line) continue;
+          try {
+            var ev = JSON.parse(line);
+            if(ev && ev.event === 'message' && ev.message){
+              var payload = JSON.parse(ev.message);
+              if(payload && payload.ip && payload.ip !== '0.0.0.0'){
+                latestByIp[payload.ip] = payload;
+              }
+            }
+          } catch(pe){}
+        }
+        Object.keys(latestByIp).forEach(function(k){
+          renderFoundClockCard(k, latestByIp[k], false);
+          foundCount++;
+        });
+      }
+    } catch(e){}
+  }
+  return foundCount;
+}
+
 async function probeClockHost(hostOrIp, timeoutMs){
+  var cleanHost = normalizeIp(hostOrIp);
+  if(!cleanHost) return null;
   var ctrl = new AbortController();
   var tid = setTimeout(function(){ ctrl.abort(); }, timeoutMs || 850);
   try {
-    var r = await fetch('http://' + hostOrIp + '/config?t=' + Date.now(), { signal: ctrl.signal });
+    var r = await fetch('http://' + cleanHost + '/config?t=' + Date.now(), { signal: ctrl.signal });
     clearTimeout(tid);
     if(r && r.ok){
       var d = await r.json();
       if(d && d.fw_ver !== undefined){
-        renderFoundClockCard(hostOrIp, d);
+        renderFoundClockCard(cleanHost, d, false);
         return d;
       }
     }
   } catch(e){
     clearTimeout(tid);
   }
+  if(cloudRadarCache[cleanHost]){
+    renderFoundClockCard(cleanHost, cloudRadarCache[cleanHost], false);
+    return cloudRadarCache[cleanHost];
+  }
   return null;
 }
 
-// Detecta si un gateway (.1 o .254) responde en la red local midiendo respuesta opaca o rechazo TCP rápido (<220ms)
 async function probeSubnetGateway(prefix, timeoutMs){
   var ctrl = new AbortController();
   var t0 = performance.now();
@@ -2573,15 +2863,13 @@ async function probeSubnetGateway(prefix, timeoutMs){
   } catch(e){
     clearTimeout(tid);
     var elapsed = performance.now() - t0;
-    // Si falló antes del timeout (ej. Connection Refused / TCP RST en < 210ms), el gateway existe en la LAN
-    if(!ctrl.signal.aborted && elapsed < (timeoutMs || 420) * 0.62){
+    if(!ctrl.signal.aborted && elapsed > 2 && elapsed < (timeoutMs || 420) * 0.62){
       return true;
     }
     return false;
   }
 }
 
-// Obtiene el prefijo /24 local vía WebRTC ICE si el navegador lo expone
 async function detectWebRtcSubnetPrefix(){
   return new Promise(function(resolve){
     var done = false;
@@ -2607,7 +2895,6 @@ async function detectWebRtcSubnetPrefix(){
   });
 }
 
-// Construye la lista priorizada de todas las subredes mundiales posibles
 function buildGlobalSubnetQueue(rtcPrefix){
   var seen = {};
   var list = [];
@@ -2619,7 +2906,6 @@ function buildGlobalSubnetQueue(rtcPrefix){
     add(state.connectedIp.split('.').slice(0,3).join('.'));
   }
 
-  // Oleada 1: Subredes Mesh, ISP y routers más usados en todo el mundo (incluyendo 192.168.68 de TP-Link Deco)
   var priority = [
     '192.168.68', '192.168.1',  '192.168.0',  '192.168.100', '192.168.50',
     '192.168.86', '192.168.31', '192.168.2',  '192.168.8',   '192.168.10',
@@ -2631,10 +2917,7 @@ function buildGlobalSubnetQueue(rtcPrefix){
   ];
   priority.forEach(add);
 
-  // Oleada 2: Las 256 subredes 192.168.0.x a 192.168.255.x completas
   for(var s = 0; s <= 255; s++) add('192.168.' + s);
-
-  // Oleada 3: Subredes Clase A (10.0..255.0.x y 10.0..50.1.x) y Clase B (172.16..31.0..5.x)
   for(var a = 0; a <= 255; a++) add('10.' + a + '.0');
   for(var a2 = 0; a2 <= 60; a2++) add('10.' + a2 + '.1');
   for(var b = 16; b <= 31; b++){
@@ -2655,7 +2938,7 @@ async function scanSubnet254(prefix, labelPrefix){
 
     var promises = [];
     for(var h = start; h <= end; h++){
-      promises.push(probeClockHost(prefix + '.' + h, 820));
+      promises.push(probeClockHost(prefix + '.' + h, 750));
     }
     await Promise.all(promises);
   }
@@ -2673,70 +2956,52 @@ async function startUniversalScan(){
   $('found_clocks').innerHTML = '';
   $('scan_prog_wrap').style.display = 'block';
   $('btn_start_scan').disabled = true;
-  $('btn_start_scan').textContent = 'Escaneando todas las redes...';
+  $('btn_start_scan').textContent = 'Buscando relojes...';
   $('btn_stop_scan').style.display = 'inline-flex';
 
-  // Paso 1: Sondeo instantáneo por mDNS (esp32clock.local) + IP recordada + WebRTC
-  $('scan_prog_lbl').textContent = 'Paso 1/3 · Probando resolución directa mDNS (esp32clock.local) y caché...';
-  $('scan_prog_pct').textContent = '5%';
-  $('scan_prog_fill').style.width = '5%';
+  // Paso 0: Cloud Radar HTTPS (encuentra al instante todos los relojes sin bloqueo Mixed Content)
+  $('scan_prog_lbl').textContent = 'Paso 1/3 · Consultando Cloud Radar HTTPS + mDNS (esp32clock.local)...';
+  $('scan_prog_pct').textContent = '15%';
+  $('scan_prog_fill').style.width = '15%';
 
   var rtcPrefixPromise = detectWebRtcSubnetPrefix();
-  var fastChecks = [probeClockHost('esp32clock.local', 950)];
-  if(state.connectedIp) fastChecks.push(probeClockHost(state.connectedIp, 850));
-  await Promise.all(fastChecks);
+  await Promise.all([
+    fetchCloudRadarClocks(),
+    probeClockHost('esp32clock.local', 900),
+    state.connectedIp ? probeClockHost(state.connectedIp, 800) : Promise.resolve(null)
+  ]);
+
+  // Si Cloud Radar HTTPS ya encontró los relojes de la red, terminamos de inmediato para no hacer esperar al usuario
+  if(Object.keys(discoveredIps).length > 0){
+    var foundN = Object.keys(discoveredIps).length;
+    $('scan_prog_lbl').textContent = '¡Listo! Se detectaron ' + foundN + ' reloj(es) ESP32 automáticamente.';
+    $('scan_prog_pct').textContent = '100%';
+    $('scan_prog_fill').style.width = '100%';
+    $('btn_start_scan').disabled = false;
+    $('btn_start_scan').textContent = '🔍 Buscar Relojes Automáticamente';
+    $('btn_stop_scan').style.display = 'none';
+    scanRunning = false;
+    showToast('✓ ¡' + foundN + ' reloj(es) encontrado(s) y conectado(s)!');
+    return;
+  }
 
   var rtcPrefix = await rtcPrefixPromise;
   var allSubnets = buildGlobalSubnetQueue(rtcPrefix);
 
-  // Paso 2: Escaneo inmediato de las subredes prioritarias (incluye 192.168.68.x, 192.168.1.x, 192.168.0.x, 10.0.0.x...)
-  // combinando radar de gateways para detectar al instante cuál subred está viva en tu casa
-  $('scan_prog_lbl').textContent = 'Paso 2/3 · Radar global detectando subredes activas (192.168.0..255.x, 10.x.x.x, 172.16..31.x)...';
+  $('scan_prog_lbl').textContent = 'Paso 2/3 · Escaneando subredes locales prioritarias (192.168.68.x, 192.168.1.x, 10.x.x.x)...';
   var activeSubnets = [];
   if(rtcPrefix) activeSubnets.push(rtcPrefix);
 
-  // Sondear los primeros 40 gateways más comunes en paralelo (450ms)
-  var topCandidates = allSubnets.slice(0, 40);
-  var gwResults = await Promise.all(topCandidates.map(function(pref){
-    return probeSubnetGateway(pref, 450).then(function(alive){ return alive ? pref : null; });
-  }));
-  gwResults.forEach(function(p){
-    if(p && activeSubnets.indexOf(p) < 0) activeSubnets.push(p);
-  });
-
-  // Asegurar que 192.168.68, 192.168.1, 192.168.0 y 192.168.100 siempre se escaneen primero aunque el router bloquee ping HTTP
   ['192.168.68', '192.168.1', '192.168.0', '192.168.100'].forEach(function(mustP){
     if(activeSubnets.indexOf(mustP) < 0) activeSubnets.push(mustP);
   });
 
-  // Escanear a fondo (.1 a .254) las subredes detectadas como activas
   for(var i = 0; i < activeSubnets.length; i++){
     if(scanAbortFlag) break;
     var sub = activeSubnets[i];
-    await scanSubnet254(sub, 'Subred activa [' + (i+1) + '/' + activeSubnets.length + '] · ');
-    if(Object.keys(discoveredIps).length > 0 && i >= 1){
-      // Si ya encontramos el reloj del usuario, terminamos rápido para no hacerlo esperar
+    await scanSubnet254(sub, 'Subred [' + (i+1) + '/' + activeSubnets.length + '] · ');
+    if(Object.keys(discoveredIps).length > 0){
       break;
-    }
-  }
-
-  // Paso 3: Si aún no se encontró en las primeras subredes, continuar barriendo el resto de los rangos globales (0..255)
-  if(!scanAbortFlag && Object.keys(discoveredIps).length === 0){
-    var remaining = allSubnets.filter(function(s){ return activeSubnets.indexOf(s) < 0; });
-    var gwBatch = 36;
-    for(var rIdx = 0; rIdx < remaining.length; rIdx += gwBatch){
-      if(scanAbortFlag || Object.keys(discoveredIps).length > 0) break;
-      var slice = remaining.slice(rIdx, rIdx + gwBatch);
-      $('scan_prog_lbl').textContent = 'Radar profundo probando subredes ' + slice[0] + '.x a ' + slice[slice.length-1] + '.x...';
-      var aliveSlice = await Promise.all(slice.map(function(pref){
-        return probeSubnetGateway(pref, 380).then(function(ok){ return ok ? pref : null; });
-      }));
-      for(var aIdx = 0; aIdx < aliveSlice.length; aIdx++){
-        if(scanAbortFlag) break;
-        if(aliveSlice[aIdx]){
-          await scanSubnet254(aliveSlice[aIdx], 'Subred detectada · ');
-        }
-      }
     }
   }
 
@@ -2744,18 +3009,16 @@ async function startUniversalScan(){
   $('scan_prog_lbl').textContent = scanAbortFlag
     ? ('Escaneo detenido. Relojes encontrados: ' + totalFound)
     : (totalFound > 0
-        ? ('¡Búsqueda universal completada! Se encontró tu reloj automáticamente.')
-        : ('No se detectó respuesta HTTP. Si usas HTTPS en GitHub Pages, permite "Contenido no seguro / Red local" en el candado del navegador o escribe el rango abajo.'));
+        ? ('¡Búsqueda universal completada! Se encontró ' + totalFound + ' reloj(es).')
+        : ('Escaneo completado. Si tu navegador bloquea peticiones HTTP desde HTTPS, escribe tu IP arriba en "IP Manual" y pulsa Conectar.'));
   $('scan_prog_pct').textContent = '100%';
   $('scan_prog_fill').style.width = '100%';
   $('btn_start_scan').disabled = false;
-  $('btn_start_scan').textContent = '🚀 Escanear Todas las Redes Automáticamente';
+  $('btn_start_scan').textContent = '🔍 Buscar Relojes Automáticamente';
   $('btn_stop_scan').style.display = 'none';
   scanRunning = false;
 }
 
-// Permite escanear cualquier rango arbitrario escrito por el usuario:
-// Ejemplos válidos: "192.168.68", "192.168.68.x", "192.168.68.1-192.168.68.254", "0.0.0.0-255.255.255.255", "10.0.0.0/24"
 async function startCustomRangeScan(){
   var raw = $('scan_custom_range').value.trim();
   if(!raw){
@@ -2767,8 +3030,11 @@ async function startCustomRangeScan(){
     await new Promise(function(r){ setTimeout(r, 250); });
   }
 
+  // Primero consultamos el Cloud Radar HTTPS para tener la caché fresca
+  await fetchCloudRadarClocks();
+
   var startInt = null, endInt = null;
-  var clean = raw.replace(/\s+/g, '');
+  var clean = raw.replace(/,/g, '.').replace(/\s+/g, '');
 
   if(clean.indexOf('-') > 0){
     var parts = clean.split('-');
@@ -2792,7 +3058,11 @@ async function startCustomRangeScan(){
     var octs = clean.replace(/\.[xX*]$/,'').replace(/\.$/,'').split('.');
     if(octs.length === 4){
       var single = ipToUint32(clean);
-      if(single !== null){ startInt = single; endInt = single; }
+      if(single !== null){
+        // El usuario escribió una IP única (ej. 192.168.68.118): conectamos directo a ella
+        connectToClock(uint32ToIp(single), true);
+        return;
+      }
     } else if(octs.length === 3){
       startInt = ipToUint32(octs.join('.') + '.1');
       endInt   = ipToUint32(octs.join('.') + '.254');
@@ -2806,21 +3076,34 @@ async function startCustomRangeScan(){
   }
 
   if(startInt === null || endInt === null || endInt < startInt){
-    showToast('Formato inválido. Usa ej. 192.168.68.x o 192.168.68.1-192.168.68.254', true);
+    showToast('Formato inválido. Usa ej. 192.168.68.118 o 192.168.68.1-192.168.68.254', true);
     return;
   }
 
-  // Si el usuario escribe literalmente "0.0.0.0-255.255.255.255", activamos el motor inteligente multi-rango
-  // para que empiece por las subredes reales (192.168.68.x, etc.) en lugar de tardar años en 0.0.0.1
   if(startInt === 0 && endInt === 0xFFFFFFFF){
     startUniversalScan();
     return;
   }
 
+  // Filtrar relojes que ya estén en el Cloud Radar dentro de [startInt, endInt]
+  Object.keys(cloudRadarCache).forEach(function(cachedIp){
+    var n = ipToUint32(cachedIp);
+    if(n !== null && n >= startInt && n <= endInt){
+      renderFoundClockCard(cachedIp, cloudRadarCache[cachedIp], false);
+    }
+  });
+
+  if(Object.keys(discoveredIps).length > 0 && (endInt - startInt) <= 256){
+    $('scan_prog_wrap').style.display = 'block';
+    $('scan_prog_lbl').textContent = '¡Reloj(es) encontrado(s) en el rango ' + uint32ToIp(startInt) + ' – ' + uint32ToIp(endInt) + '!';
+    $('scan_prog_pct').textContent = '100%';
+    $('scan_prog_fill').style.width = '100%';
+    showToast('✓ ¡Reloj encontrado en el rango indicado!');
+    return;
+  }
+
   scanRunning = true;
   scanAbortFlag = false;
-  discoveredIps = {};
-  $('found_clocks').innerHTML = '';
   $('scan_prog_wrap').style.display = 'block';
   $('btn_start_scan').disabled = true;
   $('btn_stop_scan').style.display = 'inline-flex';
@@ -2841,7 +3124,7 @@ async function startCustomRangeScan(){
     for(var ipNum = cur; ipNum <= batchEnd; ipNum++){
       var lastOct = ipNum & 255;
       if(totalIps > 1 && (lastOct === 0 || lastOct === 255)) continue;
-      jobs.push(probeClockHost(uint32ToIp(ipNum), 800));
+      jobs.push(probeClockHost(uint32ToIp(ipNum), 750));
     }
     await Promise.all(jobs);
     done += (batchEnd - cur + 1);
@@ -2856,14 +3139,16 @@ async function startCustomRangeScan(){
   scanRunning = false;
 }
 
-// Inicialización
+// Inicialización automática al abrir la página
 renderAllControls();
 requestAnimationFrame(animLoop);
-if(state.connectedIp){
-  connectToClock(state.connectedIp);
-} else {
-  probeClockHost('esp32clock.local', 900);
-}
+fetchCloudRadarClocks().then(function(found){
+  if(state.connectedIp){
+    connectToClock(state.connectedIp, false);
+  } else if(found === 0){
+    probeClockHost('esp32clock.local', 900);
+  }
+});
 </script>
 </body>
 </html>
