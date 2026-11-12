@@ -3,764 +3,1450 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
-<title>ESP32 Matrix 64×64 Studio & OTA Hub</title>
+<title>ESP32 Matrix Clock 64×64 · Gemini Design Studio</title>
 <style>
 :root {
-  --bg: #070709;
-  --card: #131317;
-  --card-elev: #1d1d24;
-  --border: rgba(255,255,255,0.09);
-  --text: #f5f5f7;
-  --sub: #8e8e98;
-  --accent: #0a84ff;
-  --green: #30d158;
-  --orange: #ff9f0a;
-  --pink: #ff2d55;
+  --bg: #06070c;
+  --bg-soft: #0d101a;
+  --card: rgba(19, 23, 36, 0.82);
+  --card-hover: rgba(28, 34, 52, 0.92);
+  --card-active: rgba(66, 133, 244, 0.16);
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(155, 114, 203, 0.45);
+  --text: #f4f6fb;
+  --sub: #949db8;
+  --muted: #5e6782;
+  --gem-blue: #4285f4;
+  --gem-violet: #9b72cb;
+  --gem-coral: #d96570;
+  --cyan: #38bdf8;
+  --green: #34d399;
+  --amber: #fbbf24;
+  --red: #f87171;
+  --gem-grad: linear-gradient(135deg, #4285f4 0%, #9b72cb 52%, #d96570 100%);
+  --gem-glow: 0 12px 36px -8px rgba(155, 114, 203, 0.35);
 }
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", "Segoe UI", Roboto, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Inter", "Google Sans", "SF Pro Display", "Segoe UI", Roboto, sans-serif;
   -webkit-tap-highlight-color: transparent;
 }
-body {
-  background: radial-gradient(circle at 50% 0%, #161826 0%, #070709 62%);
+
+html, body {
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(circle at 12% 8%, rgba(66, 133, 244, 0.13) 0%, transparent 40%),
+    radial-gradient(circle at 88% 12%, rgba(155, 114, 203, 0.13) 0%, transparent 42%),
+    radial-gradient(circle at 50% 92%, rgba(217, 101, 112, 0.08) 0%, transparent 45%);
+  background-attachment: fixed;
   color: var(--text);
   min-height: 100vh;
-  line-height: 1.4;
+  line-height: 1.45;
   -webkit-font-smoothing: antialiased;
 }
+
+/* ── TOPBAR ── */
 .topbar {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(13, 13, 17, 0.82);
+  background: rgba(6, 7, 12, 0.82);
   backdrop-filter: saturate(180%) blur(20px);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
   border-bottom: 1px solid var(--border);
-  padding: 12px 24px;
 }
+
 .topbar-inner {
-  max-width: 1260px;
+  max-width: 1320px;
   margin: 0 auto;
+  padding: 12px 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
   flex-wrap: wrap;
 }
+
 .brand {
   display: flex;
   align-items: center;
   gap: 12px;
 }
-.brand-badge {
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #ff2d55, #5e5ce6, #0a84ff);
+
+.brand-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  background: var(--gem-grad);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 800;
-  font-size: 13px;
-  letter-spacing: -0.03em;
-  box-shadow: 0 4px 16px rgba(94, 92, 230, 0.45);
+  box-shadow: 0 4px 18px rgba(155, 114, 203, 0.45);
+  flex-shrink: 0;
 }
+
 .brand-title {
-  font-size: 17px;
+  font-size: 16.5px;
   font-weight: 700;
   letter-spacing: -0.02em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
+
+.ver-pill {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(155, 114, 203, 0.18);
+  border: 1px solid rgba(155, 114, 203, 0.4);
+  color: #d8b4fe;
+}
+
 .brand-sub {
   font-size: 12px;
   color: var(--sub);
 }
-.top-actions {
+
+.conn-bar {
   display: flex;
   align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-.ver-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 6px 12px;
-  border-radius: 999px;
-  background: rgba(255,255,255,0.06);
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--border);
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--text);
+  padding: 5px 7px 5px 12px;
+  border-radius: 999px;
 }
-.dot-green {
+
+.status-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--green);
-  box-shadow: 0 0 8px var(--green);
+  background: var(--amber);
+  box-shadow: 0 0 8px var(--amber);
+  flex-shrink: 0;
 }
-.btn {
+.status-dot.online {
+  background: var(--green);
+  box-shadow: 0 0 10px var(--green);
+}
+
+.ip-input {
+  background: transparent;
   border: none;
-  border-radius: 999px;
-  padding: 8px 16px;
+  color: var(--text);
   font-size: 13px;
   font-weight: 600;
+  width: 128px;
+  outline: none;
+  font-variant-numeric: tabular-nums;
+}
+.ip-input::placeholder { color: var(--muted); }
+
+.btn-pill {
+  border: none;
+  background: rgba(255, 255, 255, 0.09);
+  color: var(--text);
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 7px 13px;
+  border-radius: 999px;
   cursor: pointer;
   transition: all 0.16s ease;
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  text-decoration: none;
+  gap: 6px;
+  white-space: nowrap;
 }
-.btn:active { transform: scale(0.96); }
-.btn-primary {
-  background: var(--accent);
-  color: #fff;
-  box-shadow: 0 4px 14px rgba(10, 132, 255, 0.35);
+.btn-pill:hover { background: rgba(255, 255, 255, 0.15); }
+
+.btn-gemini {
+  background: var(--gem-grad);
+  color: #ffffff;
+  box-shadow: 0 4px 16px rgba(66, 133, 244, 0.35);
 }
-.btn-ghost {
-  background: rgba(255,255,255,0.08);
-  color: var(--text);
-  border: 1px solid var(--border);
+.btn-gemini:hover {
+  opacity: 0.94;
+  transform: translateY(-1px);
 }
-.btn-ghost:hover { background: rgba(255,255,255,0.13); }
-.btn-boot {
-  background: linear-gradient(135deg, #ff2d55, #5e5ce6);
-  color: #fff;
-  box-shadow: 0 4px 16px rgba(255, 45, 85, 0.35);
+.btn-gemini:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
 }
 
-.layout-grid {
-  max-width: 1260px;
+/* ── MAIN WORKSPACE GRID ── */
+.studio-shell {
+  max-width: 1320px;
   margin: 0 auto;
   padding: 24px;
   display: grid;
-  grid-template-columns: 440px 1fr;
-  gap: 24px;
+  grid-template-columns: 410px 1fr;
+  gap: 28px;
   align-items: start;
 }
+
 @media (max-width: 980px) {
-  .layout-grid {
+  .studio-shell {
     grid-template-columns: 1fr;
-    padding: 16px;
   }
 }
 
-.panel {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  padding: 20px;
-  box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-}
-.sticky-stage {
+/* ── LEFT COLUMN: STICKY 64×64 MATRIX SIMULATOR ── */
+.sim-panel {
   position: sticky;
   top: 76px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 20px;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
-}
-@media (max-width: 980px) {
-  .sticky-stage { position: static; }
+  gap: 14px;
 }
 
-.matrix-frame {
-  background: #040406;
-  padding: 14px;
-  border-radius: 22px;
-  border: 1.5px solid #272730;
-  box-shadow: 0 24px 60px rgba(0,0,0,0.85), inset 0 0 0 1px rgba(255,255,255,0.05);
-  position: relative;
+@media (max-width: 980px) {
+  .sim-panel { position: static; }
 }
-#led_canvas {
-  width: 360px;
-  height: 360px;
-  max-width: calc(100vw - 76px);
-  max-height: calc(100vw - 76px);
-  display: block;
-  border-radius: 8px;
-}
-.stage-meta {
+
+.sim-header {
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 12.5px;
-  color: var(--sub);
-  padding: 0 4px;
-}
-.stage-btns {
-  width: 100%;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-.stage-btns .btn {
-  justify-content: center;
-  padding: 11px 12px;
-  border-radius: 12px;
+  gap: 8px;
 }
 
-.sec-title {
-  font-size: 12px;
+.sim-tag {
+  font-size: 11.5px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
+  color: #c4b5fd;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sim-mode-toggle {
+  display: flex;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 2px;
+}
+
+.sim-mode-btn {
+  border: none;
+  background: transparent;
   color: var(--sub);
-  margin-bottom: 10px;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.sim-mode-btn.active {
+  background: var(--gem-grad);
+  color: #fff;
+}
+
+.matrix-frame {
+  padding: 14px;
+  border-radius: 20px;
+  background: linear-gradient(145deg, #12141d, #07080d);
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  box-shadow:
+    inset 0 2px 8px rgba(255,255,255,0.05),
+    0 16px 40px rgba(0,0,0,0.75);
+  position: relative;
+}
+
+#led_canvas {
+  width: 320px;
+  height: 320px;
+  display: block;
+  border-radius: 8px;
+  background: #040508;
+  image-rendering: pixelated;
+}
+
+@media (max-width: 420px) {
+  #led_canvas {
+    width: 268px;
+    height: 268px;
+  }
+}
+
+.sim-badges {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.sim-stat {
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 8px 11px;
+  min-width: 0;
+}
+
+.sim-stat-lbl {
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--sub);
+}
+
+.sim-stat-val {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 1px;
+}
+
+.sim-quick-toggles {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.quick-toggle-btn {
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--sub);
+  border-radius: 12px;
+  padding: 9px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  transition: all 0.15s ease;
 }
-.control-block {
-  margin-bottom: 22px;
+.quick-toggle-btn.active {
+  background: rgba(66, 133, 244, 0.16);
+  border-color: rgba(66, 133, 244, 0.55);
+  color: #fff;
 }
-.control-block:last-child { margin-bottom: 0; }
 
-.seg {
+.apply-main-btn {
+  width: 100%;
+  border: none;
+  border-radius: 14px;
+  padding: 13px 16px;
+  font-size: 14px;
+  font-weight: 700;
+  background: var(--gem-grad);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: var(--gem-glow);
+  transition: all 0.18s ease;
   display: flex;
-  background: var(--card-elev);
-  padding: 3px;
-  border-radius: 11px;
-  gap: 3px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
-.seg-btn {
+.apply-main-btn:hover { opacity: 0.95; transform: translateY(-1px); }
+
+.toast-msg {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--green);
+  min-height: 17px;
+  text-align: center;
+}
+
+/* ── RIGHT COLUMN: TABBED STUDIO WORKSPACE ── */
+.workspace-col {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+}
+
+.main-tabs {
+  display: flex;
+  gap: 8px;
+  background: rgba(15, 18, 29, 0.88);
+  border: 1px solid var(--border);
+  padding: 6px;
+  border-radius: 18px;
+  overflow-x: auto;
+}
+
+.main-tab-btn {
   flex: 1;
+  min-width: 125px;
   border: none;
   background: transparent;
   color: var(--sub);
   font-size: 13px;
   font-weight: 600;
-  padding: 8px 10px;
-  border-radius: 8px;
+  padding: 10px 14px;
+  border-radius: 13px;
+  cursor: pointer;
+  transition: all 0.16s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  white-space: nowrap;
+}
+.main-tab-btn:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.04);
+}
+.main-tab-btn.active {
+  background: var(--gem-grad);
+  color: #ffffff;
+  box-shadow: 0 4px 16px rgba(155, 114, 203, 0.35);
+}
+
+.tab-count {
+  font-size: 11px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.28);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.tab-pane {
+  display: none;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 24px;
+  backdrop-filter: blur(20px);
+  animation: fadeIn 0.2s ease;
+}
+.tab-pane.active {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.pane-hdr {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+
+.pane-title {
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.pane-sub {
+  font-size: 13px;
+  color: var(--sub);
+  margin-top: 2px;
+}
+
+.sub-filter-bar {
+  display: flex;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--border);
+  padding: 4px;
+  border-radius: 12px;
+}
+
+.sub-filter-btn {
+  border: none;
+  background: transparent;
+  color: var(--sub);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 9px;
   cursor: pointer;
   transition: all 0.15s ease;
 }
-.seg-btn.active {
-  background: #3a3a44;
+.sub-filter-btn.active {
+  background: rgba(255, 255, 255, 0.12);
   color: #fff;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.35);
-}
-.seg-btn:disabled {
-  opacity: 0.3;
-  cursor: default;
 }
 
-.chips-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-  margin-top: 10px;
-}
-@media (max-width: 560px) {
-  .chips-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
-.chip {
-  background: var(--card-elev);
-  border: 1.5px solid transparent;
-  border-radius: 11px;
-  padding: 10px 10px;
-  color: var(--text);
-  font-size: 12.5px;
-  font-weight: 600;
-  cursor: pointer;
-  text-align: left;
-  transition: all 0.14s ease;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.chip span.c-sub {
-  font-size: 11px;
-  color: var(--sub);
-  font-weight: 400;
-}
-.chip:hover { background: #262630; }
-.chip.active {
-  border-color: var(--accent);
-  background: rgba(10, 132, 255, 0.14);
-}
-
-.toggles-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-top: 10px;
-}
-.toggle-card {
-  background: var(--card-elev);
-  border-radius: 12px;
-  padding: 11px 14px;
+/* ── FEATURED GEMINI BANNER ── */
+.gemini-banner {
+  background: linear-gradient(135deg, rgba(66,133,244,0.16) 0%, rgba(155,114,203,0.16) 52%, rgba(217,101,112,0.16) 100%);
+  border: 1px solid rgba(155, 114, 203, 0.42);
+  border-radius: 18px;
+  padding: 16px 18px;
+  margin-bottom: 18px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 13.5px;
-  font-weight: 500;
+  gap: 16px;
+  flex-wrap: wrap;
 }
-.switch {
-  position: relative;
-  width: 44px;
-  height: 26px;
-  display: inline-block;
+
+.gemini-banner-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
 }
-.switch input { opacity: 0; width: 0; height: 0; }
-.trk {
-  position: absolute;
-  inset: 0;
-  background: #393942;
-  border-radius: 26px;
+
+.gemini-sparkle-box {
+  width: 42px;
+  height: 42px;
+  border-radius: 13px;
+  background: var(--gem-grad);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+  box-shadow: 0 6px 20px rgba(155, 114, 203, 0.4);
+}
+
+.gemini-banner-title {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.gemini-banner-desc {
+  font-size: 12.5px;
+  color: #cbd5e1;
+  margin-top: 2px;
+}
+
+/* ── CARDS GRID (LAYOUTS, ANIMATIONS, BOOT) ── */
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(235px, 1fr));
+  gap: 12px;
+}
+
+.item-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 14px;
   cursor: pointer;
-  transition: 0.2s;
+  transition: all 0.16s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 10px;
+  position: relative;
 }
-.trk::before {
-  content: "";
-  position: absolute;
-  width: 22px;
-  height: 22px;
-  left: 2px;
-  bottom: 2px;
-  background: #fff;
-  border-radius: 50%;
-  transition: 0.2s;
+.item-card:hover {
+  background: var(--card-hover);
+  border-color: rgba(255, 255, 255, 0.18);
+  transform: translateY(-1px);
 }
-.switch input:checked + .trk { background: var(--green); }
-.switch input:checked + .trk::before { transform: translateX(18px); }
+.item-card.active {
+  background: var(--card-active);
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 1px rgba(96, 165, 250, 0.4), 0 10px 25px -6px rgba(66, 133, 244, 0.3);
+}
+.item-card.gemini-special {
+  border-color: rgba(155, 114, 203, 0.45);
+  background: linear-gradient(135deg, rgba(66,133,244,0.09), rgba(155,114,203,0.09), rgba(217,101,112,0.09));
+}
+.item-card.gemini-special.active {
+  border-color: #c084fc;
+  box-shadow: 0 0 0 1px rgba(192, 132, 252, 0.5), 0 10px 26px -6px rgba(155, 114, 203, 0.45);
+}
+
+.item-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.item-num {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--sub);
+}
+.item-card.active .item-num {
+  background: var(--gem-grad);
+  color: #fff;
+}
+
+.ori-badge {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 7px;
+  border-radius: 6px;
+}
+.ori-h { background: rgba(56, 189, 248, 0.14); color: #38bdf8; }
+.ori-v { background: rgba(168, 85, 247, 0.16); color: #c084fc; }
+
+.item-title {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--text);
+  margin-top: 2px;
+}
+
+.item-desc {
+  font-size: 12px;
+  color: var(--sub);
+  line-height: 1.4;
+}
+
+.item-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.meta-chip {
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #cbd5e1;
+}
+
+/* ── PALETTE SWATCH GRID ── */
+.palette-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 18px;
+  align-items: center;
+  justify-content: space-between;
+}
 
 .swatch-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
-  margin-top: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
 }
-@media (max-width: 560px) {
-  .swatch-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-}
-.sw-item {
-  background: var(--card-elev);
-  border: 1.5px solid transparent;
-  border-radius: 12px;
-  padding: 10px 6px 8px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
+
+.swatch-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 10px 12px;
   cursor: pointer;
-  transition: all 0.14s ease;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.15s ease;
 }
-.sw-item:hover { background: #262630; }
-.sw-item.active {
-  border-color: var(--accent);
-  background: rgba(10, 132, 255, 0.14);
+.swatch-card:hover {
+  background: var(--card-hover);
+  transform: translateY(-1px);
 }
-.sw-dot {
+.swatch-card.active {
+  background: var(--card-active);
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 1px rgba(96, 165, 250, 0.4);
+}
+
+.swatch-circle {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.22), 0 3px 8px rgba(0,0,0,0.4);
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
-.sw-name {
-  font-size: 11.5px;
-  font-weight: 500;
-  text-align: center;
+
+.swatch-name {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  width: 100%;
 }
 
-.lan-bar {
+.bright-box {
+  margin-top: 20px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 14px 18px;
   display: flex;
-  gap: 8px;
+  align-items: center;
+  gap: 14px;
+}
+
+.bright-box input[type=range] {
+  flex: 1;
+  accent-color: #9b72cb;
+  cursor: pointer;
+}
+
+/* ── LAN SCANNER & SETTINGS ── */
+.scanner-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 18px;
+  margin-bottom: 18px;
+}
+
+.scanner-controls {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
   flex-wrap: wrap;
 }
-.lan-input {
-  flex: 1;
-  min-width: 160px;
-  background: var(--card-elev);
+
+.studio-input, .studio-select {
+  background: rgba(0, 0, 0, 0.4);
   border: 1px solid var(--border);
-  border-radius: 11px;
-  padding: 10px 14px;
   color: var(--text);
-  font-size: 14px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 13.5px;
   outline: none;
 }
-.lan-input:focus { border-color: var(--accent); }
-.lan-status {
-  font-size: 12.5px;
-  margin-top: 8px;
-  color: var(--sub);
+.studio-input:focus, .studio-select:focus {
+  border-color: #9b72cb;
 }
 
-.ota-list {
+.scan-progress-wrap {
+  margin-top: 12px;
+  display: none;
+}
+.scan-progress-bar {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-top: 6px;
+}
+.scan-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--gem-grad);
+  transition: width 0.15s ease;
+}
+
+.found-clocks-list {
+  margin-top: 14px;
   display: flex;
   flex-direction: column;
-  gap: 7px;
-  margin-top: 10px;
-  max-height: 190px;
-  overflow-y: auto;
-}
-.ota-item {
-  font-size: 13px;
-  color: #d8d8e2;
-  display: flex;
   gap: 8px;
-  align-items: flex-start;
 }
-.ota-item::before {
-  content: "•";
-  color: var(--accent);
-  font-weight: bold;
+
+.found-clock-item {
+  background: rgba(52, 211, 153, 0.08);
+  border: 1px solid rgba(52, 211, 153, 0.35);
+  border-radius: 14px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+@media (max-width: 640px) {
+  .form-grid { grid-template-columns: 1fr; }
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.form-field label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--sub);
 }
 </style>
 </head>
 <body>
 
+<!-- ── TOP NAVIGATION BAR ── -->
 <header class="topbar">
   <div class="topbar-inner">
     <div class="brand">
-      <div class="brand-badge">64²</div>
+      <div class="brand-icon">✨</div>
       <div>
-        <div class="brand-title">ESP32 LED Matrix 64×64 Studio</div>
-        <div class="brand-sub">Simulador Interactivo 60 FPS · 18 Layouts · 20 Efectos · 40 Paletas · Centro OTA</div>
+        <div class="brand-title">
+          ESP32 Matrix Clock Studio
+          <span class="ver-pill" id="top_ver">v1.0.16</span>
+        </div>
+        <div class="brand-sub">Panel LED HUB75 64×64 · Motor Zero-Flicker 60 FPS &amp; Gemini UI</div>
       </div>
     </div>
-    <div class="top-actions">
-      <div class="ver-pill"><span class="dot-green"></span><span id="ota_ver_badge">Cargando versión...</span></div>
-      <a class="btn btn-primary" id="dl_fw_btn" href="./firmware.bin" download="firmware.bin">Descargar firmware.bin</a>
+
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <div class="conn-bar">
+        <span class="status-dot" id="conn_dot"></span>
+        <input type="text" class="ip-input" id="clock_ip" placeholder="IP: 192.168.1.XX" value="">
+        <button type="button" class="btn-pill" onclick="connectToClock()">Conectar</button>
+        <button type="button" class="btn-pill" onclick="switchMainTab('net')" title="Buscar relojes en mi red Wi-Fi">🔍 Buscar IP</button>
+      </div>
+      <button type="button" class="btn-pill btn-gemini" id="top_save_btn" onclick="pushConfigToClock()">
+        ⚡ Aplicar al Reloj
+      </button>
     </div>
   </div>
 </header>
 
-<main class="layout-grid">
-  <!-- COLUMNA IZQUIERDA: MATRIZ LED 64x64 EN TIEMPO REAL -->
-  <section class="panel sticky-stage">
-    <div class="stage-meta">
-      <span id="stage_lbl">Clásico · Minimal · Esferas Orbitales</span>
-      <span id="fps_lbl">60 FPS</span>
+<!-- ── MAIN TWO-COLUMN STUDIO ── -->
+<div class="studio-shell">
+
+  <!-- LEFT STICKY COLUMN: 64×64 REALTIME PIXEL-ACCURATE SIMULATOR -->
+  <aside class="sim-panel">
+    <div class="sim-header">
+      <div class="sim-tag">
+        <span>●</span> SIMULADOR 1:1 (64×64 PX)
+      </div>
+      <div class="sim-mode-toggle">
+        <button type="button" class="sim-mode-btn active" id="sim_btn_live" onclick="setSimMode('live')">Reloj + Clima</button>
+        <button type="button" class="sim-mode-btn" id="sim_btn_boot" onclick="setSimMode('boot')">🚀 Arranque</button>
+      </div>
     </div>
+
     <div class="matrix-frame">
-      <canvas id="led_canvas" width="384" height="384"></canvas>
-    </div>
-    <div class="stage-btns">
-      <button type="button" class="btn btn-boot" onclick="triggerBootPreview()">⚡ Animación de Inicio</button>
-      <button type="button" class="btn btn-ghost" onclick="randomizeShowcase()">🎲 Combinación Aleatoria</button>
+      <canvas id="led_canvas" width="256" height="256"></canvas>
     </div>
 
-    <!-- PUENTE LAN DIRECTO AL RELOJ FÍSICO -->
-    <div style="width:100%;border-top:1px solid var(--border);padding-top:14px;margin-top:4px;">
-      <div class="sec-title">
-        <span>Sincronización en Red Local (LAN)</span>
-        <span style="font-size:11px;text-transform:none;font-weight:400;">CORS Directo</span>
+    <div class="sim-badges">
+      <div class="sim-stat">
+        <div class="sim-stat-lbl">Diseño Activo</div>
+        <div class="sim-stat-val" id="stat_layout">02 · Gemini AI Studio (H)</div>
       </div>
-      <div class="lan-bar">
-        <input type="text" class="lan-input" id="esp_ip" placeholder="IP del reloj (ej. 192.168.1.75)">
-        <button type="button" class="btn btn-ghost" onclick="pullFromClock()">Leer</button>
-        <button type="button" class="btn btn-primary" onclick="pushToClock()">Enviar al Reloj</button>
+      <div class="sim-stat">
+        <div class="sim-stat-lbl">Efecto de Fondo</div>
+        <div class="sim-stat-val" id="stat_anim">✨ Gemini AI Aurora</div>
       </div>
-      <div class="lan-status" id="lan_st">Ingresa la IP local de tu ESP32 para leer o enviar el diseño actual en vivo.</div>
-    </div>
-
-    <!-- CENTRO OTA -->
-    <div style="width:100%;border-top:1px solid var(--border);padding-top:14px;">
-      <div class="sec-title">
-        <span>Último Release OTA</span>
-        <span id="ota_date_lbl" style="font-size:11px;text-transform:none;font-weight:400;"></span>
+      <div class="sim-stat">
+        <div class="sim-stat-lbl">Paleta Activa</div>
+        <div class="sim-stat-val" id="stat_grad">✨ Gemini AI Oficial</div>
       </div>
-      <div class="ota-list" id="ota_changelog">
-        <div class="ota-item">Consultando version.json del repositorio...</div>
+      <div class="sim-stat">
+        <div class="sim-stat-lbl">Animación Inicio</div>
+        <div class="sim-stat-val" id="stat_boot">1 · Destello Gemini AI</div>
       </div>
     </div>
-  </section>
 
-  <!-- COLUMNA DERECHA: ESTUDIO DE PERSONALIZACIÓN -->
-  <section class="panel">
-    <!-- 1. LAYOUTS (18 PROPUESTAS) -->
-    <div class="control-block">
-      <div class="sec-title">
-        <span>1. Orientación y Estilo de Interfaz (18 Layouts)</span>
-        <span id="cur_lay_badge" style="color:var(--accent)">Layout #0</span>
-      </div>
-      <div class="seg">
-        <button type="button" class="seg-btn active" id="ori_h" onclick="setOrientation(0)">Horizontal (9 Estilos)</button>
-        <button type="button" class="seg-btn" id="ori_v" onclick="setOrientation(1)">Vertical (9 Estilos)</button>
-      </div>
-      <div class="chips-grid" id="layouts_grid"></div>
+    <div class="sim-quick-toggles">
+      <button type="button" class="quick-toggle-btn" id="qt_fullscreen" onclick="toggleFullscreen()">
+        <span>Pantalla Completa</span>
+        <span id="qt_full_lbl">OFF</span>
+      </button>
+      <button type="button" class="quick-toggle-btn active" id="qt_frost" onclick="toggleFrost()">
+        <span>Cristal Frosted</span>
+        <span id="qt_frost_lbl">ON</span>
+      </button>
     </div>
 
-    <!-- 2. EFECTOS DE FONDO (16 ANIMADOS + 4 ESTÁTICOS = 20) -->
-    <div class="control-block">
-      <div class="sec-title">
-        <span>2. Motor de Fondo (16 Animados + 4 Estáticos)</span>
-        <span id="cur_anim_badge" style="color:var(--accent)">Efecto #0</span>
-      </div>
-      <div class="chips-grid" id="anims_grid"></div>
-      <div class="toggles-row">
-        <div class="toggle-card">
-          <span>Pantalla Completa</span>
-          <label class="switch">
-            <input type="checkbox" id="full_chk" onchange="state.fullScreen=this.checked?1:0;syncUI()">
-            <span class="trk"></span>
-          </label>
+    <button type="button" class="apply-main-btn" onclick="pushConfigToClock()">
+      <span>⚡ Sincronizar Cambios con mi Reloj</span>
+    </button>
+    <div class="toast-msg" id="toast_box"></div>
+  </aside>
+
+  <!-- RIGHT WORKSPACE COLUMN: 5 CLEAN, UNCLUTTERED TABS -->
+  <section class="workspace-col">
+
+    <!-- NAVIGATION TABS -->
+    <nav class="main-tabs">
+      <button type="button" class="main-tab-btn active" id="mtab_layouts" onclick="switchMainTab('layouts')">
+        ✨ Diseños <span class="tab-count">20</span>
+      </button>
+      <button type="button" class="main-tab-btn" id="mtab_anims" onclick="switchMainTab('anims')">
+        🌊 Fondos <span class="tab-count">21</span>
+      </button>
+      <button type="button" class="main-tab-btn" id="mtab_colors" onclick="switchMainTab('colors')">
+        🎨 Colores <span class="tab-count">41</span>
+      </button>
+      <button type="button" class="main-tab-btn" id="mtab_boot" onclick="switchMainTab('boot')">
+        🚀 Inicio <span class="tab-count">10</span>
+      </button>
+      <button type="button" class="main-tab-btn" id="mtab_net" onclick="switchMainTab('net')">
+        📡 Buscar IP, Clima &amp; OTA
+      </button>
+    </nav>
+
+    <!-- ── TAB 1: 20 LAYOUTS DE RELOJ + TEMPERATURA + SEGUNDERO ── -->
+    <div class="tab-pane active" id="pane_layouts">
+      <div class="pane-hdr">
+        <div>
+          <div class="pane-title">20 Diseños Profesionales de Reloj y Clima</div>
+          <div class="pane-sub">10 Horizontales y 10 Verticales auditados pixel por pixel (con micro-fuente 3×5 sin traslapes, segunderos únicos y clima rediseñado).</div>
         </div>
-        <div class="toggle-card">
-          <span>Efecto Frosted (Cristal)</span>
-          <label class="switch">
-            <input type="checkbox" id="frost_chk" checked onchange="state.frostClk=this.checked?1:0;syncUI()">
-            <span class="trk"></span>
-          </label>
-        </div>
-      </div>
-    </div>
-
-    <!-- 3. PALETAS DE COLOR (40 DEGRADADOS + 2 SÓLIDOS) -->
-    <div class="control-block">
-      <div class="sec-title">
-        <span>3. Paletas de Color (40 Degradados + 2 Sólidos)</span>
-        <span id="cur_pal_badge" style="color:var(--accent)">Cálido</span>
-      </div>
-      <div id="mod_tabs_box" style="margin-bottom:10px;">
-        <div class="seg">
-          <button type="button" class="seg-btn active" id="tab_clk" onclick="setTab('clock')">Módulo Reloj</button>
-          <button type="button" class="seg-btn" id="tab_wx" onclick="setTab('weather')">Módulo Clima</button>
+        <div class="sub-filter-bar">
+          <button type="button" class="sub-filter-btn active" id="lfilt_all" onclick="setLayoutFilter('all')">Todos (20)</button>
+          <button type="button" class="sub-filter-btn" id="lfilt_h" onclick="setLayoutFilter('h')">Horizontales (10)</button>
+          <button type="button" class="sub-filter-btn" id="lfilt_v" onclick="setLayoutFilter('v')">Verticales (10)</button>
         </div>
       </div>
-      <div class="seg">
-        <button type="button" class="seg-btn" id="cat_solid" onclick="setCat('solid')">Sólido (2)</button>
-        <button type="button" class="seg-btn" id="cat_mono" onclick="setCat('mono')">Único (13)</button>
-        <button type="button" class="seg-btn active" id="cat_dual" onclick="setCat('dual')">Doble (18)</button>
-        <button type="button" class="seg-btn" id="cat_triple" onclick="setCat('triple')">Triple (9)</button>
+
+      <div class="gemini-banner">
+        <div class="gemini-banner-left">
+          <div class="gemini-sparkle-box">✦</div>
+          <div>
+            <div class="gemini-banner-title">Colección Especial Google Gemini AI UX</div>
+            <div class="gemini-banner-desc">Prueba el combinación insignia: Diseño <b>Gemini AI Studio</b> + Fondo <b>Gemini AI Aurora</b> + Paleta <b>Gemini AI Oficial</b>.</div>
+          </div>
+        </div>
+        <button type="button" class="btn-pill btn-gemini" onclick="applyGeminiPreset()">
+          ✨ Activar Combo Gemini AI
+        </button>
       </div>
+
+      <div class="cards-grid" id="layouts_grid"></div>
+    </div>
+
+    <!-- ── TAB 2: 21 EFECTOS DE FONDO ── -->
+    <div class="tab-pane" id="pane_anims">
+      <div class="pane-hdr">
+        <div>
+          <div class="pane-title">21 Efectos de Fondo (60 FPS &amp; Estáticos Arquitectónicos)</div>
+          <div class="pane-sub">Incluye el nuevo modo <b>Gemini AI Aurora</b> con fondo oscuro obsidiana y ondas luminosas iridiscentes.</div>
+        </div>
+      </div>
+
+      <div class="cards-grid" id="anims_grid"></div>
+    </div>
+
+    <!-- ── TAB 3: 41 PALETAS DE COLOR ── -->
+    <div class="tab-pane" id="pane_colors">
+      <div class="pane-hdr">
+        <div>
+          <div class="pane-title">41 Paletas de Color &amp; Contraste Independiente</div>
+          <div class="pane-sub">Configura el color del clima/fondo completo y, en modo dividido, personaliza también el fondo del reloj.</div>
+        </div>
+        <div class="sub-filter-bar" id="color_target_bar">
+          <button type="button" class="sub-filter-btn active" id="ctarg_wx" onclick="setColorTarget('weather')">Fondo Principal / Clima</button>
+          <button type="button" class="sub-filter-btn" id="ctarg_clk" onclick="setColorTarget('clock')">Tarjeta del Reloj</button>
+        </div>
+      </div>
+
+      <div class="palette-controls">
+        <div class="sub-filter-bar">
+          <button type="button" class="sub-filter-btn active" id="ccat_all" onclick="setColorCat('all')">Todas (41)</button>
+          <button type="button" class="sub-filter-btn" id="ccat_triple" onclick="setColorCat('triple')">Triples (10)</button>
+          <button type="button" class="sub-filter-btn" id="ccat_dual" onclick="setColorCat('dual')">Duales (18)</button>
+          <button type="button" class="sub-filter-btn" id="ccat_mono" onclick="setColorCat('mono')">Monocromos (13)</button>
+          <button type="button" class="sub-filter-btn" id="ccat_solid" onclick="setColorCat('solid')">Sólidos Reloj (2)</button>
+        </div>
+      </div>
+
       <div class="swatch-grid" id="swatches_grid"></div>
+
+      <div class="bright-box">
+        <span style="font-size:13px;font-weight:700;color:var(--sub)">☀️ Brillo del Panel LED</span>
+        <input type="range" id="bright_slider" min="5" max="255" value="90" oninput="$('bright_val').textContent=Math.round(this.value/2.55)+'%'">
+        <span id="bright_val" style="font-size:13.5px;font-weight:700;min-width:42px;text-align:right">35%</span>
+      </div>
     </div>
+
+    <!-- ── TAB 4: 10 ANIMACIONES DE INICIO SEAMLESS ── -->
+    <div class="tab-pane" id="pane_boot">
+      <div class="pane-hdr">
+        <div>
+          <div class="pane-title">10 Animaciones de Inicio Profesionales (100% Seamless)</div>
+          <div class="pane-sub">Todas respetan tu paleta de colores activa y aterrizan matemáticamente en el efecto de fondo elegido sin cortes ni parpadeos.</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button type="button" class="btn-pill btn-gemini" onclick="setSimMode('boot')">
+            ▶ Repetir en Simulador 64×64
+          </button>
+          <button type="button" class="btn-pill" onclick="previewBootOnHardware()">
+            ⚡ Probar Ahora en mi Reloj Físico
+          </button>
+        </div>
+      </div>
+
+      <div class="cards-grid" id="boot_grid"></div>
+    </div>
+
+    <!-- ── TAB 5: BUSCADOR DE RELOJES (LAN IP SCANNER), CLIMA Y OTA ── -->
+    <div class="tab-pane" id="pane_net">
+      <div class="pane-hdr">
+        <div>
+          <div class="pane-title">Buscador de Relojes en Red Local, Clima &amp; Actualización OTA</div>
+          <div class="pane-sub">Encuentra automáticamente la dirección IP de tu reloj ESP32 en tu red Wi-Fi, configura tu ciudad o actualiza el firmware.</div>
+        </div>
+      </div>
+
+      <!-- LAN IP SCANNER -->
+      <div class="scanner-card">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+          <div>
+            <div style="font-size:15.5px;font-weight:700">🔍 Buscador Automático de Relojes (Escáner LAN)</div>
+            <div style="font-size:12.5px;color:var(--sub);margin-top:2px">
+              Escanea las 254 direcciones de tu subred local buscando relojes ESP32 activos que respondan en <code>/config</code>.
+            </div>
+          </div>
+        </div>
+
+        <div class="scanner-controls">
+          <input type="text" class="studio-input" id="scan_subnet" value="192.168.1" placeholder="Prefijo (ej. 192.168.1)" style="width:170px">
+          <button type="button" class="btn-pill" onclick="$('scan_subnet').value='192.168.1'">192.168.1.x</button>
+          <button type="button" class="btn-pill" onclick="$('scan_subnet').value='192.168.0'">192.168.0.x</button>
+          <button type="button" class="btn-pill" onclick="$('scan_subnet').value='192.168.100'">192.168.100.x</button>
+          <button type="button" class="btn-pill btn-gemini" id="btn_start_scan" onclick="scanLocalNetwork()">
+            🚀 Iniciar Búsqueda de Relojes
+          </button>
+        </div>
+
+        <div class="scan-progress-wrap" id="scan_prog_wrap">
+          <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--sub)">
+            <span id="scan_prog_lbl">Escaneando subred...</span>
+            <span id="scan_prog_pct">0%</span>
+          </div>
+          <div class="scan-progress-bar">
+            <div class="scan-progress-fill" id="scan_prog_fill"></div>
+          </div>
+        </div>
+
+        <div class="found-clocks-list" id="found_clocks"></div>
+      </div>
+
+      <!-- WEATHER & TIMEZONE -->
+      <div class="scanner-card">
+        <div style="font-size:15.5px;font-weight:700;margin-bottom:12px">🌤️ Ciudad del Clima y Zona Horaria</div>
+        <div class="form-grid">
+          <div class="form-field">
+            <label>Ciudad (OpenWeatherMap)</label>
+            <input type="text" class="studio-input" id="city_in" placeholder="Ej. Morelia, MX">
+          </div>
+          <div class="form-field">
+            <label>Zona Horaria (NTP)</label>
+            <select class="studio-select" id="tz_sel">
+              <option value="-28800">UTC-8 · Tijuana / Los Ángeles</option>
+              <option value="-25200">UTC-7 · Chihuahua / Mazatlán</option>
+              <option value="-21600" selected>UTC-6 · CDMX / Morelia / Guadalajara</option>
+              <option value="-18000">UTC-5 · Cancún / Bogotá / Nueva York</option>
+              <option value="-14400">UTC-4 · Santiago / La Paz</option>
+              <option value="-10800">UTC-3 · Buenos Aires / São Paulo</option>
+              <option value="0">UTC+0 · Londres / Lisboa</option>
+              <option value="3600">UTC+1 · Madrid / París / Berlín</option>
+              <option value="32400">UTC+9 · Tokio / Seúl</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- CLOUD OTA & HARDWARE ACTIONS -->
+      <div class="scanner-card">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+          <div>
+            <div style="font-size:15.5px;font-weight:700" id="ota_ver_title">☁️ Firmware Cloud OTA · v1.0.16</div>
+            <div style="font-size:12.5px;color:var(--sub);margin-top:2px" id="ota_ver_sub">
+              Instala la última compilación directamente desde GitHub Releases sin conectar cables.
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button type="button" class="btn-pill btn-gemini" onclick="triggerClockOta()">
+              ⬇️ Instalar Firmware OTA en mi Reloj
+            </button>
+            <button type="button" class="btn-pill" onclick="rebootClockRemote()">
+              🔄 Reiniciar Reloj
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </section>
-</main>
+</div>
 
 <script>
 function $(id){ return document.getElementById(id); }
 
+// ── GLOBAL STUDIO STATE ──
 var state = {
   fullScreen: 0,
-  layout: 2,
-  grad: 24,
-  clockBg: 26, // grad 24 + 2
-  animMode: 0,
+  layout: 2,      // Default showcase: Gemini AI Studio (H)
+  animMode: 20,   // Default showcase: Gemini AI Aurora (Ondas Oscuras)
+  grad: 40,       // Default showcase: Gemini AI Oficial
+  clockBg: 1,     // Negro Obsidiana
   frostClk: 1,
-  activeTab: 'clock',
-  activeCat: 'triple',
-  bootStartMs: -1
+  bootMode: 1,    // Destello Gemini AI
+  brightness: 90,
+  tz: -21600,
+  city: 'Morelia, MX',
+  layoutFilter: 'all',
+  colorTarget: 'weather',
+  colorCat: 'all',
+  simMode: 'live',
+  bootSimStart: 0,
+  connectedIp: localStorage.getItem('esp32_clock_ip') || ''
 };
 
-var LAYOUTS_H = [
-  { id: 0, name: 'Clásico Minimal',    desc: 'Equilibrio original 64×64' },
-  { id: 2, name: 'Bento Watch',        desc: 'Cápsulas Apple Watch Ultra' },
-  { id: 3, name: 'Nothing Dot-Matrix', desc: 'Tipografía perforada LED' },
-  { id: 4, name: 'Swiss Chrono',       desc: 'Escala taquimétrica + seg' },
-  { id: 5, name: 'Editorial Panorama', desc: 'Hora izquierda + columna' },
-  { id: 6, name: 'Cyber HUD',          desc: 'Retícula y telemetría neón' },
-  { id: 7, name: 'Flip Studio',        desc: 'Tarjetas mecánicas divididas' },
-  { id: 8, name: 'Zen Minimal',        desc: 'Aire limpio y horizonte' },
-  { id: 9, name: 'Dual Pill',          desc: 'Cápsulas flotantes suaves' }
+if(state.connectedIp) $('clock_ip').value = state.connectedIp;
+
+// ── CATÁLOGO DE 20 DISEÑOS DE RELOJ + TEMPERATURA + SEGUNDERO ──
+var LAYOUTS = [
+  { id:0,  ori:'h', name:'01 · Clásico Original (H)',       font:'Classic 8×12',  sec:'Barra Cyan',     wx:'Hero Izq + 3 Columnas', desc:'El diseño original perfeccionado con fecha centrada, barra de segundos inferior y 3 columnas limpias de pronóstico.' },
+  { id:2,  ori:'h', name:'02 · ✨ Gemini AI Studio (H)',     font:'Bento Bold',    sec:'Cápsula + Onda', wx:'Sparkle + 3 Chips IA',  desc:'Inspirado en Google Gemini: estrella de 4 puntas, onda tricolor iridiscente y 3 chips horizontales de pronóstico.', gemini:true },
+  { id:3,  ori:'h', name:'03 · Bento Watch Ultra (H)',      font:'Bento Bold',    sec:'Píldora :SS',    wx:'Hero + 3 Barras Térmicas', desc:'Tres cápsulas superiores (Día, Fecha, Segundos) y tarjeta de clima con barras horizontales de nivel térmico.' },
+  { id:4,  ori:'h', name:'04 · Nothing Dot-Matrix (H)',     font:'Dot-Matrix',    sec:'Marco Rojo :SS', wx:'Telemetría Punteada + Hero', desc:'Estética Nothing OS: matriz perforada, indicador LED rojo parpadeante y 3 líneas punteadas con bloque térmico.' },
+  { id:5,  ori:'h', name:'05 · Swiss Chrono Sparkline (H)', font:'Swiss Tall',    sec:'Dial Analógico', wx:'Curva Sparkline Conectada', desc:'Alta relojería suiza con sub-esfera analógica de manecilla en vivo y gráfica de tendencia térmica conectada.' },
+  { id:6,  ori:'h', name:'06 · Cyber HUD Telemetry (H)',    font:'Cyber Seg',     sec:'Ecualizador 4B', wx:'Header + 3 Celdas HUD', desc:'Interfaz táctica con esquinas angulares, ecualizador animado de 4 barras y 3 celdas HUD inferiores.' },
+  { id:7,  ori:'h', name:'07 · Flip Studio Cards (H)',      font:'Impact Wide',   sec:'3ra Tarjeta SS', wx:'4 Placas Split-Flap',   desc:'Reloj mecánico retro con 3 placas divididas [HH][MM][SS] y tarjetas de clima estilo aeropuerto con bisagra.' },
+  { id:8,  ori:'h', name:'08 · Editorial Panorama (H)',     font:'Swiss Tall',    sec:'Barra en Marco', wx:'3 Cols Izq + Hero Der', desc:'Composición asimétrica de revista: insignia lateral izquierda con barra de progreso y tarjeta hero a la derecha.' },
+  { id:9,  ori:'h', name:'09 · Zen Horizon (H)',            font:'Classic 8×12',  sec:'Orbe Respirante',wx:'Horizonte + 3 Nodos',   desc:'Minimalismo puro con línea de horizonte luminosa, orbe central que respira cada segundo y 3 nodos térmicos.' },
+  { id:10, ori:'h', name:'10 · Dual Pill Glass (H)',        font:'Bento Bold',    sec:'Cápsula Circular',wx:'2 Cápsulas Ancho Total', desc:'Dos grandes cápsulas apiladas de extremo a extremo tanto en el reloj como en el pronóstico meteorológico.' },
+
+  { id:1,  ori:'v', name:'11 · Clásico Columna (V)',        font:'Classic 8×12',  sec:'Barra Vertical', wx:'Hero Sup + 3 Columnas', desc:'Diseño vertical clásico con horas y minutos apilados, barra vertical de segundos y pronóstico inferior.' },
+  { id:11, ori:'v', name:'12 · ✨ Gemini AI Vertical (V)',   font:'Bento Bold',    sec:'Cápsula :SS IA', wx:'Sparkle + 3 Filas IA',  desc:'Edición vertical Gemini AI: estrella luminosa, separador tricolor entre HH y MM, y 3 tarjetas horizontales de clima.', gemini:true },
+  { id:12, ori:'v', name:'13 · Bento Split Pro (V)',        font:'Bento Bold',    sec:'Barra en Píldora',wx:'Hero + 3 Píldoras H',  desc:'Tres módulos redondeados independientes en el reloj y 3 filas horizontales translúcidas en el clima.' },
+  { id:13, ori:'v', name:'14 · Nothing Dot-Matrix (V)',     font:'Dot-Matrix',    sec:'Caja Roja :SS',  wx:'3 Termómetros Punteados',desc:'Dígitos perforados verticales con indicador rojo y 3 columnas con termómetros verticales de puntos.' },
+  { id:14, ori:'v', name:'15 · Swiss Gallery Sparkline (V)',font:'Swiss Tall',    sec:'Ticks + :SS',    wx:'Curva Sparkline Vertical',desc:'Escala graduada lateral, dígitos estilizados y curva de tendencia térmica conectada en la mitad inferior.' },
+  { id:15, ori:'v', name:'16 · Cyber Tower HUD (V)',        font:'Cyber Seg',     sec:'Barra Telemetría',wx:'Marco Neón + Barras H', desc:'Torre cibernética con chasis biselado en cian y barras horizontales de potencia térmica por hora.' },
+  { id:16, ori:'v', name:'17 · Flip Stack Mecánico (V)',    font:'Impact Wide',   sec:'Placa :SS',      wx:'Pares Bipartitos [H][T]',desc:'Placas mecánicas apiladas con ranura negra central y pares de tarjetas [Hora][Temp] estilo marcador.' },
+  { id:17, ori:'v', name:'18 · Brutalist Bold (V)',         font:'Impact Wide',   sec:'Bloque Sólido',  wx:'Cabecera Sólida + Tabla',desc:'Alto contraste arquitectónico con cabecera sólida, bloque grueso divisor y tabla tipográfica de lectura directa.' },
+  { id:18, ori:'v', name:'19 · Chrono Dial Orbital (V)',    font:'Swiss Tall',    sec:'Cometa Orbital', wx:'3 Columnas Termómetro', desc:'Un cometa luminoso recorre el perímetro del reloj durante los 60s, acompañado de 3 barras verticales de nivel.' },
+  { id:19, ori:'v', name:'20 · Zen Pillar Cristal (V)',     font:'Classic 8×12',  sec:'Orbe Central',   wx:'Eje Central + 3 Nodos', desc:'Composición flotante con orbe respirante entre hora y minuto, y árbol vertical de temperaturas.' }
 ];
 
-var LAYOUTS_V = [
-  { id: 1,  name: 'Clásico Columna',    desc: 'Doble columna clásica' },
-  { id: 10, name: 'Bento Split Pro',    desc: '3 celdas modulares de cristal' },
-  { id: 11, name: 'Nothing Dot V',      desc: 'Matriz punteada vertical' },
-  { id: 12, name: 'Swiss Gallery',      desc: 'Regla lateral de precisión' },
-  { id: 13, name: 'Cyber Tower',        desc: 'Torre HUD con barra viva' },
-  { id: 14, name: 'Flip Stack',         desc: 'Tarjetas apiladas HH / MM' },
-  { id: 15, name: 'Brutalist Bold',     desc: 'Dígitos ultra-anchos' },
-  { id: 16, name: 'Chrono Dial',        desc: 'Anillo orbital de segundos' },
-  { id: 17, name: 'Zen Pillar',         desc: 'Pilar minimalista puro' }
-];
-
+// ── CATÁLOGO DE 21 EFECTOS DE FONDO ──
 var ANIMS = [
-  { id: 0,  name: 'Esferas Orbitales', type: 'Animado' },
-  { id: 1,  name: 'Cortina Boreal',    type: 'Animado' },
-  { id: 2,  name: 'Plasma Líquido',    type: 'Animado' },
-  { id: 3,  name: 'Pulso Radial',      type: 'Animado' },
-  { id: 4,  name: 'Espiral Galáctica', type: 'Animado' },
-  { id: 5,  name: 'Prisma Diamante',   type: 'Animado' },
-  { id: 6,  name: 'Horizonte Zen',     type: 'Animado' },
-  { id: 7,  name: 'Campo Cuántico',    type: 'Animado' },
-  { id: 8,  name: 'Respiración Aura',  type: 'Animado' },
-  { id: 9,  name: 'Marea Profunda',    type: 'Animado' },
-  { id: 10, name: 'Caleidoscopio',     type: 'Animado' },
-  { id: 11, name: 'Cintas de Seda',    type: 'Animado' },
-  { id: 12, name: 'Vórtice Hiper',     type: 'Animado' },
-  { id: 13, name: 'Lluvia Estelar',    type: 'Animado' },
-  { id: 14, name: 'Duna Solar',        type: 'Animado' },
-  { id: 15, name: 'Latido Supernova',  type: 'Animado' },
-  { id: 16, name: 'Seda Diagonal',     type: 'Estático' },
-  { id: 17, name: 'Viñeta Estudio',    type: 'Estático' },
-  { id: 18, name: 'Horizonte Puro',    type: 'Estático' },
-  { id: 19, name: 'Prisma Central',    type: 'Estático' }
+  { id:20, name:'20 · ✨ Gemini AI Aurora (Ondas Oscuras)', type:'Gemini IA', desc:'Fondo obsidiana profundo (#04050B) con 3 cintas aurora suaves que cambian de color al estilo de la interfaz de Google Gemini.', gemini:true },
+  { id:0,  name:'00 · Esferas Orbitales',    type:'60 FPS', desc:'Dos esferas de luz independientes orbitando suavemente con mezcla dual.' },
+  { id:1,  name:'01 · Cortina Boreal',       type:'60 FPS', desc:'Ondas sinusoidales cruzadas que imitan una aurora boreal en movimiento.' },
+  { id:2,  name:'02 · Plasma Líquido',       type:'60 FPS', desc:'Campo de interferencia orgánica suave y envolvente.' },
+  { id:3,  name:'03 · Pulso Radial',         type:'60 FPS', desc:'Anillos concéntricos que emergen desde el núcleo luminoso.' },
+  { id:4,  name:'04 · Espiral Galáctica',    type:'60 FPS', desc:'Brazos espirales rotando con torsión trigonométrica continua.' },
+  { id:5,  name:'05 · Prisma Diamante',      type:'60 FPS', desc:'Geometría Manhattan facetada con reflejos cristalinos.' },
+  { id:6,  name:'06 · Horizonte Zen',        type:'60 FPS', desc:'Línea de horizonte serena con oleaje lento y degradado atmosférico.' },
+  { id:7,  name:'07 · Campo Cuántico',       type:'60 FPS', desc:'Retícula de nodos armónicos en fase cruzada.' },
+  { id:8,  name:'08 · Respiración Aura',     type:'60 FPS', desc:'Halo central que inhala y exhala con ritmo orgánico.' },
+  { id:9,  name:'09 · Marea Profunda',       type:'60 FPS', desc:'Corrientes oceánicas superpuestas a distinta profundidad.' },
+  { id:10, name:'10 · Caleidoscopio',        type:'60 FPS', desc:'Simetría de 4 cuadrantes con espejos dinámicos.' },
+  { id:11, name:'11 · Cintas de Seda',       type:'60 FPS', desc:'Listones diagonales entrelazados con suavidad.' },
+  { id:12, name:'12 · Vórtice Hiperespacial',type:'60 FPS', desc:'Túnel centrífugo con caída de luz hacia el infinito.' },
+  { id:13, name:'13 · Lluvia Estelar',       type:'60 FPS', desc:'Cascadas verticales desfasadas por columna.' },
+  { id:14, name:'14 · Duna Solar',           type:'60 FPS', desc:'Relieve cálido ondulante inspirado en el desierto.' },
+  { id:15, name:'15 · Latido Supernova',     type:'60 FPS', desc:'Ondas de choque expansivas con atenuación suave.' },
+  { id:16, name:'16 · Seda Diagonal',        type:'Estático', desc:'Degradado arquitectónico fijo a 45° sin distracción.' },
+  { id:17, name:'17 · Viñeta Estudio',       type:'Estático', desc:'Iluminación radial centrada de alto contraste.' },
+  { id:18, name:'18 · Horizonte Puro',       type:'Estático', desc:'Transición vertical limpia de cielo a tierra.' },
+  { id:19, name:'19 · Prisma Central',       type:'Estático', desc:'Simetría en diamante fija para máxima legibilidad.' }
 ];
 
+// ── CATÁLOGO DE 10 ANIMACIONES DE INICIO ──
+var BOOTS = [
+  { id:0, name:'0 · Singularidad Cuántica',       desc:'Núcleo gravitacional con anillo de acreción que detona en una onda de choque esférica.' },
+  { id:1, name:'1 · ✨ Destello Gemini AI',        desc:'Estrella de 4 puntas (Sparkle) con rayos hiperbólicos que rota y se funde en ondas iridiscentes.', gemini:true },
+  { id:2, name:'2 · Colisionador Dual de Fotones',desc:'Dos haces orbitales giran desde los extremos hasta fusionarse en el centro con destello prismático.' },
+  { id:3, name:'3 · Despliegue Prisma Diamante',  desc:'Cristal octogonal facetado que se despliega en capas geométricas concéntricas.' },
+  { id:4, name:'4 · Vórtice Espiral Hiperespacial',desc:'Galaxia de 3 brazos espirales que acelera y se abre hacia tu fondo elegido.' },
+  { id:5, name:'5 · Ignición Cortina Boreal',     desc:'Haces verticales de luz descienden desde el borde superior encendiendo la matriz.' },
+  { id:6, name:'6 · Convergencia Nothing Dot-Grid',desc:'Matriz táctica de nodos luminosos que convergen en sincronía con pulso tecnológico.' },
+  { id:7, name:'7 · Apertura de Iris (Obturador)',desc:'Diafragma hexagonal de cámara profesional que se abre revelando el motor de color.' },
+  { id:8, name:'8 · Resonancia de Ondas Armónicas',desc:'Dos frentes de onda senoidales opuestos se cruzan creando interferencia constructiva.' },
+  { id:9, name:'9 · Horizonte Cibernético Láser', desc:'Barrido láser horizontal dual que escanea e ilumina la pantalla de extremo a extremo.' }
+];
+
+// ── CATÁLOGO DE 41 PALETAS DE COLOR ──
 var GRADIENTS = [
-  { id: 21, cat: 'triple', name: 'Nebulosa',         css: 'linear-gradient(135deg,#c91882 0%,#4b128f 50%,#0eb8d6 100%)' },
-  { id: 22, cat: 'triple', name: 'Synthwave',        css: 'linear-gradient(135deg,#ff7b00 0%,#d6189c 52%,#1632ad 100%)' },
-  { id: 23, cat: 'triple', name: 'Prisma Boreal',    css: 'linear-gradient(135deg,#10c458 0%,#1462db 52%,#961cba 100%)' },
-  { id: 24, cat: 'triple', name: 'Tokyo Night',      css: 'linear-gradient(135deg,#dc146e 0%,#731ed2 50%,#0ac8dc 100%)' },
-  { id: 25, cat: 'triple', name: 'Solsticio',        css: 'linear-gradient(135deg,#ffaa0c 0%,#dc1e46 50%,#3c0f73 100%)' },
-  { id: 26, cat: 'triple', name: 'Glaciar Nórdico',  css: 'linear-gradient(135deg,#0adcd2 0%,#145adc 50%,#6414b4 100%)' },
-  { id: 27, cat: 'triple', name: 'Bioluminiscencia', css: 'linear-gradient(135deg,#14dc50 0%,#0aaab4 50%,#141e82 100%)' },
-  { id: 28, cat: 'triple', name: 'Supernova',        css: 'linear-gradient(135deg,#fa8c14 0%,#d21478 50%,#143cd2 100%)' },
-  { id: 29, cat: 'triple', name: 'Pacífico Sunset',  css: 'linear-gradient(135deg,#f04628 0%,#aa238c 50%,#0f78be 100%)' },
-  { id: 0,  cat: 'dual', name: 'Cálido',               css: 'linear-gradient(135deg,#c93478,#2c1fb8)' },
-  { id: 1,  cat: 'dual', name: 'Frío',                 css: 'linear-gradient(135deg,#18bdcc,#1b3fb5)' },
-  { id: 2,  cat: 'dual', name: 'Aurora',               css: 'linear-gradient(135deg,#2dd48f,#6f34b8)' },
-  { id: 3,  cat: 'dual', name: 'Cyberpunk',            css: 'linear-gradient(135deg,#e01b84,#00b4d8)' },
-  { id: 4,  cat: 'dual', name: 'Esmeralda',            css: 'linear-gradient(135deg,#1bb854,#d4901b)' },
-  { id: 5,  cat: 'dual', name: 'Crepúsculo',           css: 'linear-gradient(135deg,#db3b2b,#5c1bb8)' },
-  { id: 6,  cat: 'dual', name: 'Fuego',                css: 'linear-gradient(135deg,#eb2113,#e88d14)' },
-  { id: 7,  cat: 'dual', name: 'Vaporwave',            css: 'linear-gradient(135deg,#a339c9,#2cc9a9)' },
-  { id: 14, cat: 'dual', name: 'Atardecer',            css: 'linear-gradient(135deg,#2160db,#eb7d14)' },
-  { id: 18, cat: 'dual', name: 'Océano Tropical',      css: 'linear-gradient(135deg,#0ed4ae,#1838db)' },
-  { id: 19, cat: 'dual', name: 'Sakura',               css: 'linear-gradient(135deg,#e0328c,#d4871c)' },
-  { id: 20, cat: 'dual', name: 'Abismo Neón',          css: 'linear-gradient(135deg,#1ed44e,#4f16db)' },
-  { id: 30, cat: 'dual', name: 'Champagne & Noche',    css: 'linear-gradient(135deg,#e6be6e,#141e5a)' },
-  { id: 31, cat: 'dual', name: 'Kyoto Matcha',         css: 'linear-gradient(135deg,#28c850,#a0196e)' },
-  { id: 32, cat: 'dual', name: 'Obsidiana & Magma',    css: 'linear-gradient(135deg,#f03c0f,#3c0f46)' },
-  { id: 33, cat: 'dual', name: 'Ultravioleta & Láser', css: 'linear-gradient(135deg,#7814e6,#0ae182)' },
-  { id: 34, cat: 'dual', name: 'Cobre & Verdigris',    css: 'linear-gradient(135deg,#dc6e1e,#14af8c)' },
-  { id: 35, cat: 'dual', name: 'Rosa Boreal',          css: 'linear-gradient(135deg,#eb3282,#1e8ce6)' },
-  { id: 8,  cat: 'mono', name: 'Azul Noche',     css: 'radial-gradient(circle at 35% 35%,#2962eb,#091536)' },
-  { id: 9,  cat: 'mono', name: 'Verde Bosque',   css: 'radial-gradient(circle at 35% 35%,#19bd47,#072912)' },
-  { id: 10, cat: 'mono', name: 'Carmesí',        css: 'radial-gradient(circle at 35% 35%,#db1f32,#30070c)' },
-  { id: 11, cat: 'mono', name: 'Amatista',       css: 'radial-gradient(circle at 35% 35%,#a81ceb,#230636)' },
-  { id: 12, cat: 'mono', name: 'Ámbar',          css: 'radial-gradient(circle at 35% 35%,#db8314,#331c04)' },
-  { id: 13, cat: 'mono', name: 'Cyan Glaciar',   css: 'radial-gradient(circle at 35% 35%,#16bfd9,#052a33)' },
-  { id: 15, cat: 'mono', name: 'Rosa Cuarzo',    css: 'radial-gradient(circle at 35% 35%,#e03e82,#330b1c)' },
-  { id: 16, cat: 'mono', name: 'Azul Cobalto',   css: 'radial-gradient(circle at 35% 35%,#1c78fc,#061938)' },
-  { id: 17, cat: 'mono', name: 'Grafito Plata',  css: 'radial-gradient(circle at 35% 35%,#7c8fb0,#1c212b)' },
-  { id: 36, cat: 'mono', name: 'Titanio Natural',css: 'radial-gradient(circle at 35% 35%,#968c7d,#1e1b18)' },
-  { id: 37, cat: 'mono', name: 'Jade Imperial',  css: 'radial-gradient(circle at 35% 35%,#14b96e,#042516)' },
-  { id: 38, cat: 'mono', name: 'Oro Real',       css: 'radial-gradient(circle at 35% 35%,#dca519,#2c2105)' },
-  { id: 39, cat: 'mono', name: 'Lavanda Zen',    css: 'radial-gradient(circle at 35% 35%,#914be1,#1d0f2d)' }
+  { id:40, cat:'triple', name:'✨ Gemini AI Oficial', css:'linear-gradient(135deg,#4285f4 0%,#9b72cb 52%,#d96570 100%)' },
+  { id:21, cat:'triple', name:'Nebulosa',            css:'linear-gradient(135deg,#c91882 0%,#4b128f 50%,#0eb8d6 100%)' },
+  { id:22, cat:'triple', name:'Synthwave',           css:'linear-gradient(135deg,#ff7b00 0%,#d6189c 52%,#1632ad 100%)' },
+  { id:23, cat:'triple', name:'Prisma Boreal',       css:'linear-gradient(135deg,#10c458 0%,#1462db 52%,#961cba 100%)' },
+  { id:24, cat:'triple', name:'Tokyo Night',         css:'linear-gradient(135deg,#dc146e 0%,#731ed2 50%,#0ac8dc 100%)' },
+  { id:25, cat:'triple', name:'Solsticio',           css:'linear-gradient(135deg,#ffaa0c 0%,#dc1e46 50%,#3c0f73 100%)' },
+  { id:26, cat:'triple', name:'Glaciar Nórdico',     css:'linear-gradient(135deg,#0adcd2 0%,#145adc 50%,#6414b4 100%)' },
+  { id:27, cat:'triple', name:'Bioluminiscencia',    css:'linear-gradient(135deg,#14dc50 0%,#0aaab4 50%,#141e82 100%)' },
+  { id:28, cat:'triple', name:'Supernova',           css:'linear-gradient(135deg,#fa8c14 0%,#d21478 50%,#143cd2 100%)' },
+  { id:29, cat:'triple', name:'Pacífico Sunset',     css:'linear-gradient(135deg,#f04628 0%,#aa238c 50%,#0f78be 100%)' },
+
+  { id:0,  cat:'dual', name:'Cálido',                css:'linear-gradient(135deg,#c93478,#2c1fb8)' },
+  { id:1,  cat:'dual', name:'Frío',                  css:'linear-gradient(135deg,#18bdcc,#1b3fb5)' },
+  { id:2,  cat:'dual', name:'Aurora',                css:'linear-gradient(135deg,#2dd48f,#6f34b8)' },
+  { id:3,  cat:'dual', name:'Cyberpunk',             css:'linear-gradient(135deg,#e01b84,#00b4d8)' },
+  { id:4,  cat:'dual', name:'Esmeralda',             css:'linear-gradient(135deg,#1bb854,#d4901b)' },
+  { id:5,  cat:'dual', name:'Crepúsculo',            css:'linear-gradient(135deg,#db3b2b,#5c1bb8)' },
+  { id:6,  cat:'dual', name:'Fuego',                 css:'linear-gradient(135deg,#eb2113,#e88d14)' },
+  { id:7,  cat:'dual', name:'Vaporwave',             css:'linear-gradient(135deg,#a339c9,#2cc9a9)' },
+  { id:14, cat:'dual', name:'Atardecer',             css:'linear-gradient(135deg,#2160db,#eb7d14)' },
+  { id:18, cat:'dual', name:'Océano Tropical',       css:'linear-gradient(135deg,#0ed4ae,#1838db)' },
+  { id:19, cat:'dual', name:'Sakura',                css:'linear-gradient(135deg,#e0328c,#d4871c)' },
+  { id:20, cat:'dual', name:'Abismo Neón',           css:'linear-gradient(135deg,#1ed44e,#4f16db)' },
+  { id:30, cat:'dual', name:'Champagne & Noche',     css:'linear-gradient(135deg,#e6be6e,#141e5a)' },
+  { id:31, cat:'dual', name:'Kyoto Matcha',          css:'linear-gradient(135deg,#28c850,#a0196e)' },
+  { id:32, cat:'dual', name:'Obsidiana & Magma',     css:'linear-gradient(135deg,#f03c0f,#3c0f46)' },
+  { id:33, cat:'dual', name:'Ultravioleta & Láser',  css:'linear-gradient(135deg,#7814e6,#0ae182)' },
+  { id:34, cat:'dual', name:'Cobre & Verdigris',     css:'linear-gradient(135deg,#dc6e1e,#14af8c)' },
+  { id:35, cat:'dual', name:'Rosa Boreal',           css:'linear-gradient(135deg,#eb3282,#1e8ce6)' },
+
+  { id:8,  cat:'mono', name:'Azul Noche',            css:'radial-gradient(circle at 35% 35%,#2962eb,#091536)' },
+  { id:9,  cat:'mono', name:'Verde Bosque',          css:'radial-gradient(circle at 35% 35%,#19bd47,#072912)' },
+  { id:10, cat:'mono', name:'Carmesí',               css:'radial-gradient(circle at 35% 35%,#db1f32,#30070c)' },
+  { id:11, cat:'mono', name:'Amatista',              css:'radial-gradient(circle at 35% 35%,#a81ceb,#230636)' },
+  { id:12, cat:'mono', name:'Ámbar',                 css:'radial-gradient(circle at 35% 35%,#db8314,#331c04)' },
+  { id:13, cat:'mono', name:'Cyan Glaciar',          css:'radial-gradient(circle at 35% 35%,#16bfd9,#052a33)' },
+  { id:15, cat:'mono', name:'Rosa Cuarzo',           css:'radial-gradient(circle at 35% 35%,#e03e82,#330b1c)' },
+  { id:16, cat:'mono', name:'Azul Cobalto',          css:'radial-gradient(circle at 35% 35%,#1c78fc,#061938)' },
+  { id:17, cat:'mono', name:'Grafito Plata',         css:'radial-gradient(circle at 35% 35%,#7c8fb0,#1c212b)' },
+  { id:36, cat:'mono', name:'Titanio Natural',       css:'radial-gradient(circle at 35% 35%,#968c7d,#1e1b18)' },
+  { id:37, cat:'mono', name:'Jade Imperial',         css:'radial-gradient(circle at 35% 35%,#14b96e,#042516)' },
+  { id:38, cat:'mono', name:'Oro Real',              css:'radial-gradient(circle at 35% 35%,#dca519,#2c2105)' },
+  { id:39, cat:'mono', name:'Lavanda Zen',           css:'radial-gradient(circle at 35% 35%,#914be1,#1d0f2d)' }
 ];
 
-function isVertLayout(l){ return l === 1 || (l >= 10 && l <= 17); }
-function isMonoModeJS(m){ return (m>=8 && m<=13) || (m>=15 && m<=17) || (m>=36 && m<=39); }
+function isVertLayout(lay){ return lay === 1 || (lay >= 11 && lay <= 19); }
 
-function findGradObj(id){
-  for(var i=0;i<GRADIENTS.length;i++) if(GRADIENTS[i].id===id) return GRADIENTS[i];
-  return GRADIENTS[0];
-}
-
-function setOrientation(ori){
-  var isV = isVertLayout(state.layout);
-  if(ori === 1 && !isV){
-    var idx = 0;
-    for(var i=0;i<LAYOUTS_H.length;i++) if(LAYOUTS_H[i].id===state.layout) idx=i;
-    state.layout = LAYOUTS_V[idx].id;
-  } else if(ori === 0 && isV){
-    var idx2 = 0;
-    for(var j=0;j<LAYOUTS_V.length;j++) if(LAYOUTS_V[j].id===state.layout) idx2=j;
-    state.layout = LAYOUTS_H[idx2].id;
-  }
-  syncUI();
-}
-
-function setTab(t){
-  state.activeTab = t;
-  var isClk = (state.fullScreen === 0 && t === 'clock');
-  if(isClk){
-    state.activeCat = (state.clockBg < 2) ? 'solid' : findGradObj(state.clockBg - 2).cat;
-  } else {
-    state.activeCat = findGradObj(state.grad).cat;
-  }
-  syncUI();
-}
-
-function setCat(c){
-  state.activeCat = c;
-  syncUI();
-}
-
-function triggerBootPreview(){
-  state.bootStartMs = performance.now();
-}
-
-function randomizeShowcase(){
-  var allLay = LAYOUTS_H.concat(LAYOUTS_V);
-  state.layout = allLay[Math.floor(Math.random()*allLay.length)].id;
-  state.animMode = Math.floor(Math.random()*20);
-  state.grad = Math.floor(Math.random()*40);
-  state.clockBg = Math.floor(Math.random()*40) + 2;
-  state.activeCat = findGradObj(state.grad).cat;
-  syncUI();
-}
-
-function syncUI(){
-  var isV = isVertLayout(state.layout);
-  $('ori_h').className = 'seg-btn' + (!isV ? ' active' : '');
-  $('ori_v').className = 'seg-btn' + (isV ? ' active' : '');
-
-  var lList = isV ? LAYOUTS_V : LAYOUTS_H;
-  var lHtml = '';
-  var curLayName = '';
-  lList.forEach(function(l){
-    if(l.id === state.layout) curLayName = l.name;
-    lHtml += '<button type="button" class="chip'+(l.id===state.layout?' active':'')+'" onclick="state.layout='+l.id+';syncUI()">' +
-             '<span>'+l.name+'</span><span class="c-sub">'+l.desc+'</span></button>';
+// ── UI RENDERERS (TABS & GRIDS) ──
+function switchMainTab(tab){
+  ['layouts','anims','colors','boot','net'].forEach(function(t){
+    $('mtab_'+t).className = 'main-tab-btn' + (t===tab ? ' active' : '');
+    $('pane_'+t).className = 'tab-pane' + (t===tab ? ' active' : '');
   });
-  $('layouts_grid').innerHTML = lHtml;
-  $('cur_lay_badge').textContent = curLayName + ' (#' + state.layout + ')';
+}
 
-  var aHtml = '';
+function setSimMode(m){
+  state.simMode = m;
+  $('sim_btn_live').className = 'sim-mode-btn' + (m==='live' ? ' active' : '');
+  $('sim_btn_boot').className = 'sim-mode-btn' + (m==='boot' ? ' active' : '');
+  if(m === 'boot'){
+    state.bootSimStart = performance.now();
+  }
+}
+
+function applyGeminiPreset(){
+  state.layout = isVertLayout(state.layout) ? 11 : 2;
+  state.animMode = 20;
+  state.grad = 40;
+  state.clockBg = 1;
+  state.bootMode = 1;
+  state.simMode = 'live';
+  renderAllControls();
+  showToast('✨ Combo Google Gemini AI activado en la vista previa');
+}
+
+function toggleFullscreen(){
+  state.fullScreen = state.fullScreen ? 0 : 1;
+  renderAllControls();
+}
+
+function toggleFrost(){
+  state.frostClk = state.frostClk ? 0 : 1;
+  renderAllControls();
+}
+
+function setLayoutFilter(f){
+  state.layoutFilter = f;
+  ['all','h','v'].forEach(function(k){
+    $('lfilt_'+k).className = 'sub-filter-btn' + (k===f ? ' active' : '');
+  });
+  renderLayoutsGrid();
+}
+
+function selectLayout(id){
+  state.layout = id;
+  state.simMode = 'live';
+  $('sim_btn_live').className = 'sim-mode-btn active';
+  $('sim_btn_boot').className = 'sim-mode-btn';
+  renderAllControls();
+}
+
+function renderLayoutsGrid(){
+  var box = $('layouts_grid');
+  var list = LAYOUTS.filter(function(l){
+    if(state.layoutFilter === 'h') return l.ori === 'h';
+    if(state.layoutFilter === 'v') return l.ori === 'v';
+    return true;
+  });
+  var html = '';
+  list.forEach(function(l){
+    var cls = 'item-card' + (state.layout === l.id ? ' active' : '') + (l.gemini ? ' gemini-special' : '');
+    var oriBadge = l.ori === 'h'
+      ? '<span class="ori-badge ori-h">Horizontal</span>'
+      : '<span class="ori-badge ori-v">Vertical</span>';
+    html += '<div class="'+cls+'" onclick="selectLayout('+l.id+')">' +
+      '<div>' +
+        '<div class="item-top"><span class="item-num">Modo '+l.id+'</span>'+oriBadge+'</div>' +
+        '<div class="item-title">'+l.name+'</div>' +
+        '<div class="item-desc" style="margin-top:4px">'+l.desc+'</div>' +
+      '</div>' +
+      '<div class="item-meta">' +
+        '<span class="meta-chip">🔤 '+l.font+'</span>' +
+        '<span class="meta-chip">⏱️ '+l.sec+'</span>' +
+        '<span class="meta-chip">🌡️ '+l.wx+'</span>' +
+      '</div>' +
+    '</div>';
+  });
+  box.innerHTML = html;
+}
+
+function selectAnim(id){
+  state.animMode = id;
+  state.simMode = 'live';
+  $('sim_btn_live').className = 'sim-mode-btn active';
+  $('sim_btn_boot').className = 'sim-mode-btn';
+  renderAllControls();
+}
+
+function renderAnimsGrid(){
+  var box = $('anims_grid');
+  var html = '';
   ANIMS.forEach(function(a){
-    aHtml += '<button type="button" class="chip'+(a.id===state.animMode?' active':'')+'" onclick="state.animMode='+a.id+';syncUI()">' +
-             '<span>'+a.name+'</span><span class="c-sub">'+a.type+'</span></button>';
+    var cls = 'item-card' + (state.animMode === a.id ? ' active' : '') + (a.gemini ? ' gemini-special' : '');
+    var badge = a.gemini
+      ? '<span class="ori-badge ori-v">✨ Gemini UI</span>'
+      : '<span class="ori-badge ori-h">'+a.type+'</span>';
+    html += '<div class="'+cls+'" onclick="selectAnim('+a.id+')">' +
+      '<div>' +
+        '<div class="item-top"><span class="item-num">Efecto '+a.id+'</span>'+badge+'</div>' +
+        '<div class="item-title">'+a.name+'</div>' +
+        '<div class="item-desc" style="margin-top:4px">'+a.desc+'</div>' +
+      '</div>' +
+    '</div>';
   });
-  $('anims_grid').innerHTML = aHtml;
-  $('cur_anim_badge').textContent = ANIMS[state.animMode].name;
+  box.innerHTML = html;
+}
 
-  $('full_chk').checked = (state.fullScreen === 1);
-  $('frost_chk').checked = (state.frostClk === 1);
-  $('mod_tabs_box').style.display = state.fullScreen ? 'none' : 'block';
-  $('tab_clk').className = 'seg-btn' + (state.activeTab === 'clock' ? ' active' : '');
-  $('tab_wx').className  = 'seg-btn' + (state.activeTab === 'weather' ? ' active' : '');
+function setColorTarget(t){
+  state.colorTarget = t;
+  $('ctarg_wx').className = 'sub-filter-btn' + (t==='weather' ? ' active' : '');
+  $('ctarg_clk').className = 'sub-filter-btn' + (t==='clock' ? ' active' : '');
+  renderSwatchesGrid();
+}
 
-  var isClockTab = (state.fullScreen === 0 && state.activeTab === 'clock');
-  $('cat_solid').disabled = !isClockTab;
-  if(!isClockTab && state.activeCat === 'solid') state.activeCat = findGradObj(state.grad).cat;
-
-  ['solid','mono','dual','triple'].forEach(function(c){
-    $('cat_'+c).className = 'seg-btn' + (state.activeCat === c ? ' active' : '');
+function setColorCat(c){
+  state.colorCat = c;
+  ['all','triple','dual','mono','solid'].forEach(function(k){
+    $('ccat_'+k).className = 'sub-filter-btn' + (k===c ? ' active' : '');
   });
+  renderSwatchesGrid();
+}
 
-  var sHtml = '';
-  if(state.activeCat === 'solid' && isClockTab){
-    sHtml += '<div class="sw-item'+(state.clockBg===0?' active':'')+'" onclick="state.clockBg=0;syncUI()"><div class="sw-dot" style="background:#f2f2f7"></div><div class="sw-name">Blanco</div></div>';
-    sHtml += '<div class="sw-item'+(state.clockBg===1?' active':'')+'" onclick="state.clockBg=1;syncUI()"><div class="sw-dot" style="background:#050507"></div><div class="sw-name">Negro</div></div>';
+function selectColorSwatch(val, isClockTarget){
+  if(isClockTarget){
+    state.clockBg = val;
   } else {
-    GRADIENTS.filter(function(g){ return g.cat === state.activeCat; }).forEach(function(g){
-      var sel = isClockTab ? (state.clockBg === g.id + 2) : (state.grad === g.id);
-      var clickCode = isClockTab ? ('state.clockBg='+(g.id+2)) : ('state.grad='+g.id);
-      sHtml += '<div class="sw-item'+(sel?' active':'')+'" onclick="'+clickCode+';syncUI()">' +
-               '<div class="sw-dot" style="background:'+g.css+'"></div><div class="sw-name">'+g.name+'</div></div>';
+    state.grad = val;
+  }
+  renderAllControls();
+}
+
+function renderSwatchesGrid(){
+  var isClk = (state.colorTarget === 'clock' && state.fullScreen === 0);
+  var box = $('swatches_grid');
+  var html = '';
+
+  if(isClk && (state.colorCat === 'all' || state.colorCat === 'solid')){
+    var s0 = state.clockBg === 0 ? ' active' : '';
+    var s1 = state.clockBg === 1 ? ' active' : '';
+    html += '<div class="swatch-card'+s0+'" onclick="selectColorSwatch(0,true)">' +
+      '<div class="swatch-circle" style="background:#f5f5f7"></div>' +
+      '<div class="swatch-name">Blanco Puro</div></div>';
+    html += '<div class="swatch-card'+s1+'" onclick="selectColorSwatch(1,true)">' +
+      '<div class="swatch-circle" style="background:#08090f"></div>' +
+      '<div class="swatch-name">Negro Obsidiana</div></div>';
+  }
+
+  if(state.colorCat !== 'solid'){
+    GRADIENTS.filter(function(g){
+      return state.colorCat === 'all' || g.cat === state.colorCat;
+    }).forEach(function(g){
+      var isSel = isClk ? (state.clockBg === (g.id + 2)) : (state.grad === g.id);
+      var val = isClk ? (g.id + 2) : g.id;
+      html += '<div class="swatch-card'+(isSel?' active':'')+'" onclick="selectColorSwatch('+val+','+isClk+')">' +
+        '<div class="swatch-circle" style="background:'+g.css+'"></div>' +
+        '<div class="swatch-name">'+g.name+'</div></div>';
     });
   }
-  $('swatches_grid').innerHTML = sHtml;
-
-  var gWx = findGradObj(state.grad);
-  $('cur_pal_badge').textContent = gWx.name;
-  $('stage_lbl').textContent = curLayName + ' · ' + ANIMS[state.animMode].name;
+  box.innerHTML = html;
 }
 
-// ── MOTOR MATEMÁTICO 64x64 ──
+function selectBoot(id){
+  state.bootMode = id;
+  setSimMode('boot');
+  renderAllControls();
+}
+
+function renderBootGrid(){
+  var box = $('boot_grid');
+  var html = '';
+  BOOTS.forEach(function(b){
+    var cls = 'item-card' + (state.bootMode === b.id ? ' active' : '') + (b.gemini ? ' gemini-special' : '');
+    html += '<div class="'+cls+'" onclick="selectBoot('+b.id+')">' +
+      '<div>' +
+        '<div class="item-top"><span class="item-num">Inicio '+b.id+'</span><span class="ori-badge ori-h">Seamless 3 Actos</span></div>' +
+        '<div class="item-title">'+b.name+'</div>' +
+        '<div class="item-desc" style="margin-top:4px">'+b.desc+'</div>' +
+      '</div>' +
+    '</div>';
+  });
+  box.innerHTML = html;
+}
+
+function renderAllControls(){
+  var layObj = LAYOUTS.find(function(l){ return l.id === state.layout; }) || LAYOUTS[0];
+  var animObj = ANIMS.find(function(a){ return a.id === state.animMode; }) || ANIMS[0];
+  var gradObj = GRADIENTS.find(function(g){ return g.id === state.grad; }) || GRADIENTS[0];
+  var bootObj = BOOTS.find(function(b){ return b.id === state.bootMode; }) || BOOTS[0];
+
+  $('stat_layout').textContent = layObj.name;
+  $('stat_anim').textContent   = animObj.name.replace(/^\d+\s*·\s*/, '');
+  $('stat_grad').textContent   = gradObj.name;
+  $('stat_boot').textContent   = bootObj.name;
+
+  $('qt_fullscreen').className = 'quick-toggle-btn' + (state.fullScreen ? ' active' : '');
+  $('qt_full_lbl').textContent = state.fullScreen ? 'ON' : 'OFF';
+  $('qt_frost').className      = 'quick-toggle-btn' + (state.frostClk ? ' active' : '');
+  $('qt_frost_lbl').textContent= state.frostClk ? 'ON' : 'OFF';
+
+  renderLayoutsGrid();
+  renderAnimsGrid();
+  renderSwatchesGrid();
+  renderBootGrid();
+}
+
+// ── MOTOR MATEMÁTICO 1:1 DE LA MATRIZ LED 64×64 (CON FUENTE 3×5 SIN TRASLAPES) ──
 var ditherTab = [-3,1,-2,2, 3,-1,4,0, -2,2,-3,1, 4,0,3,-1];
+
+function isMonoModeJS(m){
+  return (m>=8 && m<=13) || (m>=15 && m<=17) || (m>=36 && m<=39);
+}
 
 function evalGradRatiosJS(x, y, dr1, dr2, mode){
   var d = ditherTab[(x & 3) | ((y & 3) << 2)];
   var w1 = 1.0 - dr1, w2 = 1.0 - dr2;
   var r=0, g=0, b=0;
-  if(mode===39){ r=145*(0.2+0.8*w1)+d/2; g=75*(0.2+0.8*w1)+d/2; b=225*(0.2+0.8*w1)+d; }
+  if(mode===40){ var w3=dr1*dr2*0.92; r=66*w1+155*w2+217*w3+d; g=133*w1+114*w2+101*w3+d/2; b=244*w1+203*w2+112*w3+d; }
+  else if(mode===39){ r=145*(0.2+0.8*w1)+d/2; g=75*(0.2+0.8*w1)+d/2; b=225*(0.2+0.8*w1)+d; }
   else if(mode===38){ r=220*(0.2+0.8*w1)+d; g=165*(0.2+0.8*w1)+d/2; b=25*(0.2+0.8*w1)+d/2; }
   else if(mode===37){ r=20*(0.2+0.8*w1)+d/2; g=185*(0.2+0.8*w1)+d; b=110*(0.2+0.8*w1)+d/2; }
   else if(mode===36){ r=150*(0.2+0.8*w1)+d/2; g=140*(0.2+0.8*w1)+d/2; b=125*(0.2+0.8*w1)+d/2; }
@@ -803,8 +1489,9 @@ function evalGradRatiosJS(x, y, dr1, dr2, mode){
   return [Math.max(0,Math.min(255,r|0)), Math.max(0,Math.min(255,g|0)), Math.max(0,Math.min(255,b|0))];
 }
 
-function evalGradColorJS(x, y, w, h, rev, mode, t_ms){
+function evalGradColorJS(x, y, w, h, rev, mode){
   var phase = rev ? Math.PI : 0.0;
+  var t_ms = performance.now();
   var dir = rev ? -1.0 : 1.0;
   var cx1 = w*0.5 + Math.cos(dir*t_ms*0.0005 + phase)*(w*0.3333);
   var cy1 = h*0.5 + Math.sin(dir*t_ms*0.000666 + phase)*(h*0.3333);
@@ -816,7 +1503,25 @@ function evalGradColorJS(x, y, w, h, rev, mode, t_ms){
   var am = state.animMode;
   var t = dir * t_ms * 0.001 + phase;
 
-  if(am === 1){
+  if(am === 20){
+    var wA = h*0.30 + Math.sin(x*0.11 + t*1.9)*5.0 + Math.cos(x*0.21 - t*1.3)*2.5;
+    var wB = h*0.54 + Math.cos(x*0.09 - t*1.6)*5.5 + Math.sin(x*0.18 + t*2.1)*2.5;
+    var wC = h*0.76 + Math.sin(x*0.13 + t*1.4 + 1.2)*4.5;
+    var dA = Math.abs(y - wA), dB = Math.abs(y - wB), dC = Math.abs(y - wC);
+    var minAB = Math.min(dA, Math.min(dB, dC));
+    var env = Math.max(0, 1.0 - minAB / (h*0.26));
+    env = env * env * (3.0 - 2.0 * env);
+    dr1 = Math.min(1.0, (x / Math.max(1, w)) * 0.65 + (dA / Math.max(1, h)) * 0.45);
+    dr2 = Math.min(1.0, ((w - x) / Math.max(1, w)) * 0.65 + (dB / Math.max(1, h)) * 0.45);
+    if(isMonoModeJS(mode)) dr2 = dr1;
+    var baseRgb = evalGradRatiosJS(x, y, dr1, dr2, mode);
+    var k = 0.08 + 0.92 * env;
+    return [
+      Math.min(255, Math.round(4 + baseRgb[0]*k)),
+      Math.min(255, Math.round(5 + baseRgb[1]*k)),
+      Math.min(255, Math.round(12 + baseRgb[2]*k))
+    ];
+  } else if(am === 1){
     var w1 = Math.sin(x*0.11 + y*0.07 + t + Math.sin(y*0.09 - t*0.7));
     var w2 = Math.cos(x*0.08 - y*0.12 - t*0.85 + Math.cos(x*0.10 + t*0.6));
     dr1 = 1.0 - (w1*0.5 + 0.5); dr2 = 1.0 - (w2*0.5 + 0.5);
@@ -833,11 +1538,13 @@ function evalGradColorJS(x, y, w, h, rev, mode, t_ms){
     dr1 = 1.0 - r1*at; dr2 = 1.0 - r2*at;
   } else if(am === 4){
     var dx = x - w*0.5, dy = y - h*0.5;
-    var d = Math.hypot(dx, dy), ang = Math.atan2(dy, dx);
+    var d = Math.hypot(dx, dy);
+    var ang = Math.atan2(dy, dx);
     dr1 = 1.0 - (Math.sin(ang*2 + d*0.18 - t*2.2)*0.5 + 0.5);
     dr2 = 1.0 - (Math.cos(ang*2 - d*0.16 + t*1.8)*0.5 + 0.5);
   } else if(am === 5){
-    var md = Math.abs(x - cx1) + Math.abs(y - cy1);
+    var dx = Math.abs(x - cx1), dy = Math.abs(y - cy1);
+    var md = dx + dy;
     dr1 = 1.0 - (Math.sin(md*0.22 - t*2.4)*0.5 + 0.5);
     dr2 = 1.0 - (Math.cos((Math.abs(x-cx2)+Math.abs(y-cy2))*0.20 + t*2.0)*0.5 + 0.5);
   } else if(am === 6){
@@ -901,22 +1608,26 @@ function evalGradColorJS(x, y, w, h, rev, mode, t_ms){
     dr1 = Math.min(1.0, md / Math.max(1, (w + h)*0.5));
     dr2 = Math.min(1.0, Math.abs(x - y) / Math.max(1, Math.max(w, h)));
   } else {
-    dr1 = Math.min(1.0, Math.hypot(x-cx1, y-cy1) * (isMonoModeJS(mode) ? (1/45.0) : invD));
-    dr2 = Math.min(1.0, Math.hypot(x-cx2, y-cy2) * invD);
+    if(isMonoModeJS(mode)){
+      dr1 = Math.min(1.0, Math.hypot(x-cx1, y-cy1) / 45.0);
+      dr2 = dr1;
+    } else {
+      dr1 = Math.min(1.0, Math.hypot(x-cx1, y-cy1) * invD);
+      dr2 = Math.min(1.0, Math.hypot(x-cx2, y-cy2) * invD);
+    }
   }
   if(isMonoModeJS(mode)) dr2 = dr1;
   return evalGradRatiosJS(x, y, dr1, dr2, mode);
 }
 
-var FONT_5X7 = {
-  '0':[0x1E,0x21,0x21,0x21,0x21,0x21,0x1E], '1':[0x08,0x18,0x08,0x08,0x08,0x08,0x1C],
-  '2':[0x1E,0x21,0x01,0x06,0x18,0x20,0x3F], '3':[0x1E,0x21,0x01,0x0E,0x01,0x21,0x1E],
-  '4':[0x02,0x06,0x0A,0x12,0x22,0x3F,0x02], '5':[0x3F,0x20,0x3E,0x01,0x01,0x21,0x1E],
-  '6':[0x1E,0x21,0x20,0x3E,0x21,0x21,0x1E], '7':[0x3F,0x01,0x02,0x04,0x08,0x10,0x20],
-  '8':[0x1E,0x21,0x21,0x1E,0x21,0x21,0x1E], '9':[0x1E,0x21,0x21,0x1F,0x01,0x21,0x1E],
-  ':':[0x00,0x0C,0x0C,0x00,0x0C,0x0C,0x00], '/':[0x01,0x02,0x04,0x08,0x10,0x20,0x00],
-  'C':[0x1E,0x21,0x20,0x20,0x20,0x21,0x1E], 'L':[0x10,0x10,0x10,0x10,0x10,0x10,0x1F],
-  'U':[0x11,0x11,0x11,0x11,0x11,0x11,0x0E], 'N':[0x11,0x19,0x15,0x13,0x11,0x11,0x11]
+var FONT_3X5 = {
+  '0':[7,5,5,5,7], '1':[2,6,2,2,7], '2':[7,1,7,4,7], '3':[7,1,7,1,7],
+  '4':[5,5,7,1,1], '5':[7,4,7,1,7], '6':[7,4,7,5,7], '7':[7,1,2,2,2],
+  '8':[7,5,7,5,7], '9':[7,5,7,1,7], ':':[0,2,0,2,0], '/':[1,1,2,4,4],
+  'C':[7,4,4,4,7], 'H':[5,5,7,5,5], 'A':[2,5,7,5,5], 'I':[7,2,2,2,7],
+  'L':[4,4,4,4,7], 'U':[5,5,5,5,7], 'N':[5,7,7,5,5], 'M':[5,7,5,5,5],
+  'S':[7,4,7,1,7], 'W':[5,5,5,7,5], 'Y':[5,5,2,2,2], 'P':[7,5,7,4,4],
+  'G':[7,4,5,5,7], 'E':[7,4,7,4,7], 'O':[7,5,5,5,7], 'R':[7,5,7,6,5]
 };
 
 var BIG_DIGS = {
@@ -932,7 +1643,81 @@ var BIG_DIGS = {
   '9':[0x7E,0xC3,0xC3,0xC3,0xC3,0xC3,0x7F,0x03,0x03,0x03,0xC3,0x7E]
 };
 
-function buildSteadyFrame(t_ms){
+function evalBootShapeMaskAct1JS(bootMode, x, y, dx, dy, dist, p1){
+  var ease1 = 1.0 - (1.0 - p1) * (1.0 - p1);
+  if(bootMode === 1){
+    var ax = Math.abs(dx), ay = Math.abs(dy);
+    var starDist = Math.min(ax + ay * 0.24, ay + ax * 0.24) + (ax * ay) * 0.045;
+    var reach = 2.0 + ease1 * 18.0;
+    var m = Math.max(0, 1.0 - starDist / reach);
+    var rotAng = Math.atan2(dy, dx) + p1 * 3.5;
+    var rays = 0.5 + 0.5 * Math.cos(rotAng * 4.0);
+    return Math.min(1.0, m * (0.65 + 0.55 * rays));
+  } else if(bootMode === 2){
+    var sep = (1.0 - ease1) * 24.0;
+    var ang = p1 * 4.5;
+    var ox = Math.cos(ang) * sep, oy = Math.sin(ang) * sep * 0.45;
+    var dA = Math.hypot(dx - ox, dy - oy), dB = Math.hypot(dx + ox, dy + oy);
+    var mA = Math.max(0, 1.0 - dA / 11.5), mB = Math.max(0, 1.0 - dB / 11.5);
+    return Math.min(1.0, mA + mB);
+  } else if(bootMode === 3){
+    var md = Math.abs(dx) + Math.abs(dy);
+    var radius = 3.0 + ease1 * 28.0;
+    var ring = Math.abs(md - radius * 0.72);
+    var core = Math.max(0, 1.0 - md / radius);
+    var facet = Math.max(0, 1.0 - ring / 4.5);
+    return Math.min(1.0, core * 0.75 + facet * 0.65);
+  } else if(bootMode === 4){
+    var ang2 = Math.atan2(dy, dx);
+    var spiral = Math.sin(ang2 * 3.0 - dist * 0.28 + p1 * 10.0) * 0.5 + 0.5;
+    var env = Math.max(0, 1.0 - dist / (4.0 + ease1 * 30.0));
+    return env * (0.35 + 0.65 * spiral);
+  } else if(bootMode === 5){
+    var colWave = Math.sin(x * 0.22 + p1 * 6.0) * 6.0;
+    var frontY = ease1 * 56.0 + colWave;
+    if(y > frontY) return 0.0;
+    var trail = Math.max(0.15, 1.0 - (frontY - y) / 28.0);
+    var rib = 0.55 + 0.45 * Math.sin(x * 0.35 - y * 0.12 + p1 * 5.0);
+    return Math.min(1.0, trail * rib);
+  } else if(bootMode === 6){
+    var scale = 1.0 - 0.65 * ease1;
+    var gx = dx * scale + 31.5, gy = dy * scale + 31.5;
+    var cellX = Math.abs((gx % 4.0) - 2.0), cellY = Math.abs((gy % 4.0) - 2.0);
+    var dot = Math.max(0, 1.0 - Math.hypot(cellX, cellY) / 1.85);
+    var env2 = Math.max(0, 1.0 - dist / (8.0 + ease1 * 32.0));
+    return dot * env2;
+  } else if(bootMode === 7){
+    var ap = 2.0 + ease1 * 26.0;
+    var hexD = Math.max(Math.abs(dx), Math.abs(dx)*0.5 + Math.abs(dy)*0.866);
+    var edge = Math.abs(hexD - ap);
+    var blade = Math.max(0, 1.0 - edge / 3.5);
+    var inside = (hexD < ap) ? (0.45 + 0.55 * (hexD / ap)) : 0.0;
+    return Math.min(1.0, inside + blade * 0.85);
+  } else if(bootMode === 8){
+    var w1 = 31.5 + Math.sin(x * 0.16 + p1 * 8.0) * (14.0 * ease1);
+    var w2 = 31.5 - Math.sin(x * 0.16 - p1 * 8.0) * (14.0 * ease1);
+    var d1 = Math.abs(y - w1), d2 = Math.abs(y - w2);
+    var m1 = Math.max(0, 1.0 - d1 / 7.5), m2 = Math.max(0, 1.0 - d2 / 7.5);
+    return Math.min(1.0, m1 + m2);
+  } else if(bootMode === 9){
+    var scanY = Math.abs(dy);
+    var barPos = ease1 * 28.0;
+    var beam = Math.max(0, 1.0 - Math.abs(scanY - barPos) / 3.8);
+    var fill = (scanY < barPos) ? (0.40 + 0.40 * (1.0 - scanY / (barPos + 1.0))) : 0.0;
+    return Math.min(1.0, fill + beam);
+  }
+  var coreR = 2.5 + ease1 * 12.0;
+  var coreGlow = Math.max(0, 1.0 - dist / coreR);
+  coreGlow = coreGlow * coreGlow;
+  var ringR = ease1 * 24.0;
+  var ringGlow = Math.max(0, 1.0 - Math.abs(dist - ringR) / 3.2) * Math.sin(p1 * Math.PI);
+  return Math.min(1.0, coreGlow + ringGlow * 0.85);
+}
+
+function renderMatrixFrame(){
+  var cv = $('led_canvas');
+  if(!cv) return;
+  var ctx = cv.getContext('2d');
   var fb = new Array(4096);
   for(var i=0;i<4096;i++) fb[i] = [0,0,0];
 
@@ -950,6 +1735,18 @@ function buildSteadyFrame(t_ms){
       Math.min(255, Math.max(0, Math.round(cur[2]*(1-a) + rgb[2]*a)))
     ];
   }
+  function drawLinePx(x0, y0, x1, y1, col){
+    var dx = Math.abs(x1-x0), sx = x0<x1 ? 1 : -1;
+    var dy = -Math.abs(y1-y0), sy = y0<y1 ? 1 : -1;
+    var err = dx+dy;
+    while(true){
+      setPx(x0, y0, col);
+      if(x0===x1 && y0===y1) break;
+      var e2 = 2*err;
+      if(e2 >= dy){ err += dy; x0 += sx; }
+      if(e2 <= dx){ err += dx; y0 += sy; }
+    }
+  }
   function insideRound(i, j, w, h, r){
     if(r<=0) return true;
     var rsq = (r-0.5)*(r-0.5);
@@ -959,22 +1756,6 @@ function buildSteadyFrame(t_ms){
     if(i>=w-r && j>=h-r){ var dx=i-(w-r), dy=j-(h-r); return dx*dx+dy*dy<=rsq; }
     return true;
   }
-  function fillCardGrad(x, y, w, h, r, mode, rev, invY){
-    for(var j=0;j<h;j++){
-      var ej = invY ? (h-1-j) : j;
-      for(var i=0;i<w;i++) if(insideRound(i, j, w, h, r)) setPx(x+i, y+j, evalGradColorJS(i, ej, w, h, rev, mode, t_ms));
-    }
-  }
-  function fillCardSolid(x, y, w, h, r, rgb){
-    for(var j=0;j<h;j++) for(var i=0;i<w;i++) if(insideRound(i, j, w, h, r)) setPx(x+i, y+j, rgb);
-  }
-  function fillGlassPill(x, y, w, h, r, tint, a){
-    for(var j=0;j<h;j++) for(var i=0;i<w;i++) if(insideRound(i, j, w, h, r)) blendPx(x+i, y+j, tint, a);
-  }
-  function strokeRect(x, y, w, h, col){
-    for(var i=0;i<w;i++){ setPx(x+i, y, col); setPx(x+i, y+h-1, col); }
-    for(var j=0;j<h;j++){ setPx(x, y+j, col); setPx(x+w-1, y+j, col); }
-  }
 
   var lay = state.layout;
   var isFull = state.fullScreen === 1;
@@ -982,400 +1763,806 @@ function buildSteadyFrame(t_ms){
   var isFrost = (state.frostClk === 1) && (isFull || state.clockBg >= 2);
   var clkGrad = isFull ? state.grad : (state.clockBg >= 2 ? state.clockBg - 2 : 0);
 
-  if(isFull){
-    fillCardGrad(0, 0, 64, 64, 0, state.grad, true, false);
-  } else if(isVert){
-    if(state.clockBg === 0) fillCardSolid(1, 1, 29, 62, 4, [255,255,255]);
-    else if(state.clockBg === 1) fillCardSolid(1, 1, 29, 62, 4, [0,0,0]);
-    else fillCardGrad(1, 1, 29, 62, 4, clkGrad, true, true);
-    fillCardGrad(33, 1, 30, 62, 4, state.grad, false, false);
-  } else {
-    if(state.clockBg === 0) fillCardSolid(1, 0, 62, 31, 4, [255,255,255]);
-    else if(state.clockBg === 1) fillCardSolid(1, 0, 62, 31, 4, [0,0,0]);
-    else fillCardGrad(1, 0, 62, 31, 4, clkGrad, true, false);
-    fillCardGrad(1, 32, 62, 31, 4, state.grad, false, false);
-  }
-
-  var isSolidWhite = (!isFull && state.clockBg === 0);
-  var inkMain = isSolidWhite ? [15,15,20] : [255,255,255];
-  var inkSub  = isSolidWhite ? [70,70,85] : [185,195,215];
-  var inkCyan = isSolidWhite ? [0,115,180] : [90,235,255];
-  var pillTint = isSolidWhite ? [0,0,0] : [8,10,16];
-
-  function frostedColorAt(px, py, vr){
-    if(!isFrost) return inkMain;
-    var cardW = isFull ? 64 : (isVert ? 29 : 62);
-    var cardH = isFull ? 64 : (isVert ? 62 : 31);
-    var lx = isFull ? px : (px - 1);
-    var ly = (isFull || !isVert) ? py : (py - 1);
-    if(isVert && !isFull) ly = cardH - 1 - ly;
-    var c = evalGradColorJS(lx, ly, cardW, cardH, true, clkGrad, t_ms);
-    var gleam = Math.round(20 * (1 - vr));
-    var glassInv = 255 - (125 + gleam);
-    return [
-      Math.min(255, 255 - Math.round((255 - c[0]) * glassInv / 255)),
-      Math.min(255, 255 - Math.round((255 - c[1]) * glassInv / 255)),
-      Math.min(255, 255 - Math.round((255 - c[2]) * glassInv / 255))
-    ];
-  }
-
-  function drawSmallStr(str, x, y, useFrost, col, stepX){
-    var cx = x, adv = stepX || 5;
-    for(var si=0;si<str.length;si++){
-      var glyph = FONT_5X7[str[si]];
-      if(glyph){
-        for(var r=0;r<7;r++){
-          var row = glyph[r];
-          for(var c=0;c<6;c++) if(row & (0x20 >> c)) setPx(cx+c, y+r, useFrost ? frostedColorAt(cx+c, y+r, r/6.0) : col);
+  // Check if we are in Startup Animation simulation mode
+  var uiAlpha = 1.0;
+  var bootElapsed = performance.now() - state.bootSimStart;
+  if(state.simMode === 'boot'){
+    if(bootElapsed < 1100){
+      // Act 1: Ignition
+      var p1 = bootElapsed / 1100.0;
+      for(var by=0;by<64;by++){
+        var dy = by - 31.5;
+        for(var bx=0;bx<64;bx++){
+          var dx = bx - 31.5;
+          var dist = Math.hypot(dx, dy);
+          var mask = evalBootShapeMaskAct1JS(state.bootMode, bx, by, dx, dy, dist, p1);
+          var c = evalGradColorJS(bx, by, 64, 64, true, state.grad);
+          var wBoost = mask * mask * 95.0;
+          setPx(bx, by, [
+            Math.min(255, Math.round(c[0]*mask + wBoost)),
+            Math.min(255, Math.round(c[1]*mask + wBoost)),
+            Math.min(255, Math.round(c[2]*mask + wBoost))
+          ]);
         }
-        cx += adv;
-      } else cx += 3;
+      }
+      uiAlpha = 0.0;
+    } else if(bootElapsed < 3200){
+      var p2 = Math.min(1.0, (bootElapsed - 1100.0) / 1200.0);
+      uiAlpha = bootElapsed > 2300 ? Math.min(1.0, (bootElapsed - 2300.0) / 900.0) : 0.0;
+      // Render background with shockwave boost
+      for(var by2=0;by2<64;by2++){
+        for(var bx2=0;bx2<64;bx2++){
+          var c2 = evalGradColorJS(bx2, by2, 64, 64, true, state.grad);
+          var d2 = Math.hypot(bx2-31.5, by2-31.5);
+          var wave = Math.max(0, 1.0 - Math.abs(d2 - p2*46.0)/6.5) * (1.0 - p2);
+          setPx(bx2, by2, [
+            Math.min(255, Math.round(c2[0] + wave*85)),
+            Math.min(255, Math.round(c2[1] + wave*85)),
+            Math.min(255, Math.round(c2[2] + wave*85))
+          ]);
+        }
+      }
+    } else {
+      state.simMode = 'live';
+      $('sim_btn_live').className = 'sim-mode-btn active';
+      $('sim_btn_boot').className = 'sim-mode-btn';
     }
   }
 
-  function drawBigDigit(dChar, x, y, style){
-    var rows = BIG_DIGS[dChar];
-    if(!rows) return;
-    for(var r=0;r<12;r++){
-      var row = rows[r];
-      for(var c=0;c<8;c++){
-        if(row & (0x80 >> c)){
-          if(style === 'dot' && ((r & 1) === 1 && (c & 1) === 1)) continue;
-          setPx(x+c, y+r, frostedColorAt(x+c, y+r, r/12.0));
+  function fillCardGrad(x, y, w, h, r, mode, rev, invY){
+    for(var j=0;j<h;j++){
+      var ej = invY ? (h-1-j) : j;
+      for(var i=0;i<w;i++){
+        if(insideRound(i, j, w, h, r)){
+          setPx(x+i, y+j, evalGradColorJS(i, ej, w, h, rev, mode));
         }
       }
     }
   }
-
-  function drawSunMini(cx, cy){
-    var yel = [255,220,20];
-    for(var dy=-2;dy<=2;dy++) for(var dx=-2;dx<=2;dx++) if(dx*dx+dy*dy<=5) setPx(cx+dx, cy+dy, yel);
+  function fillCardSolid(x, y, w, h, r, rgb){
+    for(var j=0;j<h;j++) for(var i=0;i<w;i++) if(insideRound(i, j, w, h, r)) setPx(x+i, y+j, rgb);
+  }
+  function fillGlassPill(x, y, w, h, r, tint, a){
+    for(var j=0;j<h;j++) for(var i=0;i<w;i++) if(insideRound(i, j, w, h, r)) blendPx(x+i, y+j, tint, a * uiAlpha);
+  }
+  function strokeRect(x, y, w, h, col){
+    for(var i=0;i<w;i++){ blendPx(x+i, y, col, uiAlpha); blendPx(x+i, y+h-1, col, uiAlpha); }
+    for(var j=0;j<h;j++){ blendPx(x, y+j, col, uiAlpha); blendPx(x+w-1, y+j, col, uiAlpha); }
+  }
+  function drawSparkle(cx, cy, r, col){
+    for(var i=-r;i<=r;i++){ blendPx(cx+i, cy, col, uiAlpha); blendPx(cx, cy+i, col, uiAlpha); }
+    blendPx(cx-1, cy-1, col, uiAlpha); blendPx(cx+1, cy-1, col, uiAlpha);
+    blendPx(cx-1, cy+1, col, uiAlpha); blendPx(cx+1, cy+1, col, uiAlpha);
+    blendPx(cx, cy, [255,255,255], uiAlpha);
+  }
+  function drawMiniSun5x5(x, y, kind){
+    if(kind===1){
+      for(var cx=1;cx<=3;cx++) blendPx(x+cx, y+1, [220,225,240], uiAlpha);
+      for(var cx2=0;cx2<=4;cx2++) blendPx(x+cx2, y+2, [180,190,210], uiAlpha);
+      blendPx(x+1, y+4, [80,190,255], uiAlpha); blendPx(x+3, y+4, [80,190,255], uiAlpha);
+    } else {
+      var yel = [255,215,20];
+      for(var dy=1;dy<=3;dy++) for(var dx=1;dx<=3;dx++) blendPx(x+dx, y+dy, yel, uiAlpha);
+      blendPx(x+2, y, yel, uiAlpha); blendPx(x+2, y+4, yel, uiAlpha);
+      blendPx(x, y+2, yel, uiAlpha); blendPx(x+4, y+2, yel, uiAlpha);
+    }
   }
 
-  var now = new Date();
-  var h = now.getHours() % 12; if(h === 0) h = 12;
-  var m = now.getMinutes(), s = now.getSeconds();
-  var hPad = (h < 10 ? '0' : '') + h, mStr = (m < 10 ? '0' : '') + m, sPad = (s < 10 ? '0' : '') + s;
-  var dStr = (now.getDate() < 10 ? '0' : '') + now.getDate() + '/' + ((now.getMonth()+1) < 10 ? '0' : '') + (now.getMonth()+1);
-
-  if(!isVert){
-    if(lay === 2){
-      fillGlassPill(3, 2, 19, 7, 2, pillTint, 0.35);
-      fillGlassPill(40, 2, 21, 7, 2, pillTint, 0.35);
-      drawSmallStr("LUN", 5, 2, false, inkSub, 4);
-      drawSmallStr(dStr, 41, 2, false, inkMain, 4);
-      fillGlassPill(6, 10, 52, 18, 4, pillTint, 0.28);
-      drawBigDigit(hPad[0], 11, 13); drawBigDigit(hPad[1], 20, 13);
-      setPx(31, 16, inkCyan); setPx(32, 16, inkCyan); setPx(31, 21, inkCyan); setPx(32, 21, inkCyan);
-      drawBigDigit(mStr[0], 35, 13); drawBigDigit(mStr[1], 44, 13);
-    } else if(lay === 3){
-      for(var gx=3;gx<61;gx+=4){ setPx(gx, 2, inkSub); setPx(gx, 28, inkSub); }
-      drawSmallStr(dStr, 4, 3, false, inkSub, 4);
-      drawBigDigit(hPad[0], 11, 13, 'dot'); drawBigDigit(hPad[1], 20, 13, 'dot');
-      setPx(31, 16, [255,45,55]); setPx(32, 16, [255,45,55]); setPx(31, 21, [255,45,55]); setPx(32, 21, [255,45,55]);
-      drawBigDigit(mStr[0], 35, 13, 'dot'); drawBigDigit(mStr[1], 44, 13, 'dot');
-    } else if(lay === 4){
-      for(var tx=4;tx<60;tx+=2) setPx(tx, 1, (tx%10===4)?inkMain:inkSub);
-      drawSmallStr(dStr, 22, 3, false, inkSub, 4);
-      drawBigDigit(hPad[0], 7, 13); drawBigDigit(hPad[1], 16, 13);
-      setPx(26, 17, inkMain); setPx(26, 21, inkMain);
-      drawBigDigit(mStr[0], 29, 13); drawBigDigit(mStr[1], 38, 13);
-      fillGlassPill(49, 13, 12, 12, 2, pillTint, 0.38);
-      drawSmallStr(sPad, 51, 16, false, inkCyan, 5);
-    } else if(lay === 5){
-      drawBigDigit(hPad[0], 3, 9); drawBigDigit(hPad[1], 12, 9);
-      setPx(22, 13, inkCyan); setPx(22, 18, inkCyan);
-      drawBigDigit(mStr[0], 25, 9); drawBigDigit(mStr[1], 34, 9);
-      for(var vy=4;vy<=26;vy++) setPx(44, vy, inkSub);
-      drawSmallStr("LUN", 47, 5, false, inkCyan, 4);
-      drawSmallStr(dStr, 46, 14, false, inkMain, 3);
-    } else if(lay === 6){
-      for(var k=0;k<5;k++){ setPx(2+k,1,inkCyan); setPx(2,1+k,inkCyan); setPx(61-k,1,inkCyan); setPx(61,1+k,inkCyan); }
-      drawSmallStr(dStr, 22, 3, false, inkCyan, 4);
-      drawBigDigit(hPad[0], 11, 13); drawBigDigit(hPad[1], 20, 13);
-      setPx(31, 16, inkCyan); setPx(32, 16, inkCyan); setPx(31, 21, inkCyan); setPx(32, 21, inkCyan);
-      drawBigDigit(mStr[0], 35, 13); drawBigDigit(mStr[1], 44, 13);
-    } else if(lay === 7){
-      fillGlassPill(7, 9, 23, 19, 3, pillTint, 0.48);
-      fillGlassPill(34, 9, 23, 19, 3, pillTint, 0.48);
-      drawBigDigit(hPad[0], 10, 12); drawBigDigit(hPad[1], 19, 12);
-      drawBigDigit(mStr[0], 37, 12); drawBigDigit(mStr[1], 46, 12);
-      for(var fx=7;fx<30;fx++) setPx(fx, 18, [0,0,0]);
-      for(var fx2=34;fx2<57;fx2++) setPx(fx2, 18, [0,0,0]);
-    } else if(lay === 8){
-      drawBigDigit(hPad[0], 11, 6); drawBigDigit(hPad[1], 20, 6);
-      setPx(31, 10, inkCyan); setPx(31, 14, inkCyan);
-      drawBigDigit(mStr[0], 35, 6); drawBigDigit(mStr[1], 44, 6);
-      for(var zx=14;zx<50;zx++) setPx(zx, 21, inkSub);
-      drawSmallStr(dStr, 22, 23, false, inkSub, 4);
-    } else if(lay === 9){
-      fillGlassPill(17, 1, 30, 7, 3, pillTint, 0.35);
-      drawSmallStr(dStr, 22, 1, false, inkMain, 4);
-      fillGlassPill(4, 10, 56, 18, 6, pillTint, 0.35);
-      drawBigDigit(hPad[0], 11, 13); drawBigDigit(hPad[1], 20, 13);
-      setPx(31, 16, inkCyan); setPx(32, 16, inkCyan); setPx(31, 21, inkCyan); setPx(32, 21, inkCyan);
-      drawBigDigit(mStr[0], 35, 13); drawBigDigit(mStr[1], 44, 13);
+  if(state.simMode === 'live' || bootElapsed >= 2100){
+    if(isFull){
+      fillCardGrad(0, 0, 64, 64, 0, state.grad, true, false);
+    } else if(isVert){
+      if(state.clockBg === 0) fillCardSolid(1, 1, 29, 62, 4, [255,255,255]);
+      else if(state.clockBg === 1) fillCardSolid(1, 1, 29, 62, 4, [0,0,0]);
+      else fillCardGrad(1, 1, 29, 62, 4, clkGrad, true, true);
+      fillCardGrad(33, 1, 30, 62, 4, state.grad, false, false);
     } else {
-      drawSmallStr(dStr, 22, 3, isFrost, inkMain, 4);
-      drawBigDigit(hPad[0], 11, 13); drawBigDigit(hPad[1], 20, 13);
-      setPx(31, 16, inkMain); setPx(32, 16, inkMain); setPx(31, 22, inkMain); setPx(32, 22, inkMain);
-      drawBigDigit(mStr[0], 35, 13); drawBigDigit(mStr[1], 44, 13);
-    }
-    for(var sx=2;sx<42;sx++) setPx(sx, 31, inkCyan);
-
-    var wy = 32;
-    if(lay === 2){
-      fillGlassPill(3, wy+2, 22, 27, 4, [8,10,16], 0.35);
-      fillGlassPill(27, wy+2, 34, 27, 4, [8,10,16], 0.28);
-    } else if(lay === 6){
-      strokeRect(2, wy+1, 23, 28, [80,220,255]);
-      strokeRect(27, wy+1, 35, 28, [60,150,210]);
-    } else if(lay === 7){
-      for(var fi=0;fi<3;fi++) fillGlassPill(27+fi*11, wy+2, 10, 27, 2, [8,10,16], 0.42);
-    } else if(lay === 9){
-      fillGlassPill(3, wy+3, 22, 25, 6, [8,10,16], 0.36);
-      fillGlassPill(27, wy+3, 34, 25, 6, [8,10,16], 0.30);
-    }
-    drawSunMini(13, wy+9);
-    drawSmallStr("24C", 7, wy+16, false, [255,255,255], 5);
-    var cols = [32, 43, 54], hrs = ["3","6","9"], tps = ["25","22","19"];
-    for(var ci=0;ci<3;ci++){
-      drawSmallStr(hrs[ci], cols[ci], wy+3, false, [190,195,215], 4);
-      drawSunMini(cols[ci]+1, wy+13);
-      drawSmallStr(tps[ci], cols[ci]-2, wy+21, false, [255,255,255], 4);
-    }
-  } else {
-    if(lay === 10){
-      fillGlassPill(3, 2, 25, 10, 3, pillTint, 0.35);
-      fillGlassPill(3, 14, 25, 22, 4, pillTint, 0.30);
-      fillGlassPill(3, 38, 25, 22, 4, pillTint, 0.30);
-      drawSmallStr(dStr, 5, 4, false, inkMain, 4);
-      drawBigDigit(hPad[0], 7, 19); drawBigDigit(hPad[1], 16, 19);
-      drawBigDigit(mStr[0], 7, 43); drawBigDigit(mStr[1], 16, 43);
-    } else if(lay === 11){
-      for(var gy=3;gy<61;gy+=4){ setPx(2, gy, inkSub); setPx(28, gy, inkSub); }
-      drawSmallStr(dStr, 5, 4, false, inkSub, 4);
-      drawBigDigit(hPad[0], 7, 16, 'dot'); drawBigDigit(hPad[1], 16, 16, 'dot');
-      setPx(14, 33, [255,45,55]); setPx(16, 33, [255,45,55]);
-      drawBigDigit(mStr[0], 7, 38, 'dot'); drawBigDigit(mStr[1], 16, 38, 'dot');
-    } else if(lay === 12){
-      for(var sy0=3;sy0<61;sy0+=2) setPx(2, sy0, (sy0%10===3)?inkMain:inkSub);
-      drawSmallStr(dStr, 6, 4, false, inkSub, 4);
-      drawBigDigit(hPad[0], 8, 16); drawBigDigit(hPad[1], 17, 16);
-      for(var sx2=7;sx2<=24;sx2++) setPx(sx2, 33, inkCyan);
-      drawBigDigit(mStr[0], 8, 38); drawBigDigit(mStr[1], 17, 38);
-    } else if(lay === 13){
-      strokeRect(2, 2, 27, 60, inkCyan);
-      drawSmallStr(dStr, 5, 5, false, inkCyan, 4);
-      drawBigDigit(hPad[0], 7, 17); drawBigDigit(hPad[1], 16, 17);
-      drawBigDigit(mStr[0], 7, 39); drawBigDigit(mStr[1], 16, 39);
-    } else if(lay === 14){
-      fillGlassPill(3, 13, 25, 22, 3, pillTint, 0.48);
-      fillGlassPill(3, 37, 25, 22, 3, pillTint, 0.48);
-      drawSmallStr(dStr, 5, 3, false, inkSub, 4);
-      drawBigDigit(hPad[0], 7, 18); drawBigDigit(hPad[1], 16, 18);
-      drawBigDigit(mStr[0], 7, 42); drawBigDigit(mStr[1], 16, 42);
-      for(var fx3=3;fx3<28;fx3++){ setPx(fx3, 24, [0,0,0]); setPx(fx3, 48, [0,0,0]); }
-    } else if(lay === 16){
-      for(var a=0;a<60;a+=3){
-        var rad = a * Math.PI / 30;
-        setPx(Math.round(15 + Math.cos(rad)*12), Math.round(35 + Math.sin(rad)*12), inkSub);
-      }
-      drawSmallStr(dStr, 5, 4, false, inkSub, 4);
-      drawBigDigit(hPad[0], 7, 20); drawBigDigit(hPad[1], 16, 20);
-      drawBigDigit(mStr[0], 7, 38); drawBigDigit(mStr[1], 16, 38);
-    } else {
-      drawSmallStr(dStr, 5, 4, isFrost, inkMain, 4);
-      drawBigDigit(hPad[0], 7, 16); drawBigDigit(hPad[1], 16, 16);
-      drawBigDigit(mStr[0], 7, 38); drawBigDigit(mStr[1], 16, 38);
-    }
-    for(var sy=1;sy<44;sy++) setPx(31, sy, inkCyan);
-
-    if(lay === 10){
-      fillGlassPill(35, 3, 26, 26, 4, [8,10,16], 0.35);
-      fillGlassPill(35, 31, 26, 29, 4, [8,10,16], 0.28);
-    } else if(lay === 13){
-      strokeRect(34, 2, 28, 27, [80,220,255]);
-      strokeRect(34, 31, 28, 30, [60,150,210]);
-    } else if(lay === 14){
-      fillGlassPill(35, 3, 26, 25, 3, [8,10,16], 0.45);
-      for(var fi2=0;fi2<3;fi2++) fillGlassPill(34+fi2*9, 31, 8, 29, 2, [8,10,16], 0.42);
-    }
-    drawSunMini(48, 10);
-    drawSmallStr("24C", 41, 19, false, [255,255,255], 5);
-    for(var hx=36;hx<60;hx++) setPx(hx, 30, [160,165,185]);
-    var vcols = [38, 48, 58], hrsV = ["3","6","9"], tpsV = ["25","22","19"];
-    for(var ci2=0;ci2<3;ci2++){
-      drawSmallStr(hrsV[ci2], vcols[ci2]-1, 34, false, [190,195,215], 4);
-      drawSunMini(vcols[ci2], 45);
-      drawSmallStr(tpsV[ci2], vcols[ci2]-3, 53, false, [255,255,255], 4);
+      if(state.clockBg === 0) fillCardSolid(1, 0, 62, 31, 4, [255,255,255]);
+      else if(state.clockBg === 1) fillCardSolid(1, 0, 62, 31, 4, [0,0,0]);
+      else fillCardGrad(1, 0, 62, 31, 4, clkGrad, true, false);
+      fillCardGrad(1, 32, 62, 31, 4, state.grad, false, false);
     }
   }
-  return fb;
-}
 
-// ── SIMULADOR DE ANIMACIÓN DE INICIO (SINGULARIDAD PRISMÁTICA) ──
-function buildBootFrame(elapsed, t_ms){
-  var TOTAL = 3200;
-  var p = Math.min(1.0, elapsed / TOTAL);
-  var steady = buildSteadyFrame(t_ms);
-  var fb = new Array(4096);
-  var gradBottom = state.grad;
-  var gradTop = (state.clockBg >= 2) ? (state.clockBg - 2) : state.grad;
+  if(uiAlpha > 0.01){
+    var isSolidWhite = (!isFull && state.clockBg === 0);
+    var inkMain = isSolidWhite ? [15,15,20] : [255,255,255];
+    var inkSub  = isSolidWhite ? [70,70,85] : [185,195,215];
+    var inkCyan = isSolidWhite ? [0,115,180] : [90,235,255];
+    var pillTint = isSolidWhite ? [0,0,0] : [8,10,16];
 
-  if(p < 0.72){
-    var sp = p / 0.72;
-    var ease = sp * sp * (3 - 2 * sp);
-    var orbitR = (1.0 - ease) * 26.0;
-    var spin = sp * 10.5;
-    var shockR = (sp > 0.35) ? ((sp - 0.35) / 0.65) * 48.0 : -10.0;
-    for(var y=0;y<64;y++){
-      for(var x=0;x<64;x++){
-        var dx = x - 31.5, dy = y - 31.5;
-        var d = Math.hypot(dx, dy);
-        var ang = Math.atan2(dy, dx);
-        var dr1 = Math.min(1.0, Math.abs(d - orbitR) / 22.0);
-        var dr2 = 1.0 - (Math.sin(ang * 3 - spin + d * 0.18) * 0.5 + 0.5);
-        var c1 = evalGradRatiosJS(x, y, dr1, dr2, gradTop);
-        var c2 = evalGradRatiosJS(x, y, dr2, dr1, gradBottom);
-        var shockGlow = Math.max(0, 1.0 - Math.abs(d - shockR) / 5.5);
-        var fadeIn = Math.min(1.0, sp * 2.2);
-        fb[y*64+x] = [
-          Math.min(255, Math.round(((c1[0]+c2[0])*0.5 + shockGlow*180) * fadeIn)),
-          Math.min(255, Math.round(((c1[1]+c2[1])*0.5 + shockGlow*195) * fadeIn)),
-          Math.min(255, Math.round(((c1[2]+c2[2])*0.5 + shockGlow*220) * fadeIn))
-        ];
-      }
-    }
-  } else {
-    var mp = (p - 0.72) / 0.28;
-    var mEase = mp * mp * (3 - 2 * mp);
-    var shockFrame = buildBootFrame(0.719 * TOTAL, t_ms);
-    for(var i=0;i<4096;i++){
-      var a = shockFrame[i], b = steady[i];
-      fb[i] = [
-        Math.round(a[0]*(1-mEase) + b[0]*mEase),
-        Math.round(a[1]*(1-mEase) + b[1]*mEase),
-        Math.round(a[2]*(1-mEase) + b[2]*mEase)
+    function frostedColorAt(px, py, vr){
+      if(!isFrost) return inkMain;
+      var cardW = isFull ? 64 : (isVert ? 29 : 62);
+      var cardH = isFull ? 64 : (isVert ? 62 : 31);
+      var lx = isFull ? px : (px - 1);
+      var ly = (isFull || !isVert) ? py : (py - 1);
+      if(isVert && !isFull) ly = cardH - 1 - ly;
+      var c = evalGradColorJS(lx, ly, cardW, cardH, true, clkGrad);
+      var gleam = Math.round(20 * (1 - vr));
+      var glassInv = 255 - (125 + gleam);
+      return [
+        Math.min(255, 255 - Math.round((255 - c[0]) * glassInv / 255)),
+        Math.min(255, 255 - Math.round((255 - c[1]) * glassInv / 255)),
+        Math.min(255, 255 - Math.round((255 - c[2]) * glassInv / 255))
       ];
     }
-  }
-  return fb;
-}
 
-function renderLoop(now){
-  var cv = $('led_canvas');
-  if(cv){
-    var ctx = cv.getContext('2d');
-    var fb;
-    if(state.bootStartMs >= 0){
-      var el = now - state.bootStartMs;
-      if(el >= 3200){
-        state.bootStartMs = -1;
-        fb = buildSteadyFrame(now);
-      } else {
-        fb = buildBootFrame(el, now);
+    function drawMicroStr(str, x, y, useFrost, col, stepX){
+      var cx = x;
+      var adv = stepX || 4;
+      for(var si=0;si<str.length;si++){
+        var ch = str[si];
+        var glyph = FONT_3X5[ch];
+        if(glyph){
+          for(var r=0;r<5;r++){
+            var row = glyph[r];
+            for(var c=0;c<3;c++){
+              if(row & (0x04 >> c)){
+                blendPx(cx+c, y+r, useFrost ? frostedColorAt(cx+c, y+r, r/4.0) : col, uiAlpha);
+              }
+            }
+          }
+          cx += (ch===':' || ch==='1') ? (adv-1) : adv;
+        } else {
+          cx += 2;
+        }
+      }
+    }
+
+    function drawBigDigit(dChar, x, y, style){
+      var rows = BIG_DIGS[dChar];
+      if(!rows) return;
+      for(var r=0;r<12;r++){
+        var row = rows[r];
+        for(var c=0;c<8;c++){
+          if(row & (0x80 >> c)){
+            if(style === 'dot' && ((r & 1) === 1 && (c & 1) === 1)) continue;
+            blendPx(x+c, y+r, frostedColorAt(x+c, y+r, r/12.0), uiAlpha);
+          }
+        }
+      }
+    }
+
+    var now = new Date();
+    var h = now.getHours() % 12; if(h === 0) h = 12;
+    var m = now.getMinutes();
+    var s = now.getSeconds();
+    var hPad = (h < 10 ? '0' : '') + h;
+    var mStr = (m < 10 ? '0' : '') + m;
+    var sPad = (s < 10 ? '0' : '') + s;
+    var dStr = (now.getDate() < 10 ? '0' : '') + now.getDate() + '/' + ((now.getMonth()+1) < 10 ? '0' : '') + (now.getMonth()+1);
+
+    if(!isVert){
+      // ── 10 HORIZONTAL LAYOUTS (0, 2..10) ──
+      if(lay === 2){ // 02: Gemini AI Studio (H)
+        fillGlassPill(2, 1, 60, 27, 5, pillTint, 0.42);
+        drawSparkle(7, 5, 3, [140,185,255]);
+        drawMicroStr("AI", 12, 3, false, [195,165,255], 4);
+        drawMicroStr(dStr, 41, 3, false, inkSub, 4);
+        drawBigDigit(hPad[0], 7, 11); drawBigDigit(hPad[1], 16, 11);
+        blendPx(26, 15, [155,114,203], uiAlpha); blendPx(26, 20, [217,101,112], uiAlpha);
+        drawBigDigit(mStr[0], 29, 11); drawBigDigit(mStr[1], 38, 11);
+        fillGlassPill(48, 12, 12, 10, 3, pillTint, 0.50);
+        drawMicroStr(sPad, 51, 15, false, [140,210,255], 4);
+        for(var gx=4;gx<60;gx++) blendPx(gx, 29, gx<24?[66,133,244]:(gx<44?[155,114,203]:[217,101,112]), uiAlpha);
+      } else if(lay === 3){ // 03: Bento Watch Ultra (H)
+        fillGlassPill(2, 1, 17, 7, 2, pillTint, 0.36);
+        fillGlassPill(21, 1, 22, 7, 2, pillTint, 0.30);
+        fillGlassPill(45, 1, 17, 7, 2, pillTint, 0.36);
+        drawMicroStr("LUN", 5, 2, false, inkCyan, 4);
+        drawMicroStr(dStr, 23, 2, false, inkMain, 4);
+        drawMicroStr(":"+sPad, 47, 2, false, inkCyan, 4);
+        fillGlassPill(4, 10, 56, 18, 4, pillTint, 0.28);
+        drawBigDigit(hPad[0], 11, 13); drawBigDigit(hPad[1], 20, 13);
+        blendPx(31, 16, inkCyan, uiAlpha); blendPx(32, 16, inkCyan, uiAlpha);
+        blendPx(31, 21, inkCyan, uiAlpha); blendPx(32, 21, inkCyan, uiAlpha);
+        drawBigDigit(mStr[0], 35, 13); drawBigDigit(mStr[1], 44, 13);
+      } else if(lay === 4){ // 04: Nothing Dot-Matrix (H)
+        for(var gx2=3;gx2<61;gx2+=3){ blendPx(gx2, 1, inkSub, uiAlpha); blendPx(gx2, 29, inkSub, uiAlpha); }
+        blendPx(5, 5, [255,45,55], uiAlpha); blendPx(6, 5, [255,45,55], uiAlpha);
+        drawMicroStr("LUN "+dStr, 10, 3, false, inkSub, 4);
+        drawBigDigit(hPad[0], 5, 12, 'dot'); drawBigDigit(hPad[1], 14, 12, 'dot');
+        blendPx(24, 15, [255,45,55], uiAlpha); blendPx(24, 20, [255,45,55], uiAlpha);
+        drawBigDigit(mStr[0], 27, 12, 'dot'); drawBigDigit(mStr[1], 36, 12, 'dot');
+        strokeRect(47, 12, 14, 12, [255,45,55]);
+        drawMicroStr(sPad, 51, 16, false, inkMain, 4);
+      } else if(lay === 5){ // 05: Swiss Chrono Sparkline (H)
+        for(var tx=3;tx<61;tx+=2) blendPx(tx, 1, (tx%10===3)?inkMain:inkSub, uiAlpha);
+        drawMicroStr(dStr, 6, 3, false, inkSub, 4);
+        drawBigDigit(hPad[0], 5, 12); drawBigDigit(hPad[1], 14, 12);
+        blendPx(24, 15, inkCyan, uiAlpha); blendPx(24, 20, inkCyan, uiAlpha);
+        drawBigDigit(mStr[0], 27, 12); drawBigDigit(mStr[1], 36, 12);
+        for(var a=0;a<12;a++){ var rA=a*Math.PI/6; blendPx(Math.round(53+Math.cos(rA)*7), Math.round(16+Math.sin(rA)*7), inkSub, uiAlpha); }
+        var sA = (s - 15) * Math.PI / 30;
+        drawLinePx(53, 16, Math.round(53+Math.cos(sA)*6), Math.round(16+Math.sin(sA)*6), [255,60,60]);
+      } else if(lay === 6){ // 06: Cyber HUD Telemetry (H)
+        for(var k=0;k<5;k++){ blendPx(2+k,1,inkCyan,uiAlpha); blendPx(2,1+k,inkCyan,uiAlpha); blendPx(61-k,1,inkCyan,uiAlpha); blendPx(61,1+k,inkCyan,uiAlpha); }
+        drawMicroStr(dStr, 5, 3, false, inkCyan, 4);
+        drawMicroStr("S:"+sPad, 44, 3, false, inkMain, 4);
+        drawBigDigit(hPad[0], 5, 12); drawBigDigit(hPad[1], 14, 12);
+        blendPx(24, 15, inkCyan, uiAlpha); blendPx(24, 20, inkCyan, uiAlpha);
+        drawBigDigit(mStr[0], 27, 12); drawBigDigit(mStr[1], 36, 12);
+        for(var bi=0;bi<4;bi++){ var bh=3+((s+bi*3)%9); fillCardSolid(48+bi*3, 24-bh, 2, bh, 0, (bi&1)?inkCyan:inkMain); }
+      } else if(lay === 7){ // 07: Flip Studio Cards (H)
+        drawMicroStr("LUN "+dStr, 15, 2, false, inkSub, 4);
+        fillGlassPill(3, 9, 21, 19, 3, pillTint, 0.50);
+        fillGlassPill(26, 9, 21, 19, 3, pillTint, 0.50);
+        fillGlassPill(49, 12, 12, 16, 2, pillTint, 0.50);
+        drawBigDigit(hPad[0], 5, 12); drawBigDigit(hPad[1], 14, 12);
+        drawBigDigit(mStr[0], 28, 12); drawBigDigit(mStr[1], 37, 12);
+        drawMicroStr(sPad, 52, 18, false, inkCyan, 4);
+        for(var fx=3;fx<61;fx++) blendPx(fx, 18, [0,0,0], uiAlpha);
+      } else if(lay === 8){ // 08: Editorial Panorama (H)
+        fillGlassPill(2, 3, 18, 25, 3, pillTint, 0.36);
+        drawMicroStr("LUN", 5, 5, false, inkCyan, 4);
+        drawMicroStr(dStr.slice(0,2), 7, 12, false, inkMain, 4);
+        drawMicroStr(":"+sPad, 5, 20, false, inkSub, 4);
+        drawBigDigit(hPad[0], 23, 8); drawBigDigit(hPad[1], 32, 8);
+        blendPx(42, 12, inkCyan, uiAlpha); blendPx(42, 17, inkCyan, uiAlpha);
+        drawBigDigit(mStr[0], 45, 8); drawBigDigit(mStr[1], 54, 8);
+      } else if(lay === 9){ // 09: Zen Horizon (H)
+        drawBigDigit(hPad[0], 11, 4); drawBigDigit(hPad[1], 20, 4);
+        blendPx(31, 8, inkCyan, uiAlpha); blendPx(31, 13, inkCyan, uiAlpha);
+        drawBigDigit(mStr[0], 35, 4); drawBigDigit(mStr[1], 44, 4);
+        for(var zx=6;zx<58;zx++) blendPx(zx, 20, inkSub, uiAlpha);
+        blendPx(32, 20, inkCyan, uiAlpha);
+        drawMicroStr("LUN", 10, 23, false, inkSub, 4);
+        drawMicroStr(dStr, 36, 23, false, inkSub, 4);
+      } else if(lay === 10){ // 10: Dual Pill Glass (H)
+        fillGlassPill(8, 1, 48, 7, 3, pillTint, 0.38);
+        drawMicroStr("LUN "+dStr, 14, 2, false, inkMain, 4);
+        fillGlassPill(3, 10, 58, 18, 6, pillTint, 0.34);
+        drawBigDigit(hPad[0], 6, 13); drawBigDigit(hPad[1], 15, 13);
+        blendPx(25, 16, inkCyan, uiAlpha); blendPx(25, 21, inkCyan, uiAlpha);
+        drawBigDigit(mStr[0], 28, 13); drawBigDigit(mStr[1], 37, 13);
+        fillGlassPill(47, 13, 12, 12, 4, pillTint, 0.45);
+        drawMicroStr(sPad, 50, 17, false, inkCyan, 4);
+      } else { // 0: Clásico H
+        drawMicroStr(dStr, 22, 3, isFrost, inkMain, 4);
+        drawBigDigit(hPad[0], 11, 13); drawBigDigit(hPad[1], 20, 13);
+        blendPx(31, 16, inkMain, uiAlpha); blendPx(32, 16, inkMain, uiAlpha);
+        blendPx(31, 22, inkMain, uiAlpha); blendPx(32, 22, inkMain, uiAlpha);
+        drawBigDigit(mStr[0], 35, 13); drawBigDigit(mStr[1], 44, 13);
+        for(var sx=2;sx<42;sx++) blendPx(sx, 31, inkCyan, uiAlpha);
+      }
+
+      // ── 10 HORIZONTAL WEATHER DESIGNS (0, 2..10) ──
+      var wy = 32;
+      var hrs = ["03","06","09"], tps = ["25","22","19"];
+      if(lay === 2){ // Gemini AI Studio H
+        fillGlassPill(2, wy+2, 23, 27, 5, [8,10,18], 0.44);
+        drawSparkle(7, wy+7, 2, [140,185,255]);
+        drawMiniSun5x5(14, wy+5, 0);
+        drawMicroStr("24C", 7, wy+17, false, [255,255,255], 4);
+        for(var gi=0;gi<3;gi++){
+          var ry = wy + 2 + gi*9;
+          fillGlassPill(27, ry, 35, 8, 3, [8,10,18], 0.36);
+          blendPx(29, ry+4, gi===0?[66,133,244]:(gi===1?[155,114,203]:[217,101,112]), uiAlpha);
+          drawMicroStr(hrs[gi]+"H", 32, ry+2, false, [195,205,235], 4);
+          drawMiniSun5x5(45, ry+1, gi===2?1:0);
+          drawMicroStr(tps[gi], 53, ry+2, false, [255,255,255], 4);
+        }
+      } else if(lay === 3){ // Bento Watch Ultra H
+        fillGlassPill(2, wy+2, 22, 27, 4, [8,10,16], 0.38);
+        fillGlassPill(26, wy+2, 36, 27, 4, [8,10,16], 0.30);
+        drawMiniSun5x5(10, wy+6, 0);
+        drawMicroStr("24C", 7, wy+17, false, [255,255,255], 4);
+        var bw = [11, 8, 6];
+        for(var bi2=0;bi2<3;bi2++){
+          var by = wy + 4 + bi2*8;
+          drawMicroStr(hrs[bi2], 28, by+1, false, [185,195,215], 4);
+          fillGlassPill(37, by+2, 13, 3, 1, [0,0,0], 0.45);
+          fillCardSolid(37, by+2, bw[bi2], 3, 0, [90,230,255]);
+          drawMicroStr(tps[bi2], 52, by+1, false, [255,255,255], 4);
+        }
+      } else if(lay === 4){ // Nothing Dot-Matrix H
+        for(var ni=0;ni<3;ni++){
+          var ny = wy + 4 + ni*9;
+          drawMicroStr(hrs[ni], 3, ny, false, [180,185,200], 4);
+          for(var dx=12;dx<=23;dx+=2) blendPx(dx, ny+2, [120,125,140], uiAlpha);
+          drawMicroStr(tps[ni]+"C", 25, ny, false, [255,255,255], 4);
+        }
+        strokeRect(39, wy+2, 23, 27, [150,155,170]);
+        blendPx(42, wy+5, [255,45,55], uiAlpha); blendPx(43, wy+5, [255,45,55], uiAlpha);
+        drawMiniSun5x5(52, wy+5, 0);
+        drawMicroStr("24C", 45, wy+17, false, [255,255,255], 4);
+      } else if(lay === 5){ // Swiss Chrono Sparkline H
+        drawMiniSun5x5(9, wy+5, 0);
+        drawMicroStr("24C", 6, wy+16, false, [255,255,255], 4);
+        for(var vy2=wy+3;vy2<wy+28;vy2++) blendPx(23, vy2, [140,150,175], uiAlpha);
+        var sxP = [30, 43, 56], syP = [wy+13, wy+16, wy+19];
+        drawLinePx(sxP[0], syP[0], sxP[1], syP[1], [90,235,255]);
+        drawLinePx(sxP[1], syP[1], sxP[2], syP[2], [90,235,255]);
+        for(var si2=0;si2<3;si2++){
+          drawMicroStr(hrs[si2], sxP[si2]-3, wy+3, false, [185,195,215], 4);
+          blendPx(sxP[si2], syP[si2], [255,255,255], uiAlpha);
+          drawMicroStr(tps[si2], sxP[si2]-3, wy+23, false, [255,255,255], 4);
+        }
+      } else if(lay === 6){ // Cyber HUD H
+        strokeRect(2, wy+1, 60, 10, [80,220,255]);
+        drawMiniSun5x5(6, wy+3, 0);
+        drawMicroStr("NOW 24C", 14, wy+4, false, [255,255,255], 4);
+        for(var ci3=0;ci3<3;ci3++){
+          var cx3 = 2 + ci3*20;
+          strokeRect(cx3, wy+13, 19, 17, [60,155,210]);
+          drawMicroStr(hrs[ci3]+"H", cx3+4, wy+15, false, [90,235,255], 4);
+          drawMicroStr(tps[ci3]+"C", cx3+4, wy+23, false, [255,255,255], 4);
+        }
+      } else if(lay === 7){ // Flip Studio H
+        fillGlassPill(2, wy+2, 22, 27, 3, [8,10,16], 0.48);
+        drawMiniSun5x5(10, wy+5, 0);
+        drawMicroStr("24C", 7, wy+18, false, [255,255,255], 4);
+        for(var fx4=2;fx4<24;fx4++) blendPx(fx4, wy+14, [0,0,0], uiAlpha);
+        for(var fi3=0;fi3<3;fi3++){
+          var tx2 = 26 + fi3*12;
+          fillGlassPill(tx2, wy+2, 11, 27, 2, [8,10,16], 0.46);
+          drawMicroStr(hrs[fi3], tx2+2, wy+4, false, [190,200,220], 4);
+          for(var lx2=tx2;lx2<tx2+11;lx2++) blendPx(lx2, wy+13, [0,0,0], uiAlpha);
+          drawMicroStr(tps[fi3], tx2+2, wy+18, false, [255,255,255], 4);
+        }
+      } else if(lay === 8){ // Editorial Panorama H
+        for(var ei=0;ei<3;ei++){
+          var ex = 3 + ei*12;
+          drawMicroStr(hrs[ei], ex+1, wy+3, false, [185,195,215], 4);
+          drawMiniSun5x5(ex+2, wy+11, ei===2?1:0);
+          drawMicroStr(tps[ei], ex+1, wy+21, false, [255,255,255], 4);
+        }
+        fillGlassPill(40, wy+2, 22, 27, 4, [8,10,16], 0.38);
+        drawMiniSun5x5(48, wy+5, 0);
+        drawMicroStr("24C", 45, wy+17, false, [255,255,255], 4);
+      } else if(lay === 9){ // Zen Horizon H
+        drawMiniSun5x5(18, wy+3, 0);
+        drawMicroStr("24C", 27, wy+3, false, [255,255,255], 4);
+        for(var zx2=6;zx2<58;zx2++) blendPx(zx2, wy+12, [150,160,180], uiAlpha);
+        for(var zi=0;zi<3;zi++){
+          var zpx = 4 + zi*19;
+          blendPx(zpx+8, wy+12, [90,235,255], uiAlpha);
+          drawMicroStr(hrs[zi]+"H", zpx+3, wy+15, false, [185,195,215], 4);
+          drawMicroStr(tps[zi]+"C", zpx+3, wy+22, false, [255,255,255], 4);
+        }
+      } else if(lay === 10){ // Dual Pill Glass H
+        fillGlassPill(3, wy+2, 58, 11, 5, [8,10,16], 0.38);
+        drawMiniSun5x5(8, wy+5, 0);
+        drawMicroStr("HOY 24C", 18, wy+5, false, [255,255,255], 4);
+        fillGlassPill(3, wy+15, 58, 14, 5, [8,10,16], 0.32);
+        for(var pi=0;pi<3;pi++){
+          var px2 = 6 + pi*18;
+          drawMiniSun5x5(px2, wy+19, pi===2?1:0);
+          drawMicroStr(tps[pi], px2+7, wy+20, false, [255,255,255], 4);
+        }
+      } else { // 0: Clásico H
+        drawMiniSun5x5(10, wy+6, 0);
+        drawMicroStr("24C", 7, wy+17, false, [255,255,255], 4);
+        var cols = [29, 41, 53];
+        for(var ci=0;ci<3;ci++){
+          drawMicroStr(hrs[ci], cols[ci], wy+3, false, [190,195,215], 4);
+          drawMiniSun5x5(cols[ci]+1, wy+11, ci===2?1:0);
+          drawMicroStr(tps[ci]+"C", cols[ci]-1, wy+21, false, [255,255,255], 4);
+        }
       }
     } else {
-      fb = buildSteadyFrame(now);
-    }
+      // ── 10 VERTICAL CLOCK DESIGNS (1, 11..19) ──
+      if(lay === 11){ // 12: Gemini AI Vertical (V)
+        fillGlassPill(2, 2, 27, 60, 5, pillTint, 0.42);
+        drawSparkle(7, 7, 2, [140,185,255]);
+        drawMicroStr(dStr, 11, 5, false, [195,165,255], 3);
+        drawBigDigit(hPad[0], 7, 15); drawBigDigit(hPad[1], 16, 15);
+        for(var gx3=5;gx3<=25;gx3++) blendPx(gx3, 31, gx3<12?[66,133,244]:(gx3<19?[155,114,203]:[217,101,112]), uiAlpha);
+        drawBigDigit(mStr[0], 7, 35); drawBigDigit(mStr[1], 16, 35);
+        fillGlassPill(6, 51, 19, 8, 3, pillTint, 0.50);
+        drawMicroStr(":"+sPad, 10, 53, false, [140,210,255], 4);
+      } else if(lay === 12){ // 13: Bento Split Pro (V)
+        fillGlassPill(3, 2, 25, 10, 3, pillTint, 0.35);
+        fillGlassPill(3, 14, 25, 22, 4, pillTint, 0.30);
+        fillGlassPill(3, 38, 25, 22, 4, pillTint, 0.30);
+        drawMicroStr(dStr, 6, 5, false, inkMain, 4);
+        drawBigDigit(hPad[0], 7, 19); drawBigDigit(hPad[1], 16, 19);
+        drawBigDigit(mStr[0], 7, 43); drawBigDigit(mStr[1], 16, 43);
+      } else if(lay === 13){ // 14: Nothing Dot-Matrix (V)
+        for(var gy=3;gy<61;gy+=4){ blendPx(2, gy, inkSub, uiAlpha); blendPx(28, gy, inkSub, uiAlpha); }
+        drawMicroStr(dStr, 6, 4, false, inkSub, 4);
+        drawBigDigit(hPad[0], 7, 14, 'dot'); drawBigDigit(hPad[1], 16, 14, 'dot');
+        blendPx(14, 30, [255,45,55], uiAlpha); blendPx(16, 30, [255,45,55], uiAlpha);
+        drawBigDigit(mStr[0], 7, 34, 'dot'); drawBigDigit(mStr[1], 16, 34, 'dot');
+        strokeRect(7, 50, 17, 9, [255,45,55]);
+        drawMicroStr(sPad, 12, 52, false, inkMain, 4);
+      } else if(lay === 14){ // 15: Swiss Gallery Sparkline (V)
+        for(var sy0=3;sy0<61;sy0+=2) blendPx(2, sy0, (sy0%10===3)?inkMain:inkSub, uiAlpha);
+        drawMicroStr(dStr, 7, 4, false, inkSub, 4);
+        drawBigDigit(hPad[0], 8, 14); drawBigDigit(hPad[1], 17, 14);
+        for(var sx2=7;sx2<=25;sx2++) blendPx(sx2, 31, inkCyan, uiAlpha);
+        drawBigDigit(mStr[0], 8, 35); drawBigDigit(mStr[1], 17, 35);
+        drawMicroStr(":"+sPad, 11, 52, false, inkCyan, 4);
+      } else if(lay === 15){ // 16: Cyber Tower HUD (V)
+        strokeRect(2, 2, 27, 60, inkCyan);
+        drawMicroStr(dStr, 6, 5, false, inkCyan, 4);
+        drawBigDigit(hPad[0], 7, 15); drawBigDigit(hPad[1], 16, 15);
+        drawBigDigit(mStr[0], 7, 34); drawBigDigit(mStr[1], 16, 34);
+        drawMicroStr("S:"+sPad, 8, 52, false, inkMain, 4);
+      } else if(lay === 16){ // 17: Flip Stack (V)
+        fillGlassPill(3, 12, 25, 21, 3, pillTint, 0.48);
+        fillGlassPill(3, 36, 25, 21, 3, pillTint, 0.48);
+        drawMicroStr(dStr, 6, 4, false, inkSub, 4);
+        drawBigDigit(hPad[0], 7, 16); drawBigDigit(hPad[1], 16, 16);
+        drawBigDigit(mStr[0], 7, 40); drawBigDigit(mStr[1], 16, 40);
+        for(var fx3=3;fx3<28;fx3++){ blendPx(fx3, 22, [0,0,0], uiAlpha); blendPx(fx3, 46, [0,0,0], uiAlpha); }
+      } else if(lay === 17){ // 18: Brutalist Bold (V)
+        fillGlassPill(2, 2, 27, 9, 2, inkCyan, 0.35);
+        drawMicroStr(dStr, 6, 4, false, inkMain, 4);
+        drawBigDigit(hPad[0], 7, 14); drawBigDigit(hPad[1], 16, 14);
+        fillCardSolid(4, 30, 23, 2, 0, inkCyan);
+        drawBigDigit(mStr[0], 7, 35); drawBigDigit(mStr[1], 16, 35);
+        drawMicroStr(":"+sPad, 10, 52, false, inkMain, 4);
+      } else if(lay === 18){ // 19: Chrono Dial Orbital (V)
+        strokeRect(2, 2, 27, 60, inkSub);
+        blendPx(2, 15, inkCyan, uiAlpha); blendPx(3, 15, inkCyan, uiAlpha);
+        drawMicroStr(dStr, 6, 5, false, inkSub, 4);
+        drawBigDigit(hPad[0], 7, 16); drawBigDigit(hPad[1], 16, 16);
+        drawBigDigit(mStr[0], 7, 36); drawBigDigit(mStr[1], 16, 36);
+        drawMicroStr(sPad, 12, 53, false, inkCyan, 4);
+      } else if(lay === 19){ // 20: Zen Pillar (V)
+        drawMicroStr("LUN", 10, 4, false, inkSub, 4);
+        drawBigDigit(hPad[0], 7, 13); drawBigDigit(hPad[1], 16, 13);
+        blendPx(15, 29, inkCyan, uiAlpha);
+        drawBigDigit(mStr[0], 7, 33); drawBigDigit(mStr[1], 16, 33);
+        drawMicroStr(dStr, 6, 53, false, inkSub, 4);
+      } else { // 1: Clásico V
+        drawMicroStr(dStr, 6, 4, isFrost, inkMain, 4);
+        drawBigDigit(hPad[0], 7, 16); drawBigDigit(hPad[1], 16, 16);
+        drawBigDigit(mStr[0], 7, 38); drawBigDigit(mStr[1], 16, 38);
+        for(var sy=1;sy<44;sy++) blendPx(31, sy, inkCyan, uiAlpha);
+      }
 
-    ctx.fillStyle = '#050507';
-    ctx.fillRect(0, 0, 384, 384);
-    for(var py=0;py<64;py++){
-      for(var px=0;px<64;px++){
-        var c = fb[py*64+px];
-        if(c[0]===0 && c[1]===0 && c[2]===0){
-          ctx.fillStyle = '#101015';
-        } else {
-          ctx.fillStyle = 'rgb('+c[0]+','+c[1]+','+c[2]+')';
+      // ── 10 VERTICAL WEATHER DESIGNS (1, 11..19) ──
+      var hrsV = ["03","06","09"], tpsV = ["25","22","19"];
+      if(lay === 11){ // Gemini AI Vertical V
+        fillGlassPill(34, 2, 28, 25, 5, [8,10,18], 0.44);
+        drawSparkle(39, 7, 2, [140,185,255]);
+        drawMiniSun5x5(48, 5, 0);
+        drawMicroStr("24C", 42, 16, false, [255,255,255], 4);
+        for(var gvi=0;gvi<3;gvi++){
+          var gry = 30 + gvi*11;
+          fillGlassPill(34, gry, 28, 9, 3, [8,10,18], 0.36);
+          blendPx(36, gry+4, gvi===0?[66,133,244]:(gvi===1?[155,114,203]:[217,101,112]), uiAlpha);
+          drawMicroStr(hrsV[gvi], 39, gry+2, false, [195,205,235], 4);
+          drawMiniSun5x5(48, gry+2, gvi===2?1:0);
+          drawMicroStr(tpsV[gvi], 54, gry+2, false, [255,255,255], 4);
         }
-        ctx.fillRect(px*6 + 0.5, py*6 + 0.5, 4.9, 4.9);
+      } else if(lay === 12){ // Bento Split Pro V
+        fillGlassPill(34, 2, 28, 24, 4, [8,10,16], 0.38);
+        drawMiniSun5x5(46, 5, 0);
+        drawMicroStr("24C", 42, 15, false, [255,255,255], 4);
+        for(var bvi=0;bvi<3;bvi++){
+          var bry = 28 + bvi*11;
+          fillGlassPill(34, bry, 28, 9, 3, [8,10,16], 0.30);
+          drawMicroStr(hrsV[bvi], 36, bry+2, false, [185,195,215], 4);
+          drawMiniSun5x5(45, bry+2, bvi===2?1:0);
+          drawMicroStr(tpsV[bvi], 53, bry+2, false, [255,255,255], 4);
+        }
+      } else if(lay === 13){ // Nothing Dot-Matrix V
+        strokeRect(34, 2, 28, 24, [150,155,170]);
+        blendPx(37, 5, [255,45,55], uiAlpha); blendPx(38, 5, [255,45,55], uiAlpha);
+        drawMiniSun5x5(48, 5, 0);
+        drawMicroStr("24C", 42, 15, false, [255,255,255], 4);
+        for(var nvi=0;nvi<3;nvi++){
+          var nvx = 35 + nvi*9;
+          drawMicroStr(hrsV[nvi], nvx, 29, false, [180,185,200], 4);
+          for(var dty=37;dty<=49;dty+=2) blendPx(nvx+3, dty, dty>=41?[255,45,55]:[90,95,110], uiAlpha);
+          drawMicroStr(tpsV[nvi], nvx, 53, false, [255,255,255], 4);
+        }
+      } else if(lay === 14){ // Swiss Gallery Sparkline V
+        drawMiniSun5x5(46, 5, 0);
+        drawMicroStr("24C", 42, 15, false, [255,255,255], 4);
+        for(var shx=35;shx<61;shx++) blendPx(shx, 26, [150,160,180], uiAlpha);
+        var svx = [38, 48, 58], svy = [41, 44, 47];
+        drawLinePx(svx[0], svy[0], svx[1], svy[1], [90,235,255]);
+        drawLinePx(svx[1], svy[1], svx[2], svy[2], [90,235,255]);
+        for(var svi=0;svi<3;svi++){
+          drawMicroStr(hrsV[svi], svx[svi]-3, 30, false, [185,195,215], 4);
+          blendPx(svx[svi], svy[svi], [255,255,255], uiAlpha);
+          drawMicroStr(tpsV[svi], svx[svi]-3, 54, false, [255,255,255], 4);
+        }
+      } else if(lay === 15){ // Cyber Tower HUD V
+        strokeRect(34, 2, 28, 24, [80,220,255]);
+        drawMiniSun5x5(46, 5, 0);
+        drawMicroStr("24C", 42, 15, false, [255,255,255], 4);
+        strokeRect(34, 28, 28, 33, [60,155,210]);
+        var cbw = [8, 6, 4];
+        for(var cvi=0;cvi<3;cvi++){
+          var cry = 31 + cvi*10;
+          drawMicroStr(hrsV[cvi], 36, cry, false, [90,235,255], 4);
+          fillCardSolid(45, cry+1, cbw[cvi], 3, 0, [80,220,255]);
+          drawMicroStr(tpsV[cvi], 54, cry, false, [255,255,255], 4);
+        }
+      } else if(lay === 16){ // Flip Stack V
+        fillGlassPill(34, 2, 28, 24, 3, [8,10,16], 0.48);
+        drawMiniSun5x5(46, 5, 0);
+        drawMicroStr("24C", 42, 16, false, [255,255,255], 4);
+        for(var fvx=34;fvx<62;fvx++) blendPx(fvx, 13, [0,0,0], uiAlpha);
+        for(var fvi=0;fvi<3;fvi++){
+          var fry = 28 + fvi*11;
+          fillGlassPill(34, fry, 13, 9, 2, [8,10,16], 0.46);
+          fillGlassPill(49, fry, 13, 9, 2, [8,10,16], 0.46);
+          drawMicroStr(hrsV[fvi]+"H", 35, fry+2, false, [185,195,215], 4);
+          drawMicroStr(tpsV[fvi]+"C", 50, fry+2, false, [255,255,255], 4);
+        }
+      } else if(lay === 17){ // Brutalist Bold V
+        fillGlassPill(34, 2, 28, 8, 2, [90,235,255], 0.32);
+        drawMicroStr("CLIMA", 39, 4, false, [255,255,255], 4);
+        drawMiniSun5x5(38, 14, 0);
+        drawMicroStr("24C", 47, 15, false, [255,255,255], 4);
+        fillCardSolid(35, 25, 26, 2, 0, [255,255,255]);
+        for(var bbi=0;bbi<3;bbi++){
+          var bbry = 30 + bbi*10;
+          drawMicroStr(hrsV[bbi]+"H", 36, bbry, false, [190,200,220], 4);
+          drawMicroStr(tpsV[bbi]+"C", 50, bbry, false, [255,255,255], 4);
+        }
+      } else if(lay === 18){ // Chrono Dial V
+        drawMiniSun5x5(46, 5, 0);
+        drawMicroStr("24C", 42, 15, false, [255,255,255], 4);
+        var gbh = [11, 8, 5];
+        for(var dvi=0;dvi<3;dvi++){
+          var dvx = 35 + dvi*9;
+          drawMicroStr(hrsV[dvi], dvx, 28, false, [185,195,215], 4);
+          fillGlassPill(dvx+2, 36, 4, 14, 1, [0,0,0], 0.48);
+          fillCardSolid(dvx+2, 50-gbh[dvi], 4, gbh[dvi], 0, [90,235,255]);
+          drawMicroStr(tpsV[dvi], dvx, 53, false, [255,255,255], 4);
+        }
+      } else if(lay === 19){ // Zen Pillar V
+        drawMiniSun5x5(46, 5, 0);
+        drawMicroStr("24C", 42, 15, false, [255,255,255], 4);
+        for(var zpy=29;zpy<=56;zpy++) blendPx(48, zpy, [140,150,175], uiAlpha);
+        for(var zvi=0;zvi<3;zvi++){
+          var zvry = 30 + zvi*10;
+          drawMicroStr(hrsV[zvi]+"H", 35, zvry, false, [185,195,215], 4);
+          blendPx(48, zvry+2, [90,235,255], uiAlpha);
+          drawMicroStr(tpsV[zvi]+"C", 51, zvry, false, [255,255,255], 4);
+        }
+      } else { // 1: Clásico V
+        drawMiniSun5x5(46, 6, 0);
+        drawMicroStr("24C", 42, 16, false, [255,255,255], 4);
+        for(var hx=36;hx<60;hx++) blendPx(hx, 28, [160,165,185], uiAlpha);
+        var vcols = [35, 45, 54];
+        for(var ci2=0;ci2<3;ci2++){
+          drawMicroStr(hrsV[ci2], vcols[ci2], 32, false, [190,195,215], 4);
+          drawMiniSun5x5(vcols[ci2]+1, 41, ci2===2?1:0);
+          drawMicroStr(tpsV[ci2], vcols[ci2], 51, false, [255,255,255], 4);
+        }
       }
     }
   }
-  requestAnimationFrame(renderLoop);
+
+  ctx.fillStyle = '#040508';
+  ctx.fillRect(0, 0, 256, 256);
+  for(var py=0;py<64;py++){
+    for(var px=0;px<64;px++){
+      var c = fb[py*64+px];
+      if(c[0]===0 && c[1]===0 && c[2]===0){
+        ctx.fillStyle = '#0e1017';
+      } else {
+        ctx.fillStyle = 'rgb(' + c[0] + ',' + c[1] + ',' + c[2] + ')';
+      }
+      ctx.fillRect(px*4, py*4, 3.35, 3.35);
+    }
+  }
 }
 
-// ── PUENTE LAN DIRECTO AL ESP32 ──
-function getCleanIp(){
-  var ip = ($('esp_ip').value || '').trim().replace(/^https?:\/\//,'').replace(/\/.*$/,'');
-  if(ip) localStorage.setItem('esp32_clock_ip', ip);
-  return ip;
+function animLoop(){
+  renderMatrixFrame();
+  requestAnimationFrame(animLoop);
 }
 
-function pullFromClock(){
-  var ip = getCleanIp();
-  if(!ip){ $('lan_st').textContent = 'Escribe la IP local de tu reloj primero.'; return; }
-  $('lan_st').textContent = 'Conectando con http://' + ip + '/config ...';
-  fetch('http://' + ip + '/config')
+// ── COMUNICACIÓN CON EL RELOJ FÍSICO Y BUSCADOR DE IPs LAN ──
+function showToast(msg, isErr){
+  var el = $('toast_box');
+  el.style.color = isErr ? '#f87171' : '#34d399';
+  el.textContent = msg;
+  setTimeout(function(){ if(el.textContent === msg) el.textContent = ''; }, 3500);
+}
+
+function getBaseUrl(){
+  var ip = $('clock_ip').value.trim().replace(/^https?:\/\//,'').replace(/\/.*$/,'');
+  if(!ip) return '';
+  return 'http://' + ip;
+}
+
+function connectToClock(customIp){
+  if(customIp) $('clock_ip').value = customIp;
+  var base = getBaseUrl();
+  if(!base){
+    switchMainTab('net');
+    showToast('Ingresa la IP de tu reloj o usa el Buscador Automático', true);
+    return;
+  }
+  showToast('Conectando con ' + base + '...');
+  fetch(base + '/config?t=' + Date.now())
     .then(function(r){ return r.json(); })
     .then(function(d){
-      if(d.layout !== undefined) state.layout = Number(d.layout);
-      if(d.anim_mode !== undefined) state.animMode = Number(d.anim_mode);
+      localStorage.setItem('esp32_clock_ip', $('clock_ip').value.trim());
+      $('conn_dot').className = 'status-dot online';
+      if(d.brightness !== undefined){
+        state.brightness = Number(d.brightness);
+        $('bright_slider').value = state.brightness;
+        $('bright_val').textContent = Math.round(state.brightness / 2.55) + '%';
+      }
+      if(d.tz !== undefined) $('tz_sel').value = String(d.tz);
+      if(d.city !== undefined) $('city_in').value = d.city.split('|')[0];
       if(d.grad !== undefined) state.grad = Number(d.grad);
       if(d.clock_bg !== undefined) state.clockBg = Number(d.clock_bg);
       if(d.full_screen !== undefined) state.fullScreen = Number(d.full_screen);
       if(d.frost_clk !== undefined) state.frostClk = Number(d.frost_clk);
-      syncUI();
-      $('lan_st').style.color = 'var(--green)';
-      $('lan_st').textContent = '✓ Configuración leída del reloj (Firmware v' + (d.fw_ver || '?') + ')';
+      if(d.layout !== undefined) state.layout = Number(d.layout);
+      if(d.anim_mode !== undefined) state.animMode = Number(d.anim_mode);
+      if(d.boot_mode !== undefined) state.bootMode = Number(d.boot_mode);
+      if(d.fw_ver) $('top_ver').textContent = 'v' + d.fw_ver;
+      renderAllControls();
+      showToast('✓ Conectado al reloj (' + (d.fw_ver ? 'v'+d.fw_ver : base) + ')');
     })
     .catch(function(){
-      $('lan_st').style.color = 'var(--orange)';
-      $('lan_st').textContent = 'No se pudo conectar. Asegúrate de estar en la misma red Wi-Fi (y permitir HTTP local).';
+      $('conn_dot').className = 'status-dot';
+      showToast('No se pudo conectar. Verifica la IP o permite contenido mixto HTTP.', true);
     });
 }
 
-function pushToClock(){
-  var ip = getCleanIp();
-  if(!ip){ $('lan_st').textContent = 'Escribe la IP local de tu reloj primero.'; return; }
-  $('lan_st').textContent = 'Enviando diseño a http://' + ip + '/config ...';
-  var body = 'full_screen=' + state.fullScreen +
+function pushConfigToClock(){
+  var base = getBaseUrl();
+  if(!base){
+    switchMainTab('net');
+    showToast('Primero conecta o busca la IP de tu reloj en la pestaña 📡', true);
+    return;
+  }
+  var body = 'brightness=' + $('bright_slider').value +
+             '&tz=' + $('tz_sel').value +
+             '&city=' + encodeURIComponent($('city_in').value.trim() || 'Morelia, MX') +
+             '&full_screen=' + state.fullScreen +
              '&grad=' + state.grad +
              '&clock_bg=' + state.clockBg +
-             '&frost_clk=' + (state.frostClk ? 1 : 0) +
+             '&frost_clk=' + state.frostClk +
              '&layout=' + state.layout +
-             '&anim_mode=' + state.animMode;
-  fetch('http://' + ip + '/config', {
+             '&anim_mode=' + state.animMode +
+             '&boot_mode=' + state.bootMode;
+
+  showToast('Enviando configuración al reloj...');
+  fetch(base + '/config', {
     method: 'POST',
-    headers: {'Content-Type':'application/x-www-form-urlencoded'},
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: body
   })
   .then(function(r){ return r.json(); })
   .then(function(){
-    $('lan_st').style.color = 'var(--green)';
-    $('lan_st').textContent = '✓ ¡Diseño aplicado en vivo en tu matriz física!';
+    $('conn_dot').className = 'status-dot online';
+    showToast('✓ ¡Ajustes aplicados en vivo en tu reloj!');
   })
   .catch(function(){
-    $('lan_st').style.color = 'var(--orange)';
-    $('lan_st').textContent = 'Error al enviar. Verifica la IP del reloj en tu red local.';
+    showToast('Error al enviar ajustes. Verifica que el reloj esté encendido.', true);
   });
 }
 
-// ── CONSULTA OTA ──
-fetch('./version.json?t=' + Date.now())
-  .then(function(r){ return r.ok ? r.json() : null; })
-  .then(function(info){
-    if(!info) return;
-    $('ota_ver_badge').textContent = 'Firmware v' + info.version;
-    $('ota_date_lbl').textContent = info.build_time || '';
-    var box = $('ota_changelog');
-    box.innerHTML = '';
-    (info.changelog || []).forEach(function(line){
-      var d = document.createElement('div');
-      d.className = 'ota-item';
-      d.textContent = line;
-      box.appendChild(d);
-    });
-  }).catch(function(){
-    $('ota_ver_badge').textContent = 'Studio Online';
-  });
+function previewBootOnHardware(){
+  var base = getBaseUrl();
+  if(!base){
+    switchMainTab('net');
+    showToast('Conecta primero la IP de tu reloj para probar el arranque físico', true);
+    return;
+  }
+  fetch(base + '/config', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: 'boot_mode=' + state.bootMode + '&preview_boot=' + state.bootMode
+  })
+  .then(function(){ showToast('🚀 Reproduciendo animación de inicio en tu reloj físico...'); })
+  .catch(function(){ showToast('No se pudo contactar el reloj.', true); });
+}
 
-var savedIp = localStorage.getItem('esp32_clock_ip');
-if(savedIp) $('esp_ip').value = savedIp;
-syncUI();
-requestAnimationFrame(renderLoop);
+function triggerClockOta(){
+  var base = getBaseUrl();
+  if(!base){
+    showToast('Conecta primero la IP de tu reloj.', true);
+    return;
+  }
+  if(!confirm('¿Descargar e instalar la última actualización OTA en tu reloj ahora?')) return;
+  fetch(base + '/config', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: 'start_ota=1'
+  })
+  .then(function(){ showToast('⬇️ Descargando actualización OTA en el reloj...'); })
+  .catch(function(){ showToast('Error al iniciar OTA.', true); });
+}
+
+function rebootClockRemote(){
+  var base = getBaseUrl();
+  if(!base) return;
+  if(!confirm('¿Reiniciar el reloj ahora?')) return;
+  fetch(base + '/config', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: 'reboot=1'
+  }).then(function(){ showToast('🔄 Reiniciando reloj...'); }).catch(function(){});
+}
+
+// ── ESCÁNER AUTOMÁTICO DE RELOJES EN RED LOCAL (LAN IP SCANNER) ──
+var scanRunning = false;
+async function scanLocalNetwork(){
+  if(scanRunning) return;
+  var prefix = $('scan_subnet').value.trim().replace(/\.$/, '');
+  var parts = prefix.split('.');
+  if(parts.length === 4) prefix = parts.slice(0, 3).join('.');
+  if(prefix.split('.').length !== 3){
+    showToast('Ingresa los 3 primeros bloques de tu red (ej. 192.168.1)', true);
+    return;
+  }
+
+  scanRunning = true;
+  var btn = $('btn_start_scan');
+  btn.disabled = true;
+  btn.textContent = 'Escaneando red...';
+  $('scan_prog_wrap').style.display = 'block';
+  var foundBox = $('found_clocks');
+  foundBox.innerHTML = '';
+  var foundCount = 0;
+
+  var batchSize = 26;
+  for(var start = 1; start <= 254; start += batchSize){
+    var end = Math.min(254, start + batchSize - 1);
+    var pct = Math.round((start / 254) * 100);
+    $('scan_prog_lbl').textContent = 'Probando ' + prefix + '.' + start + ' – .' + end + '...';
+    $('scan_prog_pct').textContent = pct + '%';
+    $('scan_prog_fill').style.width = pct + '%';
+
+    var promises = [];
+    for(var host = start; host <= end; host++){
+      (function(ip){
+        var ctrl = new AbortController();
+        var tid = setTimeout(function(){ ctrl.abort(); }, 950);
+        var p = fetch('http://' + ip + '/config?t=' + Date.now(), { signal: ctrl.signal })
+          .then(function(r){ clearTimeout(tid); return r.ok ? r.json() : null; })
+          .then(function(data){
+            if(data && data.fw_ver !== undefined){
+              foundCount++;
+              var card = document.createElement('div');
+              card.className = 'found-clock-item';
+              card.innerHTML =
+                '<div>' +
+                  '<div style="font-size:14.5px;font-weight:700;color:#34d399">✅ Reloj ESP32 Encontrado · ' + ip + '</div>' +
+                  '<div style="font-size:12px;color:#cbd5e1;margin-top:2px">' +
+                    'Firmware: <b>v' + data.fw_ver + '</b> · Ciudad: <b>' + ((data.city||'').split('|')[0] || 'N/A') + '</b> · Modo Layout: <b>' + data.layout + '</b>' +
+                  '</div>' +
+                '</div>' +
+                '<div style="display:flex;gap:8px">' +
+                  '<button type="button" class="btn-pill btn-gemini" onclick="connectToClock(\'' + ip + '\')">Conectar Aquí</button>' +
+                  '<a href="http://' + ip + '/" target="_blank" class="btn-pill" style="text-decoration:none">Abrir Panel Local ↗</a>' +
+                '</div>';
+              foundBox.appendChild(card);
+              if(foundCount === 1){
+                connectToClock(ip);
+              }
+            }
+          })
+          .catch(function(){ clearTimeout(tid); });
+        promises.push(p);
+      })(prefix + '.' + host);
+    }
+    await Promise.all(promises);
+  }
+
+  $('scan_prog_lbl').textContent = foundCount > 0
+    ? ('¡Escaneo completado! Se encontraron ' + foundCount + ' reloj(es) en ' + prefix + '.x')
+    : ('Escaneo completado en ' + prefix + '.x (0 encontrados). Prueba otro prefijo como 192.168.0 o 192.168.100.');
+  $('scan_prog_pct').textContent = '100%';
+  $('scan_prog_fill').style.width = '100%';
+  btn.disabled = false;
+  btn.textContent = '🚀 Iniciar Búsqueda de Relojes';
+  scanRunning = false;
+}
+
+// Inicialización
+renderAllControls();
+requestAnimationFrame(animLoop);
+if(state.connectedIp){
+  connectToClock(state.connectedIp);
+}
 </script>
 </body>
 </html>
