@@ -1,7 +1,7 @@
 {
-  "version": "1.0.15",
-  "build_time": "11/11/2026 21:37",
-  "notes": "11/11/2026 21:37",
+  "version": "1.0.16",
+  "build_time": "11/11/2026 21:38",
+  "notes": "11/11/2026 21:38",
   "changelog": [
     "Auditoria y rediseno total con 20 Layouts profesionales de Reloj + Clima + Segundero (10 Horizontales y 10 Verticales, cero traslapes).",
     "Nuevos Layouts inspirados en la UX de Google Gemini AI (Gemini AI Studio H y Gemini AI Vertical V) con estrella de 4 puntas y chips de pronostico.",
