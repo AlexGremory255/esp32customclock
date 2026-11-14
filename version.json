@@ -1,7 +1,7 @@
 {
-  "version": "1.0.18",
-  "build_time": "11/11/2026 22:41",
-  "notes": "11/11/2026 22:41",
+  "version": "1.0.19",
+  "build_time": "13/11/2026 21:26",
+  "notes": "13/11/2026 21:26",
   "changelog": [
     "Auditoria y rediseno total con 20 Layouts profesionales de Reloj + Clima + Segundero (10 Horizontales y 10 Verticales, cero traslapes).",
     "Nuevos Layouts inspirados en la UX de Google Gemini AI (Gemini AI Studio H y Gemini AI Vertical V) con estrella de 4 puntas y chips de pronostico.",
@@ -15,20 +15,6 @@
   "url": "https://raw.githubusercontent.com/AlexGremory255/esp32customclock/main/firmware.bin",
   "clocks": [
     {
-      "brightness": 89,
-      "tz": -21600,
-      "grad": 40,
-      "clock_bg": 16,
-      "full_screen": 0,
-      "frost_clk": 1,
-      "layout": 2,
-      "anim_mode": 20,
-      "boot_mode": 1,
-      "city": "Morelia, Michoacán, MX|19.7027116,-101.1923818",
-      "fw_ver": "1.0.18",
-      "ip": "192.168.68.118"
-    },
-    {
       "brightness": 154,
       "tz": -21600,
       "grad": 14,
@@ -37,10 +23,25 @@
       "frost_clk": 1,
       "layout": 0,
       "anim_mode": 1,
-      "boot_mode": 0,
       "city": "Morelia, Michoacán, MX|19.7027116,-101.1923818",
+      "owm": "935513c1fa37302feeafa46980de3ddd",
       "fw_ver": "1.0.14",
       "ip": "192.168.68.113"
+    },
+    {
+      "brightness": 89,
+      "tz": -21600,
+      "grad": 40,
+      "clock_bg": 30,
+      "full_screen": 0,
+      "frost_clk": 1,
+      "layout": 11,
+      "anim_mode": 20,
+      "boot_mode": 3,
+      "city": "Morelia, Michoacán, MX",
+      "owm": "935513c1fa37302feeafa46980de3ddd",
+      "fw_ver": "1.0.18",
+      "ip": "192.168.68.116"
     }
   ]
 }
