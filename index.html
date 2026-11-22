@@ -61,11 +61,11 @@ try{var s=localStorage.getItem('color-scheme');if(s==='light'||s==='dark')docume
   --dim-d: #798498;
 
   --glass-top-l: rgba(255, 255, 255, 0.62);
-  --glass-top-d: rgba(255, 255, 255, 0.14);
+  --glass-top-d: rgba(255, 255, 255, 0.08);
   --glass-mid-l: rgba(255, 255, 255, 0.22);
-  --glass-mid-d: rgba(24, 29, 44, 0.32);
+  --glass-mid-d: rgba(255, 255, 255, 0.028);
   --glass-bot-l: rgba(255, 255, 255, 0.44);
-  --glass-bot-d: rgba(255, 255, 255, 0.09);
+  --glass-bot-d: rgba(255, 255, 255, 0.048);
   --glass-elev-l: rgba(255, 255, 255, 0.78);
   --glass-elev-d: rgba(34, 39, 54, 0.62);
   --glass-bar-l: rgba(246, 249, 255, 0.66);
@@ -73,23 +73,30 @@ try{var s=localStorage.getItem('color-scheme');if(s==='light'||s==='dark')docume
   --glass-dlg-l: rgba(247, 250, 255, 0.84);
   --glass-dlg-d: rgba(16, 19, 28, 0.82);
 
-  --stroke-l: rgba(255, 255, 255, 0.75);
-  --stroke-d: rgba(255, 255, 255, 0.16);
-  --stroke-soft-l: rgba(15, 23, 42, 0.1);
-  --stroke-soft-d: rgba(255, 255, 255, 0.1);
+  --stroke-l: rgba(255, 255, 255, 0.56);
+  --stroke-d: rgba(255, 255, 255, 0.065);
+  --stroke-soft-l: rgba(15, 23, 42, 0.09);
+  --stroke-soft-d: rgba(255, 255, 255, 0.06);
   --sep-l: rgba(15, 23, 42, 0.09);
-  --sep-d: rgba(255, 255, 255, 0.09);
+  --sep-d: rgba(255, 255, 255, 0.075);
 
-  --rim-top-l: rgba(255, 255, 255, 0.96);
-  --rim-top-d: rgba(255, 255, 255, 0.36);
-  --rim-side-l: rgba(255, 255, 255, 0.72);
-  --rim-side-d: rgba(255, 255, 255, 0.18);
-  --rim-bot-l: rgba(15, 23, 42, 0.1);
-  --rim-bot-d: rgba(0, 0, 0, 0.5);
-  --caustic-l: rgba(255, 255, 255, 0.45);
-  --caustic-d: rgba(255, 255, 255, 0.11);
+  --rim-top-l: rgba(255, 255, 255, 0.88);
+  --rim-top-d: rgba(255, 255, 255, 0.12);
+  --rim-side-l: rgba(255, 255, 255, 0.38);
+  --rim-side-d: rgba(255, 255, 255, 0.04);
+  --rim-bot-l: rgba(15, 23, 42, 0.08);
+  --rim-bot-d: rgba(0, 0, 0, 0.42);
+  --caustic-l: rgba(255, 255, 255, 0.38);
+  --caustic-d: rgba(255, 255, 255, 0.05);
   --drop-l: rgba(15, 23, 42, 0.13);
   --drop-d: rgba(0, 0, 0, 0.68);
+
+  --btn-bg-l: rgba(255, 255, 255, 0.58);
+  --btn-bg-d: rgba(255, 255, 255, 0.075);
+  --btn-hover-l: rgba(255, 255, 255, 0.8);
+  --btn-hover-d: rgba(255, 255, 255, 0.13);
+  --seg-bg-l: rgba(15, 23, 42, 0.045);
+  --seg-bg-d: rgba(255, 255, 255, 0.045);
 
   --accent-bg-l: #0f172a;
   --accent-bg-d: #f4f6fa;
@@ -135,6 +142,9 @@ try{var s=localStorage.getItem('color-scheme');if(s==='light'||s==='dark')docume
   --danger: var(--danger-l);
   --sb-thumb: var(--sb-thumb-l);
   --sb-track: var(--sb-track-l);
+  --btn-bg: var(--btn-bg-l);
+  --btn-hover: var(--btn-hover-l);
+  --seg-bg: var(--seg-bg-l);
   --glass-bright: 1.06;
   --glint-strength: 0.72;
   --orb-opacity: 0.62;
@@ -182,6 +192,9 @@ try{var s=localStorage.getItem('color-scheme');if(s==='light'||s==='dark')docume
     --danger: var(--danger-d);
     --sb-thumb: var(--sb-thumb-d);
     --sb-track: var(--sb-track-d);
+    --btn-bg: var(--btn-bg-d);
+    --btn-hover: var(--btn-hover-d);
+    --seg-bg: var(--seg-bg-d);
     --glass-bright: 1.1;
     --glint-strength: 0.24;
     --orb-opacity: 0.52;
@@ -221,6 +234,9 @@ try{var s=localStorage.getItem('color-scheme');if(s==='light'||s==='dark')docume
     --danger: light-dark(var(--danger-l), var(--danger-d));
     --sb-thumb: light-dark(var(--sb-thumb-l), var(--sb-thumb-d));
     --sb-track: light-dark(var(--sb-track-l), var(--sb-track-d));
+    --btn-bg: light-dark(var(--btn-bg-l), var(--btn-bg-d));
+    --btn-hover: light-dark(var(--btn-hover-l), var(--btn-hover-d));
+    --seg-bg: light-dark(var(--seg-bg-l), var(--seg-bg-d));
   }
 }
 
@@ -403,10 +419,10 @@ body {
   box-shadow:
     0 14px 36px -12px var(--drop),
     0 2px 8px -2px var(--drop),
-    inset 0 1.5px 1px 0 var(--rim-top),
-    inset 1px 0 1px 0 var(--rim-side),
-    inset 0 -1.5px 2px 0 var(--rim-bot),
-    inset 0 12px 24px -12px var(--caustic);
+    inset 0 1px 0 0 var(--rim-top),
+    inset 1px 0 0 0 var(--rim-side),
+    inset 0 -1px 1px 0 var(--rim-bot),
+    inset 0 10px 20px -12px var(--caustic);
 }
 
 /* ── Barra superior Liquid Glass ── */
@@ -463,14 +479,18 @@ body {
 .glass-btn-base {
   position: relative;
   isolation: isolate;
-  background: linear-gradient(145deg, var(--glass-top), var(--glass-mid) 58%, var(--glass-bot));
+  background: var(--btn-bg);
   -webkit-backdrop-filter: blur(18px) saturate(185%) brightness(var(--glass-bright));
   backdrop-filter: blur(18px) saturate(185%) brightness(var(--glass-bright));
-  border: 1px solid var(--stroke);
+  border: 1px solid var(--stroke-soft);
   box-shadow:
-    0 6px 18px -6px var(--drop),
-    inset 0 1.5px 1px 0 var(--rim-top),
-    inset 0 -1px 1px 0 var(--rim-bot);
+    0 4px 12px -4px var(--drop),
+    inset 0 1px 0 0 var(--rim-top);
+  transition: background-color 0.16s ease, border-color 0.16s ease, transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.glass-btn-base:hover:not(:disabled) {
+  background: var(--btn-hover);
 }
 
 /* Boton toggle Claro/Oscuro (2 estados via CSS selector) */
@@ -565,7 +585,8 @@ body {
   transform: scale(0.97);
 }
 
-.apply-btn[data-dirty="true"] {
+.apply-btn[data-dirty="true"],
+.apply-btn[data-dirty="true"]:hover:not(:disabled) {
   background: var(--accent-solid);
   color: var(--accent-ink);
   border-color: var(--accent-solid);
@@ -610,12 +631,20 @@ body {
   min-inline-size: 0;
 }
 
-/* ── Bisel del reloj (Contorno RGB ANIMADO #1) ── */
+/* ── Bisel del reloj (Contorno RGB estilo Google Modern Web Guidance + 4-corner glow) ── */
 .clock-bezel {
   position: relative;
   isolation: isolate;
   padding: 0.85rem;
   border-radius: var(--radius-xl);
+  border-color: transparent;
+  box-shadow:
+    -10px -10px 30px -5px rgba(37, 99, 235, 0.24),
+    10px -10px 30px -5px rgba(255, 42, 95, 0.22),
+    10px 10px 30px -5px rgba(255, 214, 10, 0.16),
+    -10px 10px 30px -5px rgba(34, 197, 94, 0.20),
+    0 14px 36px -12px var(--drop),
+    inset 0 1px 0 0 var(--rim-top);
 }
 
 .clock-bezel::before,
@@ -628,15 +657,15 @@ body {
   border-radius: inherit;
   padding: 2px;
   background: conic-gradient(
-    from var(--rgb-angle) var(--in-oklch),
-    #06b6d4,
-    #3b82f6,
-    #8b5cf6,
-    #ec4899,
-    #f97316,
-    #eab308,
-    #10b981,
-    #06b6d4
+    from var(--rgb-angle),
+    #ff2a5f 0deg,
+    #ff9500 58deg,
+    #ffd60a 112deg,
+    #22c55e 170deg,
+    #06b6d4 226deg,
+    #2563eb 282deg,
+    #a855f7 328deg,
+    #ff2a5f 360deg
   );
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
@@ -645,40 +674,20 @@ body {
   pointer-events: none;
 }
 
-.clock-bezel::after {
-  content: "";
-  position: absolute;
-  inset: -6px;
-  z-index: -1;
-  border-radius: calc(var(--radius-xl) + 6px);
-  background: conic-gradient(
-    from var(--rgb-angle) var(--in-oklch),
-    #06b6d4,
-    #3b82f6,
-    #8b5cf6,
-    #ec4899,
-    #f97316,
-    #eab308,
-    #10b981,
-    #06b6d4
-  );
-  filter: blur(22px);
-  opacity: 0.3;
-  pointer-events: none;
-}
-
 @keyframes rgb-spin {
+  from {
+    --rgb-angle: 0deg;
+  }
   to {
     --rgb-angle: 360deg;
   }
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .clock-bezel::before,
-  .clock-bezel::after,
-  .opt-card[aria-pressed="true"]::before,
-  .swatch-card[aria-pressed="true"]::before {
-    animation: rgb-spin 4.2s linear infinite;
+  .clock-bezel,
+  .opt-card[aria-pressed="true"],
+  .swatch-card[aria-pressed="true"] {
+    animation: rgb-spin 4s linear infinite;
   }
 }
 
@@ -1062,9 +1071,9 @@ input[type="checkbox"][switch]:focus-visible {
   gap: 0.22rem;
   padding: 0.24rem;
   border-radius: var(--radius-pill);
-  background: var(--glass-mid);
-  border: 1px solid var(--stroke);
-  box-shadow: inset 0 1px 0 var(--rim-top), 0 4px 14px -6px var(--drop);
+  background: var(--seg-bg);
+  border: 1px solid var(--stroke-soft);
+  box-shadow: none;
   -webkit-backdrop-filter: blur(16px) saturate(180%);
   backdrop-filter: blur(16px) saturate(180%);
 }
@@ -1088,7 +1097,7 @@ input[type="checkbox"][switch]:focus-visible {
 
 .seg-btn[aria-pressed="true"] {
   background: var(--glass-elev);
-  border-color: var(--stroke);
+  border-color: transparent;
   color: var(--text);
   box-shadow: 0 2px 8px -2px var(--drop), inset 0 1px 0 var(--rim-top);
 }
@@ -1149,6 +1158,12 @@ input[type="checkbox"][switch]:focus-visible {
 .opt-card[aria-pressed="true"],
 .swatch-card[aria-pressed="true"] {
   border-color: transparent;
+  box-shadow:
+    -6px -6px 18px -4px rgba(37, 99, 235, 0.18),
+    6px -6px 18px -4px rgba(255, 42, 95, 0.16),
+    6px 6px 18px -4px rgba(255, 214, 10, 0.12),
+    -6px 6px 18px -4px rgba(34, 197, 94, 0.15),
+    0 10px 24px -10px var(--drop);
 }
 
 /* Destello especular siguiendo el cursor en ::after (no colisiona con ::before RGB) */
@@ -1351,7 +1366,13 @@ input[type="checkbox"][switch]:focus-visible {
 
 .btn-danger {
   color: var(--danger);
-  border-color: color-mix(in oklab, var(--danger) 35%, transparent);
+  background: color-mix(in oklab, var(--danger) 12%, transparent);
+  border-color: color-mix(in oklab, var(--danger) 22%, transparent);
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: color-mix(in oklab, var(--danger) 18%, transparent);
+  border-color: color-mix(in oklab, var(--danger) 32%, transparent);
 }
 
 /* ── Modales nativos <dialog> ── */
@@ -1704,7 +1725,6 @@ dialog {
 /* ── Forced Colors Mode ── */
 @media (forced-colors: active) {
   .clock-bezel::before,
-  .clock-bezel::after,
   .opt-card[aria-pressed="true"]::before,
   .swatch-card[aria-pressed="true"]::before {
     display: none;
@@ -2022,7 +2042,7 @@ dialog {
               <div class="sys-row">
                 <div>
                   <div class="sys-title">Firmware</div>
-                  <div class="sys-meta num" id="sys_fw_meta">v1.0.21</div>
+                  <div class="sys-meta num" id="sys_fw_meta">v1.0.22</div>
                 </div>
                 <button type="button" class="btn-glass glass-btn-base glint-target" onclick="requestClockOta()">Actualizar</button>
               </div>
@@ -2163,7 +2183,7 @@ var state = {
   simMode: 'live',
   bootSimStart: 0,
   connectedIp: initialIp,
-  fwVer: '1.0.21',
+  fwVer: '1.0.22',
   latestCloudVer: '',
   activeTab: 'layouts'
 };
@@ -2556,10 +2576,21 @@ function setAnimFilter(f){
   renderAnimsGrid();
 }
 
+function syncGridSelection(gridId, val){
+  var box = $(gridId);
+  if(!box) return false;
+  var btns = box.querySelectorAll('[data-val]');
+  if(!btns.length) return false;
+  btns.forEach(function(b){
+    b.setAttribute('aria-pressed', b.getAttribute('data-val') === String(val) ? 'true' : 'false');
+  });
+  return true;
+}
+
 function selectLayout(id){
   state.layout = id;
   setSimMode('live');
-  renderLayoutsGrid();
+  if(!syncGridSelection('layouts_grid', id)) renderLayoutsGrid();
   updateDirtyState();
 }
 
@@ -2573,7 +2604,7 @@ function renderLayoutsGrid(){
   var html = '';
   list.forEach(function(l){
     var sel = (state.layout === l.id);
-    html += '<button type="button" class="opt-card lg-surface glint-target" aria-pressed="' + (sel ? 'true' : 'false') + '" onclick="selectLayout(' + l.id + ')">' +
+    html += '<button type="button" class="opt-card lg-surface glint-target" data-val="' + l.id + '" aria-pressed="' + (sel ? 'true' : 'false') + '" onclick="selectLayout(' + l.id + ')">' +
       layoutGlyphSvg(l.glyph) +
       '<span class="opt-name">' + l.name + '</span>' +
     '</button>';
@@ -2584,7 +2615,7 @@ function renderLayoutsGrid(){
 function selectAnim(id){
   state.animMode = id;
   setSimMode('live');
-  renderAnimsGrid();
+  if(!syncGridSelection('anims_grid', id)) renderAnimsGrid();
   updateDirtyState();
 }
 
@@ -2598,7 +2629,7 @@ function renderAnimsGrid(){
   var html = '';
   list.forEach(function(a){
     var sel = (state.animMode === a.id);
-    html += '<button type="button" class="opt-card lg-surface glint-target" aria-pressed="' + (sel ? 'true' : 'false') + '" onclick="selectAnim(' + a.id + ')">' +
+    html += '<button type="button" class="opt-card lg-surface glint-target" data-val="' + a.id + '" aria-pressed="' + (sel ? 'true' : 'false') + '" onclick="selectAnim(' + a.id + ')">' +
       animGlyphSvg(a.staticMode) +
       '<span class="opt-name">' + a.name + '</span>' +
     '</button>';
@@ -2626,7 +2657,7 @@ function selectColorSwatch(val, isClockTarget){
   if(isClockTarget) state.clockBg = val;
   else state.grad = val;
   syncAmbientColors();
-  renderSwatchesGrid();
+  if(!syncGridSelection('swatches_grid', val)) renderSwatchesGrid();
   updateDirtyState();
 }
 
@@ -2636,10 +2667,10 @@ function renderSwatchesGrid(){
   var html = '';
 
   if(isClk && (state.colorCat === 'all' || state.colorCat === 'solid')){
-    html += '<button type="button" class="swatch-card lg-surface glint-target" aria-pressed="' + (state.clockBg === 0 ? 'true' : 'false') + '" onclick="selectColorSwatch(0,true)">' +
+    html += '<button type="button" class="swatch-card lg-surface glint-target" data-val="0" aria-pressed="' + (state.clockBg === 0 ? 'true' : 'false') + '" onclick="selectColorSwatch(0,true)">' +
       '<span class="swatch-dot" style="background:#f5f5f7"></span>' +
       '<span class="swatch-name">Blanco Puro</span></button>';
-    html += '<button type="button" class="swatch-card lg-surface glint-target" aria-pressed="' + (state.clockBg === 1 ? 'true' : 'false') + '" onclick="selectColorSwatch(1,true)">' +
+    html += '<button type="button" class="swatch-card lg-surface glint-target" data-val="1" aria-pressed="' + (state.clockBg === 1 ? 'true' : 'false') + '" onclick="selectColorSwatch(1,true)">' +
       '<span class="swatch-dot" style="background:#08090f"></span>' +
       '<span class="swatch-name">Negro Puro</span></button>';
   }
@@ -2650,7 +2681,7 @@ function renderSwatchesGrid(){
     }).forEach(function(g){
       var isSel = isClk ? (state.clockBg === (g.id + 2)) : (state.grad === g.id);
       var val = isClk ? (g.id + 2) : g.id;
-      html += '<button type="button" class="swatch-card lg-surface glint-target" aria-pressed="' + (isSel ? 'true' : 'false') + '" onclick="selectColorSwatch(' + val + ',' + (isClk ? 'true' : 'false') + ')">' +
+      html += '<button type="button" class="swatch-card lg-surface glint-target" data-val="' + val + '" aria-pressed="' + (isSel ? 'true' : 'false') + '" onclick="selectColorSwatch(' + val + ',' + (isClk ? 'true' : 'false') + ')">' +
         '<span class="swatch-dot" style="background:' + g.css + '"></span>' +
         '<span class="swatch-name">' + g.name + '</span></button>';
     });
@@ -2660,7 +2691,7 @@ function renderSwatchesGrid(){
 
 function selectBoot(id){
   state.bootMode = id;
-  renderBootGrid();
+  if(!syncGridSelection('boot_grid', id)) renderBootGrid();
   setSimMode('boot');
   updateDirtyState();
 }
@@ -2670,7 +2701,7 @@ function renderBootGrid(){
   var html = '';
   BOOTS.forEach(function(b){
     var sel = (state.bootMode === b.id);
-    html += '<button type="button" class="opt-card lg-surface glint-target" aria-pressed="' + (sel ? 'true' : 'false') + '" onclick="selectBoot(' + b.id + ')">' +
+    html += '<button type="button" class="opt-card lg-surface glint-target" data-val="' + b.id + '" aria-pressed="' + (sel ? 'true' : 'false') + '" onclick="selectBoot(' + b.id + ')">' +
       bootGlyphSvg() +
       '<span class="opt-name">' + b.name + '</span>' +
     '</button>';
