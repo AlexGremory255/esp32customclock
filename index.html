@@ -2,838 +2,1841 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
-<title>ESP32 Clock Studio</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Matrix Clock</title>
 <style>
-:root {
-  --bg: #07080d;
-  --card: rgba(17, 20, 30, 0.88);
-  --card-hover: rgba(26, 31, 46, 0.96);
-  --card-active: rgba(66, 133, 244, 0.16);
-  --border: rgba(255, 255, 255, 0.08);
-  --text: #f3f5fa;
-  --sub: #8f98b2;
-  --muted: #5a627a;
-  --green: #34d399;
-  --amber: #fbbf24;
-  --red: #f87171;
-  --gem-grad: linear-gradient(135deg, #4285f4 0%, #9b72cb 52%, #d96570 100%);
+@property --rgb-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
 }
 
-* {
-  margin: 0;
-  padding: 0;
+@property --fade-start {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --fade-end {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --ambient-a {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #4285f4;
+}
+
+@property --ambient-b {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #9b72cb;
+}
+
+:root {
+  color-scheme: dark;
+  --in-oklab: ;
+  --in-oklch: ;
+  --bg: #08090c;
+  --glass-1: rgba(20, 22, 29, 0.56);
+  --glass-2: rgba(29, 32, 43, 0.72);
+  --glass-hover: rgba(255, 255, 255, 0.08);
+  --glass-active: rgba(255, 255, 255, 0.13);
+  --stroke-1: rgba(255, 255, 255, 0.08);
+  --stroke-2: rgba(255, 255, 255, 0.16);
+  --specular: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 14px 36px -14px rgba(0, 0, 0, 0.65);
+  --text: #f3f5f8;
+  --text-muted: #9aa3b2;
+  --text-dim: #7e8796;
+  --accent-solid: #f4f6fa;
+  --accent-ink: #090b10;
+  --ok: #4ade80;
+  --warn: #fbbf24;
+  --danger: #f87171;
+  --ambient-a: #4285f4;
+  --ambient-b: #9b72cb;
+  --target-size: 24px;
+  --radius-xl: 1.375rem;
+  --radius-lg: 1rem;
+  --radius-md: 0.75rem;
+  --radius-pill: 999px;
+}
+
+@supports (background: linear-gradient(in oklab, white, black)) {
+  :root {
+    --in-oklab: in oklab;
+    --in-oklch: in oklch;
+  }
+}
+
+@media (pointer: coarse) {
+  :root {
+    --target-size: 44px;
+  }
+}
+
+*, *::before, *::after {
   box-sizing: border-box;
-  font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
   -webkit-tap-highlight-color: transparent;
 }
 
-html, body {
+html {
   background: var(--bg);
   color: var(--text);
-  min-height: 100vh;
-  line-height: 1.4;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
 
-/* ── TOPBAR ── */
+body {
+  margin: 0;
+  min-block-size: 100dvb;
+  background: var(--bg);
+  color: var(--text);
+  overflow-wrap: break-word;
+}
+
+[hidden]:not([hidden="until-found"]) {
+  display: none;
+}
+
+.sr-only {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+:where(button, select, input, a) {
+  font: inherit;
+  color: inherit;
+}
+
+:where(button, select, textarea, input:not([type="checkbox"], [type="radio"], [type="range"])) {
+  min-block-size: var(--target-size);
+  min-inline-size: var(--target-size);
+}
+
+:where(button, a, input, select, summary):focus-visible {
+  outline: 2px solid var(--accent-solid);
+  outline-offset: 2px;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Sobrio fondo ambiental tintado suavemente en oklab ── */
+.ambient-layer {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  isolation: isolate;
+  pointer-events: none;
+  background:
+    radial-gradient(65vmax 55vmax at 12% 8%, color-mix(in oklab, var(--ambient-a) 13%, transparent), transparent 65%),
+    radial-gradient(60vmax 50vmax at 88% 85%, color-mix(in oklab, var(--ambient-b) 10%, transparent), transparent 68%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.015) 0%, transparent 28%);
+  transition: --ambient-a 0.6s ease, --ambient-b 0.6s ease;
+}
+
+/* ── Barra superior Liquid Glass (3 elementos exactos) ── */
 .topbar {
   position: sticky;
   top: 0;
-  z-index: 100;
-  background: rgba(7, 8, 13, 0.88);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border-bottom: 1px solid var(--border);
+  z-index: 25;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-block-size: 3.75rem;
+  padding-block: max(0.65rem, env(safe-area-inset-top, 0px)) 0.65rem;
+  padding-inline: max(1rem, env(safe-area-inset-left, 0px)) max(1rem, env(safe-area-inset-right, 0px));
+  background: rgba(11, 13, 18, 0.66);
+  backdrop-filter: blur(22px) saturate(165%);
+  -webkit-backdrop-filter: blur(22px) saturate(165%);
+  border-block-end: 1px solid var(--stroke-1);
 }
 
 .topbar-inner {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 10px 20px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
+  gap: 0.75rem;
+  inline-size: 100%;
+  max-inline-size: 74rem;
+  margin-inline: auto;
 }
 
 .brand {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
-}
-
-.brand-title {
-  font-size: 15px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-}
-
-.ver-pill {
-  font-size: 11px;
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: rgba(155, 114, 203, 0.16);
-  border: 1px solid rgba(155, 114, 203, 0.35);
-  color: #d8b4fe;
-}
-
-.top-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.conn-bar {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--border);
-  padding: 4px 5px 4px 10px;
-  border-radius: 999px;
-}
-
-.status-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--amber);
-  flex-shrink: 0;
-}
-.status-dot.online {
-  background: var(--green);
-  box-shadow: 0 0 8px var(--green);
-}
-
-.ip-input {
-  background: transparent;
-  border: none;
-  color: var(--text);
-  font-size: 12.5px;
+  gap: 0.45rem;
+  margin: 0;
+  flex: none;
+  font-size: clamp(0.9rem, 0.85rem + 0.25vw, 1.05rem);
   font-weight: 600;
-  width: 118px;
-  outline: none;
-  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.015em;
+  white-space: nowrap;
 }
-.ip-input::placeholder { color: var(--muted); }
 
-.btn-pill {
-  border: none;
-  background: rgba(255, 255, 255, 0.08);
+.brand-mark {
+  flex: none;
   color: var(--text);
-  font-size: 12px;
-  font-weight: 600;
-  padding: 6px 12px;
-  border-radius: 999px;
+  opacity: 0.92;
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-inline-start: auto;
+  min-inline-size: 0;
+}
+
+/* Pildora de dispositivo */
+.device-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-block-size: max(2.25rem, var(--target-size));
+  max-inline-size: 14rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--stroke-1);
+  background: var(--glass-1);
+  box-shadow: var(--specular);
+  font-size: 0.8125rem;
+  font-weight: 500;
   cursor: pointer;
-  transition: background 0.15s ease, opacity 0.15s ease;
+  transition: background-color 0.18s ease, border-color 0.18s ease;
+}
+
+.device-pill:hover {
+  background: var(--glass-hover);
+  border-color: var(--stroke-2);
+}
+
+.device-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.status-icon {
+  flex: none;
+  color: var(--text-dim);
+}
+
+.device-pill[data-online="true"] .status-icon {
+  color: var(--ok);
+}
+
+/* Unico boton Aplicar con estado iluminado solo al editar */
+.apply-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  white-space: nowrap;
-  text-decoration: none;
+  gap: 0.45rem;
+  min-block-size: max(2.25rem, var(--target-size));
+  padding: 0.4rem 1rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--stroke-1);
+  background: var(--glass-1);
+  box-shadow: var(--specular);
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
 }
-.btn-pill:hover { background: rgba(255, 255, 255, 0.15); }
-.btn-pill:disabled { opacity: 0.45; cursor: not-allowed; }
 
-.btn-primary {
-  background: var(--gem-grad);
-  color: #ffffff;
+.apply-btn:hover {
+  background: var(--glass-hover);
+  color: var(--text);
+  border-color: var(--stroke-2);
 }
-.btn-primary:hover { opacity: 0.92; background: var(--gem-grad); }
 
-/* ── WORKSPACE LAYOUT ── */
-.studio-shell {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 20px;
+.apply-btn:active {
+  transform: scale(0.98);
+}
+
+.apply-btn[data-dirty="true"] {
+  background: var(--accent-solid);
+  color: var(--accent-ink);
+  border-color: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 6px 24px -4px rgba(255, 255, 255, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.3);
+}
+
+.apply-btn[data-dirty="true"]:hover {
+  background: #ffffff;
+}
+
+.apply-btn[disabled] {
+  opacity: 0.65;
+  cursor: progress;
+}
+
+.dirty-mark {
+  inline-size: 0.4rem;
+  block-size: 0.4rem;
+  border-radius: 50%;
+  background: currentColor;
+  display: none;
+}
+
+.apply-btn[data-dirty="true"] .dirty-mark {
+  display: inline-block;
+}
+
+/* ── Shell principal de dos columnas ── */
+.app-shell {
+  max-inline-size: 74rem;
+  margin-inline: auto;
+  padding: 1.5rem max(1rem, env(safe-area-inset-left, 0px)) 3.5rem max(1rem, env(safe-area-inset-right, 0px));
   display: grid;
-  grid-template-columns: 340px 1fr;
-  gap: 22px;
+  grid-template-columns: minmax(17.5rem, 21.5rem) minmax(0, 1fr);
+  gap: 2rem;
   align-items: start;
 }
 
-@media (max-width: 920px) {
-  .studio-shell {
-    grid-template-columns: 1fr;
-    padding: 14px;
+.stage-col {
+  position: sticky;
+  top: 5.25rem;
+  display: grid;
+  gap: 0.9rem;
+}
+
+/* ── Bisel del reloj (PUNTO FOCAL #1 con borde RGB animado selectivo) ── */
+.clock-bezel {
+  position: relative;
+  isolation: isolate;
+  padding: 0.85rem;
+  border-radius: var(--radius-xl);
+  background: rgba(14, 16, 22, 0.72);
+  backdrop-filter: blur(22px) saturate(160%);
+  -webkit-backdrop-filter: blur(22px) saturate(160%);
+  box-shadow: var(--shadow-card), var(--specular);
+}
+
+.clock-bezel::before,
+.opt-card[aria-pressed="true"]::before,
+.swatch-card[aria-pressed="true"]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: conic-gradient(
+    from var(--rgb-angle) var(--in-oklch),
+    #38bdf8,
+    #818cf8,
+    #c084fc,
+    #f472b6,
+    #fb923c,
+    #34d399,
+    #38bdf8
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.clock-bezel::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  z-index: -1;
+  border-radius: calc(var(--radius-xl) + 4px);
+  background: conic-gradient(
+    from var(--rgb-angle) var(--in-oklch),
+    #38bdf8,
+    #818cf8,
+    #c084fc,
+    #f472b6,
+    #fb923c,
+    #34d399,
+    #38bdf8
+  );
+  filter: blur(20px);
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+@keyframes rgb-spin {
+  to {
+    --rgb-angle: 360deg;
   }
 }
 
-/* ── LEFT STICKY SIMULATOR ── */
-.sim-panel {
-  position: sticky;
-  top: 68px;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
+@media (prefers-reduced-motion: no-preference) {
+  .clock-bezel,
+  .opt-card[aria-pressed="true"],
+  .swatch-card[aria-pressed="true"] {
+    animation: rgb-spin 9s linear infinite;
+  }
 }
 
-@media (max-width: 920px) {
-  .sim-panel { position: static; }
-}
-
-.sim-header {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.sim-tag {
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--sub);
-}
-
-.sim-mode-toggle {
-  display: flex;
-  background: rgba(0, 0, 0, 0.4);
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  padding: 2px;
-}
-
-.sim-mode-btn {
-  border: none;
-  background: transparent;
-  color: var(--sub);
-  font-size: 11px;
-  font-weight: 600;
-  padding: 4px 10px;
-  border-radius: 999px;
-  cursor: pointer;
-}
-.sim-mode-btn.active {
-  background: var(--gem-grad);
-  color: #fff;
-}
-
-.matrix-frame {
-  padding: 10px;
-  border-radius: 16px;
-  background: #090b10;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+.canvas-well {
+  position: relative;
+  border-radius: 0.85rem;
+  background: #030406;
+  padding: 0.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.85);
 }
 
 #led_canvas {
-  width: 288px;
-  height: 288px;
   display: block;
-  border-radius: 6px;
-  background: #040508;
-  image-rendering: pixelated;
+  inline-size: 100%;
+  block-size: auto;
+  aspect-ratio: 1;
+  border-radius: 0.65rem;
+  background: #000;
 }
 
-@media (max-width: 400px) {
-  #led_canvas {
-    width: 256px;
-    height: 256px;
+.bezel-actions {
+  position: absolute;
+  inset-block-end: 0.65rem;
+  inset-inline-end: 0.65rem;
+  display: flex;
+  gap: 0.35rem;
+}
+
+.bezel-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-block-size: var(--target-size);
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(10, 12, 18, 0.78);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.bezel-chip:hover {
+  background: rgba(24, 28, 38, 0.9);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* ── Panel rapido Liquid Glass bajo el visor ── */
+.quick-controls {
+  padding: 0.9rem 1rem;
+  border-radius: var(--radius-lg);
+  background: var(--glass-1);
+  backdrop-filter: blur(22px) saturate(160%);
+  -webkit-backdrop-filter: blur(22px) saturate(160%);
+  border: 1px solid var(--stroke-1);
+  box-shadow: var(--shadow-card), var(--specular);
+  display: grid;
+  gap: 0.55rem;
+}
+
+.slider-block {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.slider-hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+.slider-hdr output {
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+}
+
+/* Range slider nativo siguiendo modern-web-guidance */
+input[type="range"].glass-range {
+  --slider-track-size: 0.375rem;
+  --slider-thumb-size: 1.125rem;
+  --slider-track-radius: 999px;
+  --slider-thumb-radius: 50%;
+  --slider-track-color: rgba(255, 255, 255, 0.16);
+  --slider-fill-color: rgba(244, 246, 250, 0.94);
+  --slider-thumb-color: #ffffff;
+  --slider-direction: to right;
+
+  --attr-min: attr(min type(<number>), 15);
+  --attr-max: attr(max type(<number>), 255);
+  --control-value: attr(value type(<number>), 90);
+  --slider-progress: calc(progress(var(--control-value), var(--attr-min), var(--attr-max)) * 100%);
+
+  appearance: none;
+  inline-size: 100%;
+  block-size: 2.5rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+@supports not (opacity: progress(1, 0, 100)) {
+  input[type="range"].glass-range {
+    --slider-progress: calc(
+      (var(--control-value) - var(--attr-min)) /
+      (var(--attr-max) - var(--attr-min)) * 100%
+    );
   }
 }
 
-.sim-quick-toggles {
-  width: 100%;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
+input[type="range"].glass-range::-webkit-slider-runnable-track {
+  block-size: var(--slider-track-size);
+  border: 0;
+  border-radius: var(--slider-track-radius);
+  background: linear-gradient(
+    var(--slider-direction),
+    var(--slider-fill-color) var(--slider-progress),
+    var(--slider-track-color) var(--slider-progress)
+  );
 }
 
-.quick-toggle-btn {
-  border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.03);
-  color: var(--sub);
-  border-radius: 11px;
-  padding: 8px 10px;
-  font-size: 11.5px;
-  font-weight: 600;
-  cursor: pointer;
+input[type="range"].glass-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  inline-size: var(--slider-thumb-size);
+  block-size: var(--slider-thumb-size);
+  margin-block-start: calc((var(--slider-track-size) - var(--slider-thumb-size)) / 2);
+  border: 0;
+  border-radius: var(--slider-thumb-radius);
+  background: var(--slider-thumb-color);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.55);
+}
+
+input[type="range"].glass-range::-moz-range-track {
+  block-size: var(--slider-track-size);
+  border: 0;
+  border-radius: var(--slider-track-radius);
+  background: var(--slider-track-color);
+}
+
+input[type="range"].glass-range::-moz-range-progress {
+  block-size: var(--slider-track-size);
+  border-radius: var(--slider-track-radius);
+  background: var(--slider-fill-color);
+}
+
+input[type="range"].glass-range::-moz-range-thumb {
+  inline-size: var(--slider-thumb-size);
+  block-size: var(--slider-thumb-size);
+  border: 0;
+  border-radius: var(--slider-thumb-radius);
+  background: var(--slider-thumb-color);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.55);
+}
+
+input[type="range"].glass-range:focus-visible {
+  outline: 2px solid var(--accent-solid);
+  outline-offset: 4px;
+}
+
+.divider-line {
+  block-size: 1px;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+/* Switch nativo + fallback accesible */
+.switch-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 6px;
-}
-.quick-toggle-btn.active {
-  background: rgba(66, 133, 244, 0.15);
-  border-color: rgba(96, 165, 250, 0.5);
-  color: #fff;
+  gap: 0.75rem;
+  min-block-size: max(2.25rem, var(--target-size));
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
 }
 
-.bright-row {
-  width: 100%;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--border);
-  border-radius: 11px;
-  padding: 8px 12px;
-  display: flex;
+input[type="checkbox"][switch] {
+  accent-color: #d8dee9;
+  margin: 0;
+  cursor: pointer;
+  flex: none;
+}
+
+input[type="checkbox"][switch].switch-fallback {
+  appearance: none;
+  -webkit-appearance: none;
+  inline-size: 2.75rem;
+  block-size: 1.625rem;
+  padding: 0.1875rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--stroke-2);
+  background: rgba(255, 255, 255, 0.16);
+  display: inline-grid;
   align-items: center;
-  gap: 10px;
-}
-.bright-row label {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--sub);
-}
-.bright-row input[type=range] {
-  flex: 1;
-  accent-color: #9b72cb;
-  cursor: pointer;
-}
-.bright-row span {
-  font-size: 12px;
-  font-weight: 700;
-  min-width: 34px;
-  text-align: right;
-  font-variant-numeric: tabular-nums;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
-.apply-main-btn {
-  width: 100%;
-  border: none;
-  border-radius: 12px;
-  padding: 11px 14px;
-  font-size: 13px;
-  font-weight: 700;
-  background: var(--gem-grad);
-  color: #fff;
-  cursor: pointer;
-}
-.apply-main-btn:hover { opacity: 0.93; }
-
-.toast-msg {
-  font-size: 11.5px;
-  font-weight: 600;
-  color: var(--green);
-  min-height: 16px;
-  text-align: center;
+input[type="checkbox"][switch].switch-fallback::before {
+  content: "";
+  inline-size: 1.125rem;
+  block-size: 1.125rem;
+  border-radius: 50%;
+  background: #f3f5f8;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
+  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.2s ease;
 }
 
-.floating-toast {
-  position: fixed;
-  bottom: 18px;
-  right: 18px;
-  z-index: 9999;
-  background: rgba(13, 16, 26, 0.96);
-  border: 1px solid rgba(155, 114, 203, 0.5);
-  padding: 10px 15px;
-  border-radius: 12px;
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--green);
-  max-width: 380px;
+input[type="checkbox"][switch].switch-fallback:checked {
+  background: rgba(244, 246, 250, 0.94);
+  border-color: rgba(255, 255, 255, 0.9);
+}
+
+input[type="checkbox"][switch].switch-fallback:checked::before {
+  transform: translateX(1.125rem);
+  background: #090b10;
+}
+
+input[type="checkbox"][switch]:focus-visible {
+  outline: 2px solid var(--accent-solid);
+  outline-offset: 4px;
+}
+
+/* ── Columna de trabajo (Container Query) ── */
+.workspace-col {
+  container: workspace / inline-size;
+  min-inline-size: 0;
+  display: grid;
+  gap: 1.15rem;
+}
+
+/* ── Tablist Liquid Glass con indicador animado por Anchor Positioning ── */
+.tablist {
+  position: relative;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.35rem;
+  border-radius: var(--radius-pill);
+  background: var(--glass-1);
+  backdrop-filter: blur(22px) saturate(165%);
+  -webkit-backdrop-filter: blur(22px) saturate(165%);
+  border: 1px solid var(--stroke-1);
+  box-shadow: var(--shadow-card), var(--specular);
+  overflow-x: auto;
+  scrollbar-width: none;
+  scroll-snap-type: inline proximity;
+  --fade-size: 1.5rem;
+  --fade-dir: right;
+  --fade-start-pos: 0;
+  --fade-end-pos: 100%;
+  mask:
+    linear-gradient(black, black) no-clip subtract,
+    linear-gradient(to var(--fade-dir), black, transparent) var(--fade-start-pos) 0 / var(--fade-start) 100% no-repeat no-clip,
+    linear-gradient(to var(--fade-dir), transparent, black) var(--fade-end-pos) 0 / var(--fade-end) 100% no-repeat no-clip;
+  animation: reveal-fade-start linear both, hide-fade-end linear both;
+  animation-timeline: scroll(self inline);
+  animation-range: 0 var(--fade-size), calc(100% - var(--fade-size)) 100%;
+  scroll-padding-inline: var(--fade-size);
+}
+
+.tablist::-webkit-scrollbar {
   display: none;
 }
 
-/* ── RIGHT COLUMN ── */
-.workspace-col {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  min-width: 0;
+@keyframes reveal-fade-start {
+  to { --fade-start: var(--fade-size); }
 }
 
-.main-tabs {
-  display: flex;
-  gap: 6px;
-  background: rgba(15, 18, 28, 0.9);
-  border: 1px solid var(--border);
-  padding: 5px;
-  border-radius: 14px;
-  overflow-x: auto;
+@keyframes hide-fade-end {
+  from { --fade-end: var(--fade-size); }
 }
 
-.main-tab-btn {
-  flex: 1;
-  min-width: 96px;
-  border: none;
+.tablist::before {
+  content: "";
+  position: absolute;
+  position-anchor: --active-tab;
+  inset-block-end: 0.28rem;
+  inset-inline-start: calc(anchor(left) + 0.85rem);
+  inset-inline-end: calc(anchor(right) + 0.85rem);
+  border-block-end: 2px solid var(--text);
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .tablist::before {
+    transition: inset 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+}
+
+.tablist [role="tab"] {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  min-block-size: max(2.35rem, var(--target-size));
+  padding: 0.45rem 0.95rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid transparent;
+  border-block-end: 2px solid transparent;
   background: transparent;
-  color: var(--sub);
-  font-size: 12.5px;
-  font-weight: 600;
-  padding: 8px 12px;
-  border-radius: 10px;
-  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  font-weight: 500;
   white-space: nowrap;
+  scroll-snap-align: start;
+  cursor: pointer;
+  transition: color 0.18s ease, background-color 0.18s ease;
 }
-.main-tab-btn:hover {
+
+.tablist [role="tab"]:hover {
   color: var(--text);
   background: rgba(255, 255, 255, 0.04);
 }
-.main-tab-btn.active {
-  background: var(--gem-grad);
-  color: #ffffff;
+
+.tablist [role="tab"][aria-selected="true"] {
+  anchor-name: --active-tab;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.09);
 }
 
-.tab-pane {
-  display: none;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  padding: 18px;
+@supports not (position-anchor: auto) {
+  .tablist::before {
+    display: none;
+  }
+  .tablist [role="tab"][aria-selected="true"] {
+    border-block-end-color: var(--text);
+  }
 }
-.tab-pane.active { display: block; }
 
-.pane-hdr {
+.tablist [role="tab"] svg {
+  flex: none;
+  opacity: 0.88;
+}
+
+/* ── Pila de paneles: CERO padding/border/margin/background en [role="tabpanel"] ── */
+.panels-stack {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+[role="tabpanel"] {
+  grid-column: 1;
+  grid-row: 1;
+  min-inline-size: 0;
+}
+
+.panel-inner {
+  display: grid;
+  gap: 1.1rem;
+}
+
+.panel-hdr {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 14px;
-  flex-wrap: wrap;
+  gap: 0.75rem;
 }
 
-.pane-title {
-  font-size: 16px;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-}
-
-.sub-filter-bar {
-  display: flex;
-  gap: 4px;
-  flex-wrap: wrap;
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid var(--border);
-  padding: 3px;
-  border-radius: 10px;
-}
-
-.sub-filter-btn {
-  border: none;
-  background: transparent;
-  color: var(--sub);
-  font-size: 11.5px;
+.panel-hdr h2 {
+  margin: 0;
+  font-size: clamp(1.125rem, 1.05rem + 0.4vw, 1.35rem);
   font-weight: 600;
-  padding: 5px 10px;
-  border-radius: 7px;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+/* Sub-filtros segmentados sobrios */
+.seg-group {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--stroke-1);
+}
+
+.seg-btn {
+  min-block-size: max(1.9rem, var(--target-size));
+  padding: 0.3rem 0.78rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  font-weight: 500;
   cursor: pointer;
+  transition: background-color 0.16s ease, color 0.16s ease, border-color 0.16s ease;
 }
-.sub-filter-btn.active {
+
+.seg-btn:hover:not(:disabled) {
+  color: var(--text);
+}
+
+.seg-btn[aria-pressed="true"] {
   background: rgba(255, 255, 255, 0.13);
-  color: #fff;
+  border-color: var(--stroke-2);
+  color: var(--text);
 }
-.sub-filter-btn:disabled {
-  opacity: 0.35;
+
+.seg-btn:disabled {
+  opacity: 0.38;
   cursor: not-allowed;
 }
 
-/* ── COMPACT CARDS GRID ── */
-.cards-grid {
+/* ── Rejillas de opciones ── */
+.opt-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
-  gap: 9px;
+  grid-template-columns: repeat(auto-fill, minmax(9.75rem, 1fr));
+  gap: 0.65rem;
 }
 
-.item-card {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 10px 12px;
-  cursor: pointer;
+.opt-card {
+  position: relative;
+  isolation: isolate;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  transition: background 0.14s ease, border-color 0.14s ease;
-}
-.item-card:hover {
-  background: var(--card-hover);
-  border-color: rgba(255, 255, 255, 0.18);
-}
-.item-card.active {
-  background: var(--card-active);
-  border-color: #60a5fa;
-}
-.item-card.gemini-special {
-  border-color: rgba(155, 114, 203, 0.35);
-}
-.item-card.gemini-special.active {
-  border-color: #c084fc;
-}
-
-.item-top {
-  display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 6px;
+  gap: 0.65rem;
+  min-block-size: 4.5rem;
+  padding: 0.85rem 0.9rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--stroke-1);
+  background: var(--glass-1);
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  box-shadow: var(--specular);
+  text-align: start;
+  cursor: pointer;
+  transition: background-color 0.16s ease, border-color 0.16s ease, transform 0.14s ease;
 }
 
-.item-num {
-  font-size: 10.5px;
-  font-weight: 700;
-  color: var(--sub);
-  font-variant-numeric: tabular-nums;
-}
-.item-card.active .item-num {
-  color: #93c5fd;
+.opt-card:hover {
+  background: var(--glass-hover);
+  border-color: var(--stroke-2);
 }
 
-.ori-badge {
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  padding: 1px 6px;
-  border-radius: 5px;
+.opt-card:active {
+  transform: scale(0.985);
 }
-.ori-h { background: rgba(56, 189, 248, 0.14); color: #38bdf8; }
-.ori-v { background: rgba(168, 85, 247, 0.16); color: #c084fc; }
-.ori-s { background: rgba(148, 163, 184, 0.15); color: #cbd5e1; }
 
-.item-title {
-  font-size: 13px;
-  font-weight: 600;
+.opt-card[aria-pressed="true"] {
+  background: var(--glass-2);
+  border-color: transparent;
+}
+
+.opt-glyph {
+  color: var(--text-muted);
+  opacity: 0.88;
+}
+
+.opt-card[aria-pressed="true"] .opt-glyph {
   color: var(--text);
-  line-height: 1.25;
+  opacity: 1;
 }
 
-/* ── PALETTE SWATCH GRID ── */
-.palette-controls {
-  margin-bottom: 12px;
+.opt-name {
+  font-size: 0.84rem;
+  font-weight: 500;
+  color: var(--text);
+  line-height: 1.3;
+}
+
+/* Grid de colores */
+.color-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .swatch-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+  gap: 0.6rem;
 }
 
 .swatch-card {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--border);
-  border-radius: 11px;
-  padding: 8px 10px;
-  cursor: pointer;
+  position: relative;
+  isolation: isolate;
   display: flex;
   align-items: center;
-  gap: 9px;
-}
-.swatch-card:hover { background: var(--card-hover); }
-.swatch-card.active {
-  background: var(--card-active);
-  border-color: #60a5fa;
+  gap: 0.65rem;
+  min-block-size: max(3rem, var(--target-size));
+  padding: 0.6rem 0.75rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--stroke-1);
+  background: var(--glass-1);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: var(--specular);
+  text-align: start;
+  cursor: pointer;
+  transition: background-color 0.16s ease, border-color 0.16s ease, transform 0.14s ease;
 }
 
-.swatch-circle {
-  width: 24px;
-  height: 24px;
+.swatch-card:hover {
+  background: var(--glass-hover);
+  border-color: var(--stroke-2);
+}
+
+.swatch-card:active {
+  transform: scale(0.985);
+}
+
+.swatch-card[aria-pressed="true"] {
+  background: var(--glass-2);
+  border-color: transparent;
+}
+
+.swatch-dot {
+  flex: none;
+  inline-size: 1.45rem;
+  block-size: 1.45rem;
   border-radius: 50%;
-  flex-shrink: 0;
-  border: 1px solid rgba(255, 255, 255, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.35), 0 2px 6px rgba(0, 0, 0, 0.45);
+  forced-color-adjust: none;
 }
 
 .swatch-name {
-  font-size: 12px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text);
+  line-height: 1.25;
+}
+
+@container workspace (max-inline-size: 28rem) {
+  .opt-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .swatch-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ── Panel Ajustes (listas limpias agrupadas) ── */
+.settings-group {
+  border-radius: var(--radius-lg);
+  background: var(--glass-1);
+  backdrop-filter: blur(22px) saturate(160%);
+  -webkit-backdrop-filter: blur(22px) saturate(160%);
+  border: 1px solid var(--stroke-1);
+  box-shadow: var(--shadow-card), var(--specular);
+  padding: 1rem 1.1rem;
+  display: grid;
+  gap: 0.9rem;
+}
+
+.settings-group h3 {
+  margin: 0;
+  font-size: 0.875rem;
   font-weight: 600;
-  color: var(--text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* ── NET / SETTINGS CARDS ── */
-.net-card {
-  background: rgba(255, 255, 255, 0.025);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 14px;
-  margin-bottom: 12px;
-}
-.net-card:last-child { margin-bottom: 0; }
-
-.net-card-title {
-  font-size: 13.5px;
-  font-weight: 700;
-  margin-bottom: 10px;
-}
-
-.net-row {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  align-items: center;
-}
-.net-row + .net-row { margin-top: 8px; }
-
-.studio-input, .studio-select {
-  background: rgba(0, 0, 0, 0.42);
-  border: 1px solid var(--border);
-  color: var(--text);
-  padding: 8px 11px;
-  border-radius: 10px;
-  font-size: 12.5px;
-  outline: none;
-}
-.studio-input:focus, .studio-select:focus { border-color: #9b72cb; }
-
-.scan-progress-wrap {
-  margin-top: 10px;
-  display: none;
-}
-.scan-progress-bar {
-  width: 100%;
-  height: 5px;
-  background: rgba(255, 255, 255, 0.07);
-  border-radius: 999px;
-  overflow: hidden;
-  margin-top: 5px;
-}
-.scan-progress-fill {
-  height: 100%;
-  width: 0%;
-  background: var(--gem-grad);
-  transition: width 0.15s ease;
-}
-
-.found-clocks-list {
-  margin-top: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.found-clock-item {
-  background: rgba(52, 211, 153, 0.07);
-  border: 1px solid rgba(52, 211, 153, 0.32);
-  border-radius: 12px;
-  padding: 10px 12px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  flex-wrap: wrap;
+  color: var(--text-muted);
 }
 
 .form-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-@media (max-width: 600px) {
-  .form-grid { grid-template-columns: 1fr; }
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 0.85rem;
 }
 
-.form-field {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
+.field {
+  display: grid;
+  gap: 0.35rem;
 }
-.form-field label {
-  font-size: 11.5px;
+
+.field label {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.glass-input,
+.glass-select {
+  inline-size: 100%;
+  min-block-size: max(2.6rem, var(--target-size));
+  padding: 0.5rem 0.8rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--stroke-1);
+  background: rgba(10, 12, 18, 0.68);
+  color: var(--text);
+  font-size: 0.875rem;
+  transition: border-color 0.16s ease, background-color 0.16s ease;
+}
+
+.glass-input:focus,
+.glass-select:focus {
+  border-color: var(--stroke-2);
+  background: rgba(14, 17, 24, 0.85);
+}
+
+.sys-list {
+  display: grid;
+}
+
+.sys-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-block: 0.75rem;
+}
+
+.sys-row + .sys-row {
+  border-block-start: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.sys-title {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.sys-meta {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+.btn-glass {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-block-size: max(2.2rem, var(--target-size));
+  padding: 0.42rem 0.9rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--stroke-1);
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: var(--specular);
+  color: var(--text);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.16s ease, border-color 0.16s ease;
+}
+
+.btn-glass:hover:not(:disabled) {
+  background: var(--glass-hover);
+  border-color: var(--stroke-2);
+}
+
+.btn-glass:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-solid {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-block-size: max(2.2rem, var(--target-size));
+  padding: 0.42rem 1rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  background: var(--accent-solid);
+  color: var(--accent-ink);
+  font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--sub);
+  cursor: pointer;
+}
+
+.btn-solid:hover {
+  background: #ffffff;
+}
+
+.btn-danger {
+  color: var(--danger);
+  border-color: rgba(248, 113, 113, 0.25);
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: rgba(248, 113, 113, 0.12);
+  border-color: rgba(248, 113, 113, 0.45);
+}
+
+/* ── Modales nativos <dialog> (siguiendo guide dialog + top-layer animation) ── */
+dialog:modal {
+  overscroll-behavior: contain;
+}
+
+dialog::backdrop {
+  overflow: hidden;
+  overscroll-behavior: contain;
+  background-color: rgba(0, 0, 0, 0);
+  backdrop-filter: blur(0px);
+  transition-property: background-color, backdrop-filter, display, overlay;
+  transition-duration: 0.24s;
+  transition-timing-function: ease-out;
+  transition-behavior: allow-discrete;
+}
+
+dialog {
+  inline-size: min(30rem, calc(100% - 1.5rem));
+  max-block-size: calc(100dvb - 2rem);
+  margin: auto;
+  padding: 0;
+  border: 1px solid var(--stroke-2);
+  border-radius: var(--radius-xl);
+  background: rgba(16, 18, 25, 0.88);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  box-shadow: 0 24px 64px -12px rgba(0, 0, 0, 0.85), var(--specular);
+  color: var(--text);
+  opacity: 0;
+  transition-property: opacity, transform, display, overlay;
+  transition-duration: 0.24s;
+  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  transition-behavior: allow-discrete;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  dialog {
+    transform: translateY(10px) scale(0.96);
+  }
+}
+
+:is(dialog[open]):where(:not([data-closing])) {
+  opacity: 1;
+  @starting-style {
+    opacity: 0;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    transform: translateY(0) scale(1);
+    @starting-style {
+      transform: translateY(10px) scale(0.96);
+    }
+  }
+  &::backdrop {
+    background-color: rgba(4, 5, 9, 0.64);
+    backdrop-filter: blur(8px);
+    @starting-style {
+      background-color: rgba(4, 5, 9, 0);
+      backdrop-filter: blur(0px);
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  dialog,
+  dialog::backdrop {
+    transition-duration: 0.1s;
+  }
+}
+
+.dialog-body {
+  padding: 1.15rem 1.25rem;
+  display: grid;
+  gap: 1rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  max-block-size: calc(100dvb - 2.5rem);
+}
+
+.dialog-hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.dialog-hdr h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  text-wrap: balance;
+}
+
+.icon-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: max(2rem, var(--target-size));
+  block-size: max(2rem, var(--target-size));
+  border-radius: 50%;
+  border: 1px solid var(--stroke-1);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.icon-close:hover {
+  background: var(--glass-hover);
+  color: var(--text);
+}
+
+.dialog-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.dialog-row .glass-input {
+  flex: 1 1 10rem;
+}
+
+.scan-progress {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.scan-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.scan-track {
+  inline-size: 100%;
+  block-size: 0.3rem;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+}
+
+.scan-fill {
+  inline-size: 0%;
+  block-size: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--accent-solid);
+  transition: inline-size 0.2s ease;
+}
+
+.clocks-list {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.clock-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+  padding: 0.65rem 0.8rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--stroke-1);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.clock-item[data-current="true"] {
+  border-color: var(--stroke-2);
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.clock-pick {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  text-align: start;
+  cursor: pointer;
+  display: grid;
+  gap: 0.1rem;
+}
+
+.clock-ip {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.clock-sub {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.adv-scan {
+  border-block-start: 1px solid rgba(255, 255, 255, 0.08);
+  padding-block-start: 0.75rem;
+}
+
+.adv-scan summary {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-block-size: var(--target-size);
+}
+
+.adv-scan summary::-webkit-details-marker {
+  display: none;
+}
+
+.adv-scan-body {
+  display: grid;
+  gap: 0.6rem;
+  padding-block-start: 0.65rem;
+}
+
+.cidr-chips {
+  display: flex;
+  flex-wrap: wrap;
+  flex-wrap: balance;
+  gap: 0.35rem;
+}
+
+.cidr-chip {
+  min-block-size: max(1.75rem, var(--target-size));
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--stroke-1);
+  background: rgba(255, 255, 255, 0.04);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.cidr-chip:hover {
+  color: var(--text);
+  border-color: var(--stroke-2);
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+/* ── Toast sobrio accesibilidad ── */
+.toast {
+  position: fixed;
+  inset-inline: 0;
+  margin-inline: auto;
+  inset-block-end: 1.5rem;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  inline-size: max-content;
+  max-inline-size: min(26rem, calc(100% - 1.5rem));
+  padding: 0.6rem 1rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--stroke-2);
+  background: rgba(16, 19, 27, 0.9);
+  backdrop-filter: blur(22px) saturate(165%);
+  -webkit-backdrop-filter: blur(22px) saturate(165%);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6), var(--specular);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+@media (max-width: 30rem) {
+  .topbar {
+    padding-inline: max(0.75rem, env(safe-area-inset-left, 0px)) max(0.75rem, env(safe-area-inset-right, 0px));
+  }
+  .topbar-inner {
+    gap: 0.5rem;
+  }
+  .device-pill {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.78rem;
+  }
+  .apply-btn {
+    padding: 0.3rem 0.78rem;
+    font-size: 0.78rem;
+  }
+}
+
+.toast-icon {
+  flex: none;
+}
+
+.toast[data-tone="ok"] .toast-icon { color: var(--ok); }
+.toast[data-tone="err"] .toast-icon { color: var(--danger); }
+
+/* ── Adaptacion movil (<= 54rem): visor compacto + Dock flotante inferior ── */
+@media (max-width: 54rem) {
+  html {
+    scroll-padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .app-shell {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.25rem;
+    padding-block: 0.9rem calc(5.5rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .stage-col {
+    position: static;
+    justify-items: center;
+  }
+
+  .clock-bezel {
+    inline-size: min(17.5rem, 100%);
+  }
+
+  .quick-controls {
+    inline-size: 100%;
+  }
+
+  .tablist {
+    position: fixed;
+    inset-block-end: max(0.75rem, env(safe-area-inset-bottom, 0px));
+    inset-inline: max(0.75rem, env(safe-area-inset-left, 0px)) max(0.75rem, env(safe-area-inset-right, 0px));
+    max-inline-size: 32rem;
+    margin-inline: auto;
+    z-index: 30;
+    justify-content: space-between;
+    background: rgba(13, 15, 22, 0.78);
+    backdrop-filter: blur(26px) saturate(185%);
+    -webkit-backdrop-filter: blur(26px) saturate(185%);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.75), var(--specular);
+  }
+
+  .tablist [role="tab"] {
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: 0.35rem 0.65rem;
+    font-size: 0.72rem;
+    min-block-size: 3rem;
+  }
+
+  .toast {
+    inset-block-end: calc(5.15rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  dialog {
+    margin-block-end: 0;
+    inline-size: 100%;
+    max-inline-size: 100%;
+    border-end-start-radius: 0;
+    border-end-end-radius: 0;
+    padding-block-end: env(safe-area-inset-bottom, 0px);
+  }
+}
+
+/* ── Forced Colors Mode (Windows High Contrast) ── */
+@media (forced-colors: active) {
+  .clock-bezel::before,
+  .clock-bezel::after,
+  .opt-card[aria-pressed="true"]::before,
+  .swatch-card[aria-pressed="true"]::before {
+    display: none;
+  }
+
+  .clock-bezel,
+  .quick-controls,
+  .settings-group,
+  .opt-card,
+  .swatch-card,
+  .device-pill,
+  .apply-btn,
+  .tablist,
+  dialog {
+    border: 1px solid CanvasText;
+  }
+
+  .opt-card[aria-pressed="true"],
+  .swatch-card[aria-pressed="true"],
+  .seg-btn[aria-pressed="true"] {
+    border: 2px solid Highlight;
+    outline: 1px solid Highlight;
+  }
+
+  .apply-btn[data-dirty="true"] {
+    border: 2px solid Highlight;
+  }
+
+  .tablist::before {
+    border-block-end-color: Highlight;
+  }
 }
 </style>
 </head>
 <body>
+<div class="ambient-layer" aria-hidden="true"></div>
 
 <header class="topbar">
   <div class="topbar-inner">
-    <div class="brand">
-      <div class="brand-title">ESP32 Clock</div>
-      <span class="ver-pill" id="top_ver">v1.0.19</span>
-    </div>
+    <h1 class="brand">
+      <svg class="brand-mark" width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+        <rect x="2" y="2" width="6.5" height="6.5" rx="2" fill="currentColor" opacity="0.95"/>
+        <rect x="11.5" y="2" width="6.5" height="6.5" rx="2" fill="currentColor" opacity="0.45"/>
+        <rect x="2" y="11.5" width="6.5" height="6.5" rx="2" fill="currentColor" opacity="0.45"/>
+        <rect x="11.5" y="11.5" width="6.5" height="6.5" rx="2" fill="currentColor" opacity="0.95"/>
+      </svg>
+      <span>Matrix Clock</span>
+    </h1>
 
-    <div class="top-actions">
-      <div class="conn-bar">
-        <span class="status-dot" id="conn_dot"></span>
-        <input type="text" class="ip-input" id="clock_ip" placeholder="192.168.68.118" value="" onkeydown="if(event.key==='Enter'){event.preventDefault();connectToClock();}">
-        <button type="button" class="btn-pill" id="btn_top_conn" onclick="connectToClock()">Conectar</button>
-        <button type="button" class="btn-pill" onclick="switchMainTab('net');startUniversalScan()">Buscar</button>
-      </div>
-      <button type="button" class="btn-pill btn-primary" id="top_save_btn" onclick="pushConfigToClock()">Aplicar</button>
+    <div class="topbar-actions">
+      <button type="button" class="device-pill" id="btn_device_pill" data-online="false" aria-haspopup="dialog">
+        <svg class="status-icon" width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <circle cx="8" cy="8" r="5" fill="currentColor" opacity="0.25"/>
+          <circle cx="8" cy="8" r="3" fill="currentColor"/>
+        </svg>
+        <span class="device-label num" id="device_pill_lbl">Conectar</span>
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+          <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+
+      <button type="button" class="apply-btn" id="btn_apply" data-dirty="false">
+        <span class="dirty-mark" aria-hidden="true"></span>
+        <span id="btn_apply_lbl">Aplicar</span>
+      </button>
     </div>
   </div>
 </header>
 
-<div class="studio-shell">
-
-  <aside class="sim-panel">
-    <div class="sim-header">
-      <div class="sim-tag">Vista previa 64x64</div>
-      <div class="sim-mode-toggle">
-        <button type="button" class="sim-mode-btn active" id="sim_btn_live" onclick="setSimMode('live')">En vivo</button>
-        <button type="button" class="sim-mode-btn" id="sim_btn_boot" onclick="setSimMode('boot')">Inicio</button>
+<main class="app-shell">
+  <aside class="stage-col">
+    <div class="clock-bezel">
+      <div class="canvas-well">
+        <canvas id="led_canvas" width="256" height="256" role="img" aria-label="Reloj en vivo"></canvas>
+        <div class="bezel-actions" id="bezel_actions" hidden>
+          <button type="button" class="bezel-chip" id="btn_replay_boot" onclick="setSimMode('boot')">Repetir</button>
+          <button type="button" class="bezel-chip" id="btn_back_live" onclick="setSimMode('live')">Ver reloj</button>
+        </div>
       </div>
     </div>
 
-    <div class="matrix-frame">
-      <canvas id="led_canvas" width="256" height="256"></canvas>
-    </div>
+    <div class="quick-controls">
+      <div class="slider-block">
+        <div class="slider-hdr">
+          <label for="bright_slider">Brillo</label>
+          <output id="bright_val" for="bright_slider" class="num">35%</output>
+        </div>
+        <input type="range" class="glass-range" id="bright_slider" min="15" max="255" value="90" aria-valuetext="35%">
+      </div>
 
-    <div class="sim-quick-toggles">
-      <button type="button" class="quick-toggle-btn" id="qt_fullscreen" onclick="toggleFullscreen()">
+      <div class="divider-line" role="separator"></div>
+
+      <label class="switch-row">
         <span>Pantalla completa</span>
-        <span id="qt_full_lbl">OFF</span>
-      </button>
-      <button type="button" class="quick-toggle-btn active" id="qt_frost" onclick="toggleFrost()">
-        <span>Cristal Frosted</span>
-        <span id="qt_frost_lbl">ON</span>
-      </button>
-    </div>
+        <input type="checkbox" switch id="sw_fullscreen">
+      </label>
 
-    <div class="bright-row">
-      <label for="bright_slider">Brillo</label>
-      <input type="range" id="bright_slider" min="5" max="255" value="90" oninput="state.brightness=Number(this.value);$('bright_val').textContent=Math.round(this.value/2.55)+'%'">
-      <span id="bright_val">35%</span>
-    </div>
+      <div class="divider-line" role="separator"></div>
 
-    <button type="button" class="apply-main-btn" onclick="pushConfigToClock()">Aplicar al reloj</button>
-    <div class="toast-msg" id="toast_box"></div>
+      <label class="switch-row">
+        <span>Efecto cristal</span>
+        <input type="checkbox" switch id="sw_frost" checked>
+      </label>
+    </div>
   </aside>
 
   <section class="workspace-col">
-    <nav class="main-tabs">
-      <button type="button" class="main-tab-btn active" id="mtab_layouts" onclick="switchMainTab('layouts')">Diseños</button>
-      <button type="button" class="main-tab-btn" id="mtab_anims" onclick="switchMainTab('anims')">Fondos</button>
-      <button type="button" class="main-tab-btn" id="mtab_colors" onclick="switchMainTab('colors')">Colores</button>
-      <button type="button" class="main-tab-btn" id="mtab_boot" onclick="switchMainTab('boot')">Inicio</button>
-      <button type="button" class="main-tab-btn" id="mtab_net" onclick="switchMainTab('net')">Red y Clima</button>
-    </nav>
+    <div class="tablist" id="main_tablist" role="tablist" focusgroup="tablist nomemory" aria-label="Secciones">
+      <button type="button" role="tab" id="tab_layouts" aria-selected="true" focusgroupstart>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <rect x="2" y="2" width="12" height="5" rx="1.5" stroke="currentColor" stroke-width="1.35"/>
+          <rect x="2" y="9" width="12" height="5" rx="1.5" stroke="currentColor" stroke-width="1.35"/>
+        </svg>
+        <span>Diseños</span>
+      </button>
 
-    <div class="tab-pane active" id="pane_layouts">
-      <div class="pane-hdr">
-        <div class="pane-title">Diseños</div>
-        <div class="sub-filter-bar">
-          <button type="button" class="sub-filter-btn active" id="lfilt_all" onclick="setLayoutFilter('all')">Todos</button>
-          <button type="button" class="sub-filter-btn" id="lfilt_h" onclick="setLayoutFilter('h')">Horizontales</button>
-          <button type="button" class="sub-filter-btn" id="lfilt_v" onclick="setLayoutFilter('v')">Verticales</button>
-        </div>
-      </div>
-      <div class="cards-grid" id="layouts_grid"></div>
+      <button type="button" role="tab" id="tab_anims" aria-selected="false">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d="M2 10.5C4.2 7 6.2 7 8 10.5C9.8 14 11.8 14 14 10.5" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"/>
+          <path d="M2 5.5C4.2 2 6.2 2 8 5.5C9.8 9 11.8 9 14 5.5" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" opacity="0.55"/>
+        </svg>
+        <span>Fondos</span>
+      </button>
+
+      <button type="button" role="tab" id="tab_colors" aria-selected="false">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.35"/>
+          <circle cx="8" cy="8" r="2.2" fill="currentColor"/>
+        </svg>
+        <span>Colores</span>
+      </button>
+
+      <button type="button" role="tab" id="tab_boot" aria-selected="false">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d="M8 2L9.5 6.5L14 8L9.5 9.5L8 14L6.5 9.5L2 8L6.5 6.5L8 2Z" stroke="currentColor" stroke-width="1.35" stroke-linejoin="round"/>
+        </svg>
+        <span>Inicio</span>
+      </button>
+
+      <button type="button" role="tab" id="tab_settings" aria-selected="false">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d="M3 5H13M3 11H13" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"/>
+          <circle cx="6" cy="5" r="1.5" fill="var(--bg)" stroke="currentColor" stroke-width="1.35"/>
+          <circle cx="10.5" cy="11" r="1.5" fill="var(--bg)" stroke="currentColor" stroke-width="1.35"/>
+        </svg>
+        <span>Ajustes</span>
+      </button>
     </div>
 
-    <div class="tab-pane" id="pane_anims">
-      <div class="pane-hdr">
-        <div class="pane-title">Fondos</div>
-      </div>
-      <div class="cards-grid" id="anims_grid"></div>
-    </div>
-
-    <div class="tab-pane" id="pane_colors">
-      <div class="pane-hdr">
-        <div class="pane-title">Colores</div>
-        <div class="sub-filter-bar" id="color_target_bar">
-          <button type="button" class="sub-filter-btn active" id="ctarg_wx" onclick="setColorTarget('weather')">Fondo / Clima</button>
-          <button type="button" class="sub-filter-btn" id="ctarg_clk" onclick="setColorTarget('clock')">Tarjeta Reloj</button>
-        </div>
-      </div>
-
-      <div class="palette-controls">
-        <div class="sub-filter-bar">
-          <button type="button" class="sub-filter-btn active" id="ccat_all" onclick="setColorCat('all')">Todas</button>
-          <button type="button" class="sub-filter-btn" id="ccat_triple" onclick="setColorCat('triple')">Triples</button>
-          <button type="button" class="sub-filter-btn" id="ccat_dual" onclick="setColorCat('dual')">Duales</button>
-          <button type="button" class="sub-filter-btn" id="ccat_mono" onclick="setColorCat('mono')">Monocromos</button>
-          <button type="button" class="sub-filter-btn" id="ccat_solid" onclick="setColorCat('solid')">Sólidos</button>
-        </div>
-      </div>
-
-      <div class="swatch-grid" id="swatches_grid"></div>
-    </div>
-
-    <div class="tab-pane" id="pane_boot">
-      <div class="pane-hdr">
-        <div class="pane-title">Animación de inicio</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button type="button" class="btn-pill btn-primary" onclick="setSimMode('boot')">Probar en pantalla</button>
-          <button type="button" class="btn-pill" onclick="previewBootOnHardware()">Probar en reloj</button>
-        </div>
-      </div>
-      <div class="cards-grid" id="boot_grid"></div>
-    </div>
-
-    <div class="tab-pane" id="pane_net">
-      <div class="net-card">
-        <div class="net-card-title">Conexión y Búsqueda</div>
-        <div class="net-row">
-          <input type="text" class="studio-input" id="manual_ip_in" placeholder="IP manual (ej. 192.168.68.118)" style="flex:1;min-width:190px" onkeydown="if(event.key==='Enter'){event.preventDefault();connectManualIpFromTab();}">
-          <button type="button" class="btn-pill btn-primary" onclick="connectManualIpFromTab()">Conectar</button>
-          <button type="button" class="btn-pill" onclick="openDirectStudioOnClock()">Abrir local</button>
-        </div>
-        <div class="net-row">
-          <input type="text" class="studio-input" id="scan_custom_range" value="" placeholder="Rango opcional (ej. 192.168.68.1-254)" style="flex:1;min-width:190px" onkeydown="if(event.key==='Enter'){event.preventDefault();startCustomRangeScan();}">
-          <button type="button" class="btn-pill btn-primary" id="btn_start_scan" onclick="startUniversalScan()">Buscar en red</button>
-          <button type="button" class="btn-pill" onclick="startCustomRangeScan()">Escanear rango</button>
-          <button type="button" class="btn-pill" id="btn_stop_scan" onclick="stopUniversalScan()" style="display:none;color:#f87171">Detener</button>
-        </div>
-        <div class="net-row" style="gap:6px">
-          <button type="button" class="btn-pill" style="padding:4px 9px;font-size:11px" onclick="$('scan_custom_range').value='192.168.68.1-192.168.68.254';startCustomRangeScan()">192.168.68.x</button>
-          <button type="button" class="btn-pill" style="padding:4px 9px;font-size:11px" onclick="$('scan_custom_range').value='192.168.0.1-192.168.255.254';startCustomRangeScan()">192.168.x.x</button>
-          <button type="button" class="btn-pill" style="padding:4px 9px;font-size:11px" onclick="$('scan_custom_range').value='10.0.0.1-10.255.255.254';startCustomRangeScan()">10.x.x.x</button>
-          <button type="button" class="btn-pill" style="padding:4px 9px;font-size:11px" onclick="$('scan_custom_range').value='172.16.0.1-172.31.255.254';startCustomRangeScan()">172.16.x.x</button>
-        </div>
-
-        <div class="scan-progress-wrap" id="scan_prog_wrap">
-          <div style="display:flex;justify-content:space-between;font-size:11.5px;color:var(--sub);gap:8px">
-            <span id="scan_prog_lbl">Buscando...</span>
-            <span id="scan_prog_pct">0%</span>
+    <div class="panels-stack">
+      <section role="tabpanel" id="panel_layouts" aria-labelledby="tab_layouts">
+        <div class="panel-inner">
+          <div class="panel-hdr">
+            <h2>Diseños</h2>
+            <div class="seg-group" role="group" aria-label="Orientación">
+              <button type="button" class="seg-btn" id="lfil_all" aria-pressed="true" onclick="setLayoutFilter('all')">Todos</button>
+              <button type="button" class="seg-btn" id="lfil_h" aria-pressed="false" onclick="setLayoutFilter('h')">Horizontal</button>
+              <button type="button" class="seg-btn" id="lfil_v" aria-pressed="false" onclick="setLayoutFilter('v')">Vertical</button>
+            </div>
           </div>
-          <div class="scan-progress-bar">
-            <div class="scan-progress-fill" id="scan_prog_fill"></div>
-          </div>
+          <div class="opt-grid" id="layouts_grid"></div>
         </div>
+      </section>
 
-        <div class="found-clocks-list" id="found_clocks"></div>
-      </div>
+      <section role="tabpanel" id="panel_anims" aria-labelledby="tab_anims" hidden="until-found">
+        <div class="panel-inner">
+          <div class="panel-hdr">
+            <h2>Fondos</h2>
+            <div class="seg-group" role="group" aria-label="Movimiento">
+              <button type="button" class="seg-btn" id="afil_all" aria-pressed="true" onclick="setAnimFilter('all')">Todos</button>
+              <button type="button" class="seg-btn" id="afil_dyn" aria-pressed="false" onclick="setAnimFilter('dyn')">Animados</button>
+              <button type="button" class="seg-btn" id="afil_static" aria-pressed="false" onclick="setAnimFilter('static')">Estáticos</button>
+            </div>
+          </div>
+          <div class="opt-grid" id="anims_grid"></div>
+        </div>
+      </section>
 
-      <div class="net-card">
-        <div class="net-card-title">Clima y Zona Horaria</div>
-        <div class="form-grid">
-          <div class="form-field">
-            <label for="city_in">Ciudad</label>
-            <input type="text" class="studio-input" id="city_in" placeholder="Morelia, MX">
+      <section role="tabpanel" id="panel_colors" aria-labelledby="tab_colors" hidden="until-found">
+        <div class="panel-inner">
+          <div class="panel-hdr">
+            <h2>Colores</h2>
+            <div class="color-toolbar">
+              <div class="seg-group" role="group" aria-label="Zona de color">
+                <button type="button" class="seg-btn" id="ctarg_wx" aria-pressed="true" onclick="setColorTarget('weather')">Fondo</button>
+                <button type="button" class="seg-btn" id="ctarg_clk" aria-pressed="false" onclick="setColorTarget('clock')">Tarjeta reloj</button>
+              </div>
+              <div class="seg-group" role="group" aria-label="Paletas">
+                <button type="button" class="seg-btn" id="ccat_all" aria-pressed="true" onclick="setColorCat('all')">Todas</button>
+                <button type="button" class="seg-btn" id="ccat_triple" aria-pressed="false" onclick="setColorCat('triple')">Triples</button>
+                <button type="button" class="seg-btn" id="ccat_dual" aria-pressed="false" onclick="setColorCat('dual')">Duales</button>
+                <button type="button" class="seg-btn" id="ccat_mono" aria-pressed="false" onclick="setColorCat('mono')">Monocromos</button>
+                <button type="button" class="seg-btn" id="ccat_solid" aria-pressed="false" onclick="setColorCat('solid')">Sólidos</button>
+              </div>
+            </div>
           </div>
-          <div class="form-field">
-            <label for="tz_sel">Zona Horaria</label>
-            <select class="studio-select" id="tz_sel">
-              <option value="-28800">UTC-8 Tijuana / LA</option>
-              <option value="-25200">UTC-7 Chihuahua / Mazatlan</option>
-              <option value="-21600" selected>UTC-6 CDMX / Morelia / GDL</option>
-              <option value="-18000">UTC-5 Cancun / Bogota / NY</option>
-              <option value="-14400">UTC-4 Santiago / La Paz</option>
-              <option value="-10800">UTC-3 Buenos Aires / Sao Paulo</option>
-              <option value="0">UTC+0 Londres / Lisboa</option>
-              <option value="3600">UTC+1 Madrid / Paris / Berlin</option>
-              <option value="32400">UTC+9 Tokio / Seul</option>
-            </select>
-          </div>
+          <div class="swatch-grid" id="swatches_grid"></div>
         </div>
-        <div class="net-row" style="margin-top:10px">
-          <button type="button" class="btn-pill btn-primary" onclick="pushConfigToClock()">Guardar cambios</button>
-        </div>
-      </div>
+      </section>
 
-      <div class="net-card">
-        <div class="net-row" style="justify-content:space-between">
-          <div>
-            <div class="net-card-title" style="margin-bottom:2px" id="ota_ver_title">Sistema y Firmware · v1.0.19</div>
-            <div style="font-size:11.5px;color:var(--sub)" id="ota_ver_sub">Listo</div>
+      <section role="tabpanel" id="panel_boot" aria-labelledby="tab_boot" hidden="until-found">
+        <div class="panel-inner">
+          <div class="panel-hdr">
+            <h2>Inicio</h2>
+            <button type="button" class="btn-glass" onclick="previewBootOnHardware()">Probar en reloj</button>
           </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button type="button" class="btn-pill btn-primary" onclick="triggerClockOta()">Actualizar OTA</button>
-            <button type="button" class="btn-pill" onclick="rebootClockRemote()">Reiniciar</button>
+          <div class="opt-grid" id="boot_grid"></div>
+        </div>
+      </section>
+
+      <section role="tabpanel" id="panel_settings" aria-labelledby="tab_settings" hidden="until-found">
+        <div class="panel-inner">
+          <div class="panel-hdr">
+            <h2>Ajustes</h2>
+          </div>
+
+          <div class="settings-group">
+            <h3>Clima y hora</h3>
+            <div class="form-grid">
+              <div class="field">
+                <label for="city_in">Ciudad</label>
+                <input type="text" class="glass-input" id="city_in" placeholder="Morelia, Michoacán, MX">
+              </div>
+              <div class="field">
+                <label for="tz_sel">Zona horaria</label>
+                <select class="glass-select" id="tz_sel">
+                  <option value="-43200">UTC-12 · Baker Island</option>
+                  <option value="-39600">UTC-11 · Samoa</option>
+                  <option value="-36000">UTC-10 · Hawái</option>
+                  <option value="-34200">UTC-9:30 · Marquesas</option>
+                  <option value="-32400">UTC-9 · Alaska</option>
+                  <option value="-28800">UTC-8 · Tijuana / LA</option>
+                  <option value="-25200">UTC-7 · Chihuahua / Mazatlán</option>
+                  <option value="-21600" selected>UTC-6 · CDMX / Morelia / GDL</option>
+                  <option value="-18000">UTC-5 · Cancún / Bogotá / NY</option>
+                  <option value="-16200">UTC-4:30 · Caracas</option>
+                  <option value="-14400">UTC-4 · Santiago / La Paz</option>
+                  <option value="-12600">UTC-3:30 · Terranova</option>
+                  <option value="-10800">UTC-3 · Buenos Aires / São Paulo</option>
+                  <option value="-7200">UTC-2 · Atlántico Sur</option>
+                  <option value="-3600">UTC-1 · Azores</option>
+                  <option value="0">UTC+0 · Londres / Lisboa</option>
+                  <option value="3600">UTC+1 · Madrid / París / Berlín</option>
+                  <option value="7200">UTC+2 · Atenas / El Cairo</option>
+                  <option value="10800">UTC+3 · Moscú / Estambul</option>
+                  <option value="12600">UTC+3:30 · Teherán</option>
+                  <option value="14400">UTC+4 · Dubái</option>
+                  <option value="16200">UTC+4:30 · Kabul</option>
+                  <option value="18000">UTC+5 · Karachi</option>
+                  <option value="19800">UTC+5:30 · Nueva Delhi</option>
+                  <option value="20700">UTC+5:45 · Katmandú</option>
+                  <option value="21600">UTC+6 · Daca</option>
+                  <option value="23400">UTC+6:30 · Rangún</option>
+                  <option value="25200">UTC+7 · Bangkok / Hanói</option>
+                  <option value="28800">UTC+8 · Pekín / Singapur</option>
+                  <option value="31500">UTC+8:45 · Eucla</option>
+                  <option value="32400">UTC+9 · Tokio / Seúl</option>
+                  <option value="34200">UTC+9:30 · Adelaida</option>
+                  <option value="36000">UTC+10 · Sídney</option>
+                  <option value="37800">UTC+10:30 · Lord Howe</option>
+                  <option value="39600">UTC+11 · Noumea</option>
+                  <option value="43200">UTC+12 · Auckland</option>
+                  <option value="45900">UTC+12:45 · Chatham</option>
+                  <option value="46800">UTC+13 · Apia</option>
+                  <option value="50400">UTC+14 · Kiritimati</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-group">
+            <h3>Sistema</h3>
+            <div class="sys-list">
+              <div class="sys-row">
+                <div>
+                  <div class="sys-title">Firmware</div>
+                  <div class="sys-meta num" id="sys_fw_meta">v1.0.20</div>
+                </div>
+                <button type="button" class="btn-glass" onclick="requestClockOta()">Actualizar</button>
+              </div>
+              <div class="sys-row">
+                <div>
+                  <div class="sys-title">Reiniciar reloj</div>
+                  <div class="sys-meta">Reinicio rápido sin perder ajustes</div>
+                </div>
+                <button type="button" class="btn-glass" onclick="requestClockReboot()">Reiniciar</button>
+              </div>
+              <div class="sys-row">
+                <div>
+                  <div class="sys-title">Red Wi-Fi</div>
+                  <div class="sys-meta">Olvidar red actual y abrir portal AP</div>
+                </div>
+                <button type="button" class="btn-glass btn-danger" onclick="requestResetWifi()">Restablecer</button>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      </section>
     </div>
   </section>
+</main>
+
+<dialog id="device_dialog" closedby="any" aria-labelledby="device_dialog_title">
+  <div class="dialog-body">
+    <div class="dialog-hdr">
+      <h2 id="device_dialog_title">Relojes</h2>
+      <button type="button" class="icon-close" onclick="closeTopLayer($('device_dialog'))" aria-label="Cerrar">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+          <path d="M3 3L11 11M11 3L3 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+
+    <form class="dialog-row" onsubmit="event.preventDefault(); connectManualIpFromDialog();">
+      <label class="sr-only" for="manual_ip_in">Dirección IP del reloj</label>
+      <input type="text" class="glass-input num" id="manual_ip_in" inputmode="decimal" placeholder="192.168.68.116" autofocus>
+      <button type="submit" class="btn-solid">Conectar</button>
+    </form>
+
+    <div class="dialog-row">
+      <button type="button" class="btn-glass" id="btn_start_scan" onclick="startUniversalScan()">Buscar en red</button>
+      <button type="button" class="btn-glass btn-danger" id="btn_stop_scan" onclick="stopUniversalScan()" hidden>Detener</button>
+    </div>
+
+    <div class="scan-progress" id="scan_prog_wrap" hidden>
+      <div class="scan-meta">
+        <span id="scan_prog_lbl">Buscando...</span>
+        <span class="num" id="scan_prog_pct">0%</span>
+      </div>
+      <div class="scan-track">
+        <div class="scan-fill" id="scan_prog_fill"></div>
+      </div>
+    </div>
+
+    <div class="clocks-list" id="found_clocks"></div>
+
+    <details class="adv-scan">
+      <summary>
+        <span>Escaneo por rango</span>
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+          <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </summary>
+      <div class="adv-scan-body">
+        <form class="dialog-row" onsubmit="event.preventDefault(); startCustomRangeScan();">
+          <label class="sr-only" for="scan_custom_range">Rango de IPs</label>
+          <input type="text" class="glass-input num" id="scan_custom_range" placeholder="192.168.68.1-254">
+          <button type="submit" class="btn-glass">Escanear</button>
+        </form>
+        <div class="cidr-chips">
+          <button type="button" class="cidr-chip num" onclick="setRangePreset('192.168.68.1-192.168.68.254')">192.168.68.x</button>
+          <button type="button" class="cidr-chip num" onclick="setRangePreset('192.168.0.1-192.168.255.254')">192.168.x.x</button>
+          <button type="button" class="cidr-chip num" onclick="setRangePreset('10.0.0.1-10.255.255.254')">10.x.x.x</button>
+          <button type="button" class="cidr-chip num" onclick="setRangePreset('172.16.0.1-172.31.255.254')">172.16.x.x</button>
+        </div>
+      </div>
+    </details>
+  </div>
+</dialog>
+
+<dialog id="confirm_dialog" closedby="closerequest" aria-labelledby="confirm_dialog_title">
+  <div class="dialog-body">
+    <div class="dialog-hdr">
+      <h2 id="confirm_dialog_title">Confirmar acción</h2>
+    </div>
+    <p id="confirm_dialog_msg" style="margin:0;color:var(--text-muted);font-size:0.875rem"></p>
+    <form method="dialog" class="dialog-actions">
+      <button type="submit" value="cancel" class="btn-glass" autofocus>Cancelar</button>
+      <button type="submit" value="confirm" id="confirm_dialog_ok" class="btn-solid">Continuar</button>
+    </form>
+  </div>
+</dialog>
+
+<div class="toast" id="floating_toast" role="status" aria-live="polite" data-tone="ok" hidden>
+  <svg class="toast-icon" id="toast_icon" width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+    <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/>
+    <path d="M5.5 8.2L7.2 9.9L10.8 6.3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+  <span id="toast_msg"></span>
 </div>
 
 <script>
 function $(id){ return document.getElementById(id); }
 
-// ── GLOBAL STUDIO STATE ──
+var DEFAULT_CITY = 'Morelia, Michoacán, MX';
+var TAB_KEYS = ['layouts', 'anims', 'colors', 'boot', 'settings'];
+var SNAPSHOT_KEYS = ['layout', 'animMode', 'grad', 'clockBg', 'fullScreen', 'frostClk', 'bootMode', 'brightness', 'tz', 'city'];
+
+var HOST_NAME = location.hostname || '';
+var IS_LOCAL_HOST = (
+  location.protocol === 'http:' &&
+  HOST_NAME !== '' &&
+  HOST_NAME !== 'localhost' &&
+  HOST_NAME !== '127.0.0.1' &&
+  HOST_NAME.indexOf('github.io') < 0
+);
+
+var initialIp = IS_LOCAL_HOST ? HOST_NAME : (localStorage.getItem('esp32_clock_ip') || '');
+
 var state = {
   fullScreen: 0,
   layout: 2,
@@ -844,165 +1847,329 @@ var state = {
   bootMode: 1,
   brightness: 90,
   tz: -21600,
-  city: 'Morelia, MX',
+  city: DEFAULT_CITY,
   layoutFilter: 'all',
+  animFilter: 'all',
   colorTarget: 'weather',
   colorCat: 'all',
   simMode: 'live',
   bootSimStart: 0,
-  connectedIp: localStorage.getItem('esp32_clock_ip') || ''
+  connectedIp: initialIp,
+  fwVer: '1.0.20',
+  latestCloudVer: '',
+  activeTab: 'layouts'
 };
 
-if(state.connectedIp) $('clock_ip').value = state.connectedIp;
+var savedSnapshot = null;
 
-// ── CATALOGOS COMPACTOS (SIN EMOJIS NI TEXTO INNECESARIO) ──
+function captureSnapshot(){
+  return {
+    layout: Number(state.layout),
+    animMode: Number(state.animMode),
+    grad: Number(state.grad),
+    clockBg: Number(state.clockBg),
+    fullScreen: Number(state.fullScreen),
+    frostClk: Number(state.frostClk),
+    bootMode: Number(state.bootMode),
+    brightness: Number(state.brightness),
+    tz: String(state.tz),
+    city: String(state.city || '').trim()
+  };
+}
+
+function commitSnapshot(){
+  savedSnapshot = captureSnapshot();
+  updateDirtyState();
+}
+
+function updateDirtyState(){
+  var btn = $('btn_apply');
+  if(!btn) return;
+  if(!savedSnapshot){
+    btn.setAttribute('data-dirty', 'false');
+    return;
+  }
+  var cur = captureSnapshot();
+  var dirty = false;
+  for(var i = 0; i < SNAPSHOT_KEYS.length; i++){
+    var k = SNAPSHOT_KEYS[i];
+    if(String(cur[k]) !== String(savedSnapshot[k])){
+      dirty = true;
+      break;
+    }
+  }
+  btn.setAttribute('data-dirty', dirty ? 'true' : 'false');
+}
+
+// ── CATALOGOS LIMPIOS (CERO BASURA TEXTUAL / ETIQUETAS) ──
 var LAYOUTS = [
-  { id:0,  ori:'h', name:'01 · Clasico' },
-  { id:2,  ori:'h', name:'02 · Gemini Studio', gemini:true },
-  { id:3,  ori:'h', name:'03 · Bento Ultra' },
-  { id:4,  ori:'h', name:'04 · Nothing Dot' },
-  { id:5,  ori:'h', name:'05 · Swiss Chrono' },
-  { id:6,  ori:'h', name:'06 · Cyber HUD' },
-  { id:7,  ori:'h', name:'07 · Flip Cards' },
-  { id:8,  ori:'h', name:'08 · Editorial' },
-  { id:9,  ori:'h', name:'09 · Zen Horizon' },
-  { id:10, ori:'h', name:'10 · Dual Pill' },
+  { id:0,  ori:'h', glyph:'h-split',   name:'Clásico' },
+  { id:2,  ori:'h', glyph:'h-gemini',  name:'Gemini Studio' },
+  { id:3,  ori:'h', glyph:'h-bento',   name:'Bento Ultra' },
+  { id:4,  ori:'h', glyph:'h-dot',     name:'Nothing Dot' },
+  { id:5,  ori:'h', glyph:'h-ring',    name:'Swiss Chrono' },
+  { id:6,  ori:'h', glyph:'h-hud',     name:'Cyber HUD' },
+  { id:7,  ori:'h', glyph:'h-flip',    name:'Flip Cards' },
+  { id:8,  ori:'h', glyph:'h-edit',    name:'Editorial' },
+  { id:9,  ori:'h', glyph:'h-zen',     name:'Zen Horizon' },
+  { id:10, ori:'h', glyph:'h-pill',    name:'Dual Pill' },
 
-  { id:1,  ori:'v', name:'11 · Clasico Columna' },
-  { id:11, ori:'v', name:'12 · Gemini Vertical', gemini:true },
-  { id:12, ori:'v', name:'13 · Bento Split' },
-  { id:13, ori:'v', name:'14 · Nothing Torre' },
-  { id:14, ori:'v', name:'15 · Swiss Gallery' },
-  { id:15, ori:'v', name:'16 · Cyber Tower' },
-  { id:16, ori:'v', name:'17 · Flip Stack' },
-  { id:17, ori:'v', name:'18 · Brutalist Bold' },
-  { id:18, ori:'v', name:'19 · Chrono Orbital' },
-  { id:19, ori:'v', name:'20 · Zen Pillar' }
+  { id:1,  ori:'v', glyph:'v-split',   name:'Clásico Columna' },
+  { id:11, ori:'v', glyph:'v-gemini',  name:'Gemini Vertical' },
+  { id:12, ori:'v', glyph:'v-bento',   name:'Bento Split' },
+  { id:13, ori:'v', glyph:'v-dot',     name:'Nothing Torre' },
+  { id:14, ori:'v', glyph:'v-ring',    name:'Swiss Gallery' },
+  { id:15, ori:'v', glyph:'v-hud',     name:'Cyber Tower' },
+  { id:16, ori:'v', glyph:'v-flip',    name:'Flip Stack' },
+  { id:17, ori:'v', glyph:'v-edit',    name:'Brutalist Bold' },
+  { id:18, ori:'v', glyph:'v-ring',    name:'Chrono Orbital' },
+  { id:19, ori:'v', glyph:'v-zen',     name:'Zen Pillar' }
 ];
 
 var ANIMS = [
-  { id:20, name:'20 · Gemini Aurora', type:'Gemini UI', gemini:true },
-  { id:0,  name:'00 · Esferas Orbitales', type:'60 FPS' },
-  { id:1,  name:'01 · Cortina Boreal', type:'60 FPS' },
-  { id:2,  name:'02 · Plasma Liquido', type:'60 FPS' },
-  { id:3,  name:'03 · Pulso Radial', type:'60 FPS' },
-  { id:4,  name:'04 · Espiral Galactica', type:'60 FPS' },
-  { id:5,  name:'05 · Prisma Diamante', type:'60 FPS' },
-  { id:6,  name:'06 · Horizonte Zen', type:'60 FPS' },
-  { id:7,  name:'07 · Campo Cuantico', type:'60 FPS' },
-  { id:8,  name:'08 · Respiracion Aura', type:'60 FPS' },
-  { id:9,  name:'09 · Marea Profunda', type:'60 FPS' },
-  { id:10, name:'10 · Caleidoscopio', type:'60 FPS' },
-  { id:11, name:'11 · Cintas de Seda', type:'60 FPS' },
-  { id:12, name:'12 · Vortice', type:'60 FPS' },
-  { id:13, name:'13 · Lluvia Estelar', type:'60 FPS' },
-  { id:14, name:'14 · Duna Solar', type:'60 FPS' },
-  { id:15, name:'15 · Supernova', type:'60 FPS' },
-  { id:16, name:'16 · Seda Diagonal', type:'Estatico' },
-  { id:17, name:'17 · Vineta Estudio', type:'Estatico' },
-  { id:18, name:'18 · Horizonte Puro', type:'Estatico' },
-  { id:19, name:'19 · Prisma Central', type:'Estatico' }
+  { id:20, staticMode:false, name:'Gemini Aurora' },
+  { id:0,  staticMode:false, name:'Esferas Orbitales' },
+  { id:1,  staticMode:false, name:'Cortina Boreal' },
+  { id:2,  staticMode:false, name:'Plasma Líquido' },
+  { id:3,  staticMode:false, name:'Pulso Radial' },
+  { id:4,  staticMode:false, name:'Espiral Galáctica' },
+  { id:5,  staticMode:false, name:'Prisma Diamante' },
+  { id:6,  staticMode:false, name:'Horizonte Zen' },
+  { id:7,  staticMode:false, name:'Campo Cuántico' },
+  { id:8,  staticMode:false, name:'Respiración Aura' },
+  { id:9,  staticMode:false, name:'Marea Profunda' },
+  { id:10, staticMode:false, name:'Caleidoscopio' },
+  { id:11, staticMode:false, name:'Cintas de Seda' },
+  { id:12, staticMode:false, name:'Vórtice' },
+  { id:13, staticMode:false, name:'Lluvia Estelar' },
+  { id:14, staticMode:false, name:'Duna Solar' },
+  { id:15, staticMode:false, name:'Supernova' },
+  { id:16, staticMode:true,  name:'Seda Diagonal' },
+  { id:17, staticMode:true,  name:'Viñeta Estudio' },
+  { id:18, staticMode:true,  name:'Horizonte Puro' },
+  { id:19, staticMode:true,  name:'Prisma Central' }
 ];
 
 var BOOTS = [
-  { id:0, name:'0 · Singularidad' },
-  { id:1, name:'1 · Destello Gemini', gemini:true },
-  { id:2, name:'2 · Colisionador Dual' },
-  { id:3, name:'3 · Prisma Diamante' },
-  { id:4, name:'4 · Vortice Espiral' },
-  { id:5, name:'5 · Cortina Boreal' },
-  { id:6, name:'6 · Nothing Grid' },
-  { id:7, name:'7 · Apertura Iris' },
-  { id:8, name:'8 · Ondas Armonicas' },
-  { id:9, name:'9 · Barrido Laser' }
+  { id:0,  name:'Singularidad' },
+  { id:1,  name:'Destello Gemini' },
+  { id:2,  name:'Colisionador Dual' },
+  { id:3,  name:'Prisma Diamante' },
+  { id:4,  name:'Vórtice Espiral' },
+  { id:5,  name:'Cortina Boreal' },
+  { id:6,  name:'Nothing Grid' },
+  { id:7,  name:'Apertura Iris' },
+  { id:8,  name:'Ondas Armónicas' },
+  { id:9,  name:'Barrido Láser' }
 ];
 
 var GRADIENTS = [
-  { id:40, cat:'triple', name:'Gemini Oficial', css:'linear-gradient(135deg,#4285f4 0%,#9b72cb 52%,#d96570 100%)' },
-  { id:21, cat:'triple', name:'Nebulosa', css:'linear-gradient(135deg,#c91882 0%,#4b128f 50%,#0eb8d6 100%)' },
-  { id:22, cat:'triple', name:'Synthwave', css:'linear-gradient(135deg,#ff7b00 0%,#d6189c 52%,#1632ad 100%)' },
-  { id:23, cat:'triple', name:'Prisma Boreal', css:'linear-gradient(135deg,#10c458 0%,#1462db 52%,#961cba 100%)' },
-  { id:24, cat:'triple', name:'Tokyo Night', css:'linear-gradient(135deg,#dc146e 0%,#731ed2 50%,#0ac8dc 100%)' },
-  { id:25, cat:'triple', name:'Solsticio', css:'linear-gradient(135deg,#ffaa0c 0%,#dc1e46 50%,#3c0f73 100%)' },
-  { id:26, cat:'triple', name:'Glaciar Nordico', css:'linear-gradient(135deg,#0adcd2 0%,#145adc 50%,#6414b4 100%)' },
-  { id:27, cat:'triple', name:'Bioluminiscencia', css:'linear-gradient(135deg,#14dc50 0%,#0aaab4 50%,#141e82 100%)' },
-  { id:28, cat:'triple', name:'Supernova', css:'linear-gradient(135deg,#fa8c14 0%,#d21478 50%,#143cd2 100%)' },
-  { id:29, cat:'triple', name:'Pacifico Sunset', css:'linear-gradient(135deg,#f04628 0%,#aa238c 50%,#0f78be 100%)' },
+  { id:40, cat:'triple', a:'#4285f4', b:'#d96570', name:'Gemini Oficial', css:'linear-gradient(135deg,#4285f4 0%,#9b72cb 52%,#d96570 100%)' },
+  { id:21, cat:'triple', a:'#c91882', b:'#0eb8d6', name:'Nebulosa', css:'linear-gradient(135deg,#c91882 0%,#4b128f 50%,#0eb8d6 100%)' },
+  { id:22, cat:'triple', a:'#ff7b00', b:'#d6189c', name:'Synthwave', css:'linear-gradient(135deg,#ff7b00 0%,#d6189c 52%,#1632ad 100%)' },
+  { id:23, cat:'triple', a:'#10c458', b:'#1462db', name:'Prisma Boreal', css:'linear-gradient(135deg,#10c458 0%,#1462db 52%,#961cba 100%)' },
+  { id:24, cat:'triple', a:'#dc146e', b:'#0ac8dc', name:'Tokyo Night', css:'linear-gradient(135deg,#dc146e 0%,#731ed2 50%,#0ac8dc 100%)' },
+  { id:25, cat:'triple', a:'#ffaa0c', b:'#dc1e46', name:'Solsticio', css:'linear-gradient(135deg,#ffaa0c 0%,#dc1e46 50%,#3c0f73 100%)' },
+  { id:26, cat:'triple', a:'#0adcd2', b:'#6414b4', name:'Glaciar Nórdico', css:'linear-gradient(135deg,#0adcd2 0%,#145adc 50%,#6414b4 100%)' },
+  { id:27, cat:'triple', a:'#14dc50', b:'#141e82', name:'Bioluminiscencia', css:'linear-gradient(135deg,#14dc50 0%,#0aaab4 50%,#141e82 100%)' },
+  { id:28, cat:'triple', a:'#fa8c14', b:'#143cd2', name:'Supernova', css:'linear-gradient(135deg,#fa8c14 0%,#d21478 50%,#143cd2 100%)' },
+  { id:29, cat:'triple', a:'#f04628', b:'#0f78be', name:'Pacífico Sunset', css:'linear-gradient(135deg,#f04628 0%,#aa238c 50%,#0f78be 100%)' },
 
-  { id:0,  cat:'dual', name:'Calido', css:'linear-gradient(135deg,#c93478,#2c1fb8)' },
-  { id:1,  cat:'dual', name:'Frio', css:'linear-gradient(135deg,#18bdcc,#1b3fb5)' },
-  { id:2,  cat:'dual', name:'Aurora', css:'linear-gradient(135deg,#2dd48f,#6f34b8)' },
-  { id:3,  cat:'dual', name:'Cyberpunk', css:'linear-gradient(135deg,#e01b84,#00b4d8)' },
-  { id:4,  cat:'dual', name:'Esmeralda', css:'linear-gradient(135deg,#1bb854,#d4901b)' },
-  { id:5,  cat:'dual', name:'Crepusculo', css:'linear-gradient(135deg,#db3b2b,#5c1bb8)' },
-  { id:6,  cat:'dual', name:'Fuego', css:'linear-gradient(135deg,#eb2113,#e88d14)' },
-  { id:7,  cat:'dual', name:'Vaporwave', css:'linear-gradient(135deg,#a339c9,#2cc9a9)' },
-  { id:14, cat:'dual', name:'Atardecer', css:'linear-gradient(135deg,#2160db,#eb7d14)' },
-  { id:18, cat:'dual', name:'Oceano Tropical', css:'linear-gradient(135deg,#0ed4ae,#1838db)' },
-  { id:19, cat:'dual', name:'Sakura', css:'linear-gradient(135deg,#e0328c,#d4871c)' },
-  { id:20, cat:'dual', name:'Abismo Neon', css:'linear-gradient(135deg,#1ed44e,#4f16db)' },
-  { id:30, cat:'dual', name:'Champagne Noche', css:'linear-gradient(135deg,#e6be6e,#141e5a)' },
-  { id:31, cat:'dual', name:'Kyoto Matcha', css:'linear-gradient(135deg,#28c850,#a0196e)' },
-  { id:32, cat:'dual', name:'Obsidiana Magma', css:'linear-gradient(135deg,#f03c0f,#3c0f46)' },
-  { id:33, cat:'dual', name:'Ultravioleta', css:'linear-gradient(135deg,#7814e6,#0ae182)' },
-  { id:34, cat:'dual', name:'Cobre Verdigris', css:'linear-gradient(135deg,#dc6e1e,#14af8c)' },
-  { id:35, cat:'dual', name:'Rosa Boreal', css:'linear-gradient(135deg,#eb3282,#1e8ce6)' },
+  { id:0,  cat:'dual', a:'#c93478', b:'#2c1fb8', name:'Cálido', css:'linear-gradient(135deg,#c93478,#2c1fb8)' },
+  { id:1,  cat:'dual', a:'#18bdcc', b:'#1b3fb5', name:'Frío', css:'linear-gradient(135deg,#18bdcc,#1b3fb5)' },
+  { id:2,  cat:'dual', a:'#2dd48f', b:'#6f34b8', name:'Aurora', css:'linear-gradient(135deg,#2dd48f,#6f34b8)' },
+  { id:3,  cat:'dual', a:'#e01b84', b:'#00b4d8', name:'Cyberpunk', css:'linear-gradient(135deg,#e01b84,#00b4d8)' },
+  { id:4,  cat:'dual', a:'#1bb854', b:'#d4901b', name:'Esmeralda', css:'linear-gradient(135deg,#1bb854,#d4901b)' },
+  { id:5,  cat:'dual', a:'#db3b2b', b:'#5c1bb8', name:'Crepúsculo', css:'linear-gradient(135deg,#db3b2b,#5c1bb8)' },
+  { id:6,  cat:'dual', a:'#eb2113', b:'#e88d14', name:'Fuego', css:'linear-gradient(135deg,#eb2113,#e88d14)' },
+  { id:7,  cat:'dual', a:'#a339c9', b:'#2cc9a9', name:'Vaporwave', css:'linear-gradient(135deg,#a339c9,#2cc9a9)' },
+  { id:14, cat:'dual', a:'#2160db', b:'#eb7d14', name:'Atardecer', css:'linear-gradient(135deg,#2160db,#eb7d14)' },
+  { id:18, cat:'dual', a:'#0ed4ae', b:'#1838db', name:'Océano Tropical', css:'linear-gradient(135deg,#0ed4ae,#1838db)' },
+  { id:19, cat:'dual', a:'#e0328c', b:'#d4871c', name:'Sakura', css:'linear-gradient(135deg,#e0328c,#d4871c)' },
+  { id:20, cat:'dual', a:'#1ed44e', b:'#4f16db', name:'Abismo Neón', css:'linear-gradient(135deg,#1ed44e,#4f16db)' },
+  { id:30, cat:'dual', a:'#e6be6e', b:'#141e5a', name:'Champagne Noche', css:'linear-gradient(135deg,#e6be6e,#141e5a)' },
+  { id:31, cat:'dual', a:'#28c850', b:'#a0196e', name:'Kyoto Matcha', css:'linear-gradient(135deg,#28c850,#a0196e)' },
+  { id:32, cat:'dual', a:'#f03c0f', b:'#3c0f46', name:'Obsidiana Magma', css:'linear-gradient(135deg,#f03c0f,#3c0f46)' },
+  { id:33, cat:'dual', a:'#7814e6', b:'#0ae182', name:'Ultravioleta', css:'linear-gradient(135deg,#7814e6,#0ae182)' },
+  { id:34, cat:'dual', a:'#dc6e1e', b:'#14af8c', name:'Cobre Verdigris', css:'linear-gradient(135deg,#dc6e1e,#14af8c)' },
+  { id:35, cat:'dual', a:'#eb3282', b:'#1e8ce6', name:'Rosa Boreal', css:'linear-gradient(135deg,#eb3282,#1e8ce6)' },
 
-  { id:8,  cat:'mono', name:'Azul Noche', css:'radial-gradient(circle at 35% 35%,#2962eb,#091536)' },
-  { id:9,  cat:'mono', name:'Verde Bosque', css:'radial-gradient(circle at 35% 35%,#19bd47,#072912)' },
-  { id:10, cat:'mono', name:'Carmesi', css:'radial-gradient(circle at 35% 35%,#db1f32,#30070c)' },
-  { id:11, cat:'mono', name:'Amatista', css:'radial-gradient(circle at 35% 35%,#a81ceb,#230636)' },
-  { id:12, cat:'mono', name:'Ambar', css:'radial-gradient(circle at 35% 35%,#db8314,#331c04)' },
-  { id:13, cat:'mono', name:'Cyan Glaciar', css:'radial-gradient(circle at 35% 35%,#16bfd9,#052a33)' },
-  { id:15, cat:'mono', name:'Rosa Cuarzo', css:'radial-gradient(circle at 35% 35%,#e03e82,#330b1c)' },
-  { id:16, cat:'mono', name:'Azul Cobalto', css:'radial-gradient(circle at 35% 35%,#1c78fc,#061938)' },
-  { id:17, cat:'mono', name:'Grafito Plata', css:'radial-gradient(circle at 35% 35%,#7c8fb0,#1c212b)' },
-  { id:36, cat:'mono', name:'Titanio Natural', css:'radial-gradient(circle at 35% 35%,#968c7d,#1e1b18)' },
-  { id:37, cat:'mono', name:'Jade Imperial', css:'radial-gradient(circle at 35% 35%,#14b96e,#042516)' },
-  { id:38, cat:'mono', name:'Oro Real', css:'radial-gradient(circle at 35% 35%,#dca519,#2c2105)' },
-  { id:39, cat:'mono', name:'Lavanda Zen', css:'radial-gradient(circle at 35% 35%,#914be1,#1d0f2d)' }
+  { id:8,  cat:'mono', a:'#2962eb', b:'#091536', name:'Azul Noche', css:'radial-gradient(circle at 35% 35%,#2962eb,#091536)' },
+  { id:9,  cat:'mono', a:'#19bd47', b:'#072912', name:'Verde Bosque', css:'radial-gradient(circle at 35% 35%,#19bd47,#072912)' },
+  { id:10, cat:'mono', a:'#db1f32', b:'#30070c', name:'Carmesí', css:'radial-gradient(circle at 35% 35%,#db1f32,#30070c)' },
+  { id:11, cat:'mono', a:'#a81ceb', b:'#230636', name:'Amatista', css:'radial-gradient(circle at 35% 35%,#a81ceb,#230636)' },
+  { id:12, cat:'mono', a:'#db8314', b:'#331c04', name:'Ámbar', css:'radial-gradient(circle at 35% 35%,#db8314,#331c04)' },
+  { id:13, cat:'mono', a:'#16bfd9', b:'#052a33', name:'Cyan Glaciar', css:'radial-gradient(circle at 35% 35%,#16bfd9,#052a33)' },
+  { id:15, cat:'mono', a:'#e03e82', b:'#330b1c', name:'Rosa Cuarzo', css:'radial-gradient(circle at 35% 35%,#e03e82,#330b1c)' },
+  { id:16, cat:'mono', a:'#1c78fc', b:'#061938', name:'Azul Cobalto', css:'radial-gradient(circle at 35% 35%,#1c78fc,#061938)' },
+  { id:17, cat:'mono', a:'#7c8fb0', b:'#1c212b', name:'Grafito Plata', css:'radial-gradient(circle at 35% 35%,#7c8fb0,#1c212b)' },
+  { id:36, cat:'mono', a:'#968c7d', b:'#1e1b18', name:'Titanio Natural', css:'radial-gradient(circle at 35% 35%,#968c7d,#1e1b18)' },
+  { id:37, cat:'mono', a:'#14b96e', b:'#042516', name:'Jade Imperial', css:'radial-gradient(circle at 35% 35%,#14b96e,#042516)' },
+  { id:38, cat:'mono', a:'#dca519', b:'#2c2105', name:'Oro Real', css:'radial-gradient(circle at 35% 35%,#dca519,#2c2105)' },
+  { id:39, cat:'mono', a:'#914be1', b:'#1d0f2d', name:'Lavanda Zen', css:'radial-gradient(circle at 35% 35%,#914be1,#1d0f2d)' }
 ];
 
 function isVertLayout(lay){ return lay === 1 || (lay >= 11 && lay <= 19); }
 
-function switchMainTab(tab){
-  ['layouts','anims','colors','boot','net'].forEach(function(t){
-    $('mtab_'+t).className = 'main-tab-btn' + (t===tab ? ' active' : '');
-    $('pane_'+t).className = 'tab-pane' + (t===tab ? ' active' : '');
+function syncAmbientColors(){
+  var match = GRADIENTS.find(function(g){ return g.id === state.grad; }) || GRADIENTS[0];
+  if(match){
+    document.documentElement.style.setProperty('--ambient-a', match.a);
+    document.documentElement.style.setProperty('--ambient-b', match.b);
+  }
+}
+
+function layoutGlyphSvg(kind){
+  var base = '<svg class="opt-glyph" width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">';
+  var map = {
+    'h-split':  '<rect x="2" y="2" width="18" height="8.5" rx="2" stroke="currentColor" stroke-width="1.35"/><rect x="2" y="12.5" width="18" height="7.5" rx="2" fill="currentColor" opacity="0.22" stroke="currentColor" stroke-width="1.1"/>',
+    'h-gemini': '<rect x="2" y="2" width="18" height="8" rx="3.5" stroke="currentColor" stroke-width="1.35"/><circle cx="6.5" cy="15.5" r="2.2" fill="currentColor" opacity="0.8"/><rect x="11" y="13.5" width="8.5" height="4" rx="1.5" fill="currentColor" opacity="0.25"/>',
+    'h-bento':  '<rect x="2" y="2" width="11" height="8.5" rx="2" stroke="currentColor" stroke-width="1.35"/><rect x="15" y="2" width="5" height="8.5" rx="2" fill="currentColor" opacity="0.28"/><rect x="2" y="12.5" width="7.5" height="7.5" rx="2" fill="currentColor" opacity="0.2"/><rect x="11.5" y="12.5" width="8.5" height="7.5" rx="2" fill="currentColor" opacity="0.2"/>',
+    'h-dot':    '<circle cx="5" cy="5.5" r="1.3" fill="currentColor"/><circle cx="9.5" cy="5.5" r="1.3" fill="currentColor"/><circle cx="14" cy="5.5" r="1.3" fill="currentColor"/><circle cx="18" cy="5.5" r="1.3" fill="currentColor" opacity="0.4"/><line x1="3" y1="11" x2="19" y2="11" stroke="currentColor" stroke-width="1.2" stroke-dasharray="2 2"/><rect x="3" y="14" width="16" height="5" rx="1.5" fill="currentColor" opacity="0.22"/>',
+    'h-ring':   '<circle cx="11" cy="6.5" r="4.5" stroke="currentColor" stroke-width="1.35"/><path d="M11 4V6.5L12.8 7.6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><line x1="3" y1="14" x2="19" y2="14" stroke="currentColor" stroke-width="1.2" opacity="0.5"/><line x1="5" y1="17.5" x2="17" y2="17.5" stroke="currentColor" stroke-width="1.2" opacity="0.35"/>',
+    'h-hud':    '<path d="M2.5 6V2.5H6M16 2.5H19.5V6M2.5 16V19.5H6M16 19.5H19.5V16" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"/><rect x="6" y="7" width="10" height="3" rx="1" fill="currentColor" opacity="0.7"/><rect x="6" y="12.5" width="7" height="2" rx="1" fill="currentColor" opacity="0.35"/>',
+    'h-flip':   '<rect x="2" y="2.5" width="8" height="8" rx="1.8" stroke="currentColor" stroke-width="1.35"/><rect x="12" y="2.5" width="8" height="8" rx="1.8" stroke="currentColor" stroke-width="1.35"/><rect x="2" y="13" width="18" height="6.5" rx="1.8" fill="currentColor" opacity="0.2"/>',
+    'h-edit':   '<line x1="3" y1="6.5" x2="19" y2="6.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><line x1="3" y1="11.5" x2="13" y2="11.5" stroke="currentColor" stroke-width="1.3" opacity="0.5"/><rect x="3" y="15" width="16" height="4" rx="1.2" fill="currentColor" opacity="0.22"/>',
+    'h-zen':    '<rect x="5" y="4.5" width="12" height="4" rx="1.5" fill="currentColor" opacity="0.8"/><line x1="2" y1="11.5" x2="20" y2="11.5" stroke="currentColor" stroke-width="1.2" opacity="0.45"/><rect x="6" y="14.5" width="10" height="3.5" rx="1.5" fill="currentColor" opacity="0.25"/>',
+    'h-pill':   '<rect x="2" y="2.5" width="18" height="7.5" rx="3.75" stroke="currentColor" stroke-width="1.35"/><rect x="2" y="12" width="18" height="7.5" rx="3.75" fill="currentColor" opacity="0.22" stroke="currentColor" stroke-width="1.1"/>',
+    'v-split':  '<rect x="2" y="2" width="8.5" height="18" rx="2" stroke="currentColor" stroke-width="1.35"/><rect x="12.5" y="2" width="7.5" height="18" rx="2" fill="currentColor" opacity="0.22" stroke="currentColor" stroke-width="1.1"/>',
+    'v-gemini': '<rect x="2" y="2" width="8.5" height="18" rx="3.5" stroke="currentColor" stroke-width="1.35"/><circle cx="16.2" cy="6" r="2.2" fill="currentColor" opacity="0.8"/><rect x="13" y="11" width="6.5" height="8.5" rx="2" fill="currentColor" opacity="0.24"/>',
+    'v-bento':  '<rect x="2" y="2" width="8.5" height="11" rx="2" stroke="currentColor" stroke-width="1.35"/><rect x="2" y="15" width="8.5" height="5" rx="2" fill="currentColor" opacity="0.28"/><rect x="12.5" y="2" width="7.5" height="8" rx="2" fill="currentColor" opacity="0.2"/><rect x="12.5" y="12" width="7.5" height="8" rx="2" fill="currentColor" opacity="0.2"/>',
+    'v-dot':    '<rect x="2" y="2" width="8.5" height="18" rx="2" stroke="currentColor" stroke-width="1.2" stroke-dasharray="2 2"/><circle cx="16" cy="6" r="1.4" fill="currentColor"/><circle cx="16" cy="11" r="1.4" fill="currentColor" opacity="0.6"/><circle cx="16" cy="16" r="1.4" fill="currentColor" opacity="0.35"/>',
+    'v-ring':   '<rect x="2" y="2" width="8.5" height="18" rx="2" stroke="currentColor" stroke-width="1.2" opacity="0.7"/><circle cx="16" cy="11" r="4" stroke="currentColor" stroke-width="1.35"/>',
+    'v-hud':    '<path d="M2.5 5.5V2.5H6M16 2.5H19.5V5.5M2.5 16.5V19.5H6M16 19.5H19.5V16.5" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"/><line x1="11" y1="4" x2="11" y2="18" stroke="currentColor" stroke-width="1.2" opacity="0.45"/>',
+    'v-flip':   '<rect x="2.5" y="2" width="8" height="8" rx="1.8" stroke="currentColor" stroke-width="1.35"/><rect x="2.5" y="12" width="8" height="8" rx="1.8" stroke="currentColor" stroke-width="1.35"/><rect x="13" y="2" width="6.5" height="18" rx="1.8" fill="currentColor" opacity="0.2"/>',
+    'v-edit':   '<rect x="2.5" y="3" width="6.5" height="16" rx="1.5" fill="currentColor" opacity="0.75"/><rect x="11.5" y="3" width="8" height="7" rx="1.5" fill="currentColor" opacity="0.28"/><rect x="11.5" y="12" width="8" height="7" rx="1.5" fill="currentColor" opacity="0.18"/>',
+    'v-zen':    '<rect x="3" y="3" width="6.5" height="16" rx="3" fill="currentColor" opacity="0.8"/><line x1="12" y1="3" x2="12" y2="19" stroke="currentColor" stroke-width="1.1" opacity="0.4"/><rect x="14.5" y="5" width="4.5" height="12" rx="2" fill="currentColor" opacity="0.25"/>'
+  };
+  return base + (map[kind] || map['h-split']) + '</svg>';
+}
+
+function animGlyphSvg(isStatic){
+  if(isStatic){
+    return '<svg class="opt-glyph" width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">' +
+      '<rect x="2.5" y="4" width="13" height="10" rx="2.5" stroke="currentColor" stroke-width="1.35"/>' +
+      '<line x1="5" y1="11" x2="13" y2="7" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"/>' +
+      '</svg>';
+  }
+  return '<svg class="opt-glyph" width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">' +
+    '<path d="M2 9.5C4.5 5.5 6.8 5.5 9 9.5C11.2 13.5 13.5 13.5 16 9.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>' +
+    '<circle cx="14" cy="4.5" r="1.4" fill="currentColor" opacity="0.75"/>' +
+    '</svg>';
+}
+
+function bootGlyphSvg(){
+  return '<svg class="opt-glyph" width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">' +
+    '<path d="M9 2.5L10.6 7.4L15.5 9L10.6 10.6L9 15.5L7.4 10.6L2.5 9L7.4 7.4L9 2.5Z" stroke="currentColor" stroke-width="1.35" stroke-linejoin="round"/>' +
+    '</svg>';
+}
+
+// ── TABS (focusgroup + beforematch + keyboard fallback) ──
+function switchMainTab(tab, skipScroll){
+  if(TAB_KEYS.indexOf(tab) < 0) tab = 'layouts';
+  state.activeTab = tab;
+  TAB_KEYS.forEach(function(k){
+    var btn = $('tab_' + k);
+    var panel = $('panel_' + k);
+    var sel = (k === tab);
+    if(btn){
+      btn.setAttribute('aria-selected', sel ? 'true' : 'false');
+      if(sel){
+        btn.setAttribute('focusgroupstart', '');
+        if(!skipScroll){
+          try {
+            btn.scrollIntoView({ block: 'nearest', inline: 'nearest', container: 'nearest' });
+          } catch(e){
+            try { btn.scrollIntoView({ block: 'nearest', inline: 'nearest' }); } catch(e2){}
+          }
+        }
+      } else {
+        btn.removeAttribute('focusgroupstart');
+      }
+    }
+    if(panel){
+      if(sel){
+        panel.removeAttribute('hidden');
+      } else {
+        panel.hidden = 'until-found';
+      }
+    }
   });
+}
+
+(function initTabs(){
+  var tablist = $('main_tablist');
+  if(!tablist) return;
+  var btns = Array.prototype.slice.call(tablist.querySelectorAll('[role="tab"]'));
+  btns.forEach(function(btn){
+    var key = btn.id.replace('tab_', '');
+    btn.addEventListener('click', function(){
+      switchMainTab(key);
+    });
+    btn.addEventListener('focus', function(){
+      if(state.activeTab !== key) switchMainTab(key);
+    });
+  });
+
+  if(!Object.hasOwn(HTMLElement.prototype, 'focusGroup')){
+    tablist.addEventListener('keydown', function(e){
+      var idx = btns.indexOf(document.activeElement);
+      if(idx < 0) return;
+      var next = -1;
+      if(e.key === 'ArrowRight') next = (idx + 1) % btns.length;
+      else if(e.key === 'ArrowLeft') next = (idx - 1 + btns.length) % btns.length;
+      else if(e.key === 'Home') next = 0;
+      else if(e.key === 'End') next = btns.length - 1;
+      if(next >= 0){
+        e.preventDefault();
+        btns[next].focus();
+      }
+    });
+  }
+
+  TAB_KEYS.forEach(function(k){
+    var panel = $('panel_' + k);
+    if(panel){
+      panel.addEventListener('beforematch', function(){
+        switchMainTab(k);
+      });
+    }
+  });
+})();
+
+function onBootSimFinished(){
+  var act = $('bezel_actions');
+  if(act) act.hidden = (state.simMode === 'live');
 }
 
 function setSimMode(m){
   state.simMode = m;
-  $('sim_btn_live').className = 'sim-mode-btn' + (m==='live' ? ' active' : '');
-  $('sim_btn_boot').className = 'sim-mode-btn' + (m==='boot' ? ' active' : '');
+  var act = $('bezel_actions');
+  if(act) act.hidden = (m === 'live');
   if(m === 'boot') state.bootSimStart = performance.now();
-}
-
-function toggleFullscreen(){
-  state.fullScreen = state.fullScreen ? 0 : 1;
-  renderAllControls();
-}
-
-function toggleFrost(){
-  state.frostClk = state.frostClk ? 0 : 1;
-  renderAllControls();
 }
 
 function setLayoutFilter(f){
   state.layoutFilter = f;
   ['all','h','v'].forEach(function(k){
-    $('lfilt_'+k).className = 'sub-filter-btn' + (k===f ? ' active' : '');
+    $('lfil_' + k).setAttribute('aria-pressed', f === k ? 'true' : 'false');
   });
   renderLayoutsGrid();
 }
 
+function setAnimFilter(f){
+  state.animFilter = f;
+  ['all','dyn','static'].forEach(function(k){
+    $('afil_' + k).setAttribute('aria-pressed', f === k ? 'true' : 'false');
+  });
+  renderAnimsGrid();
+}
+
 function selectLayout(id){
   state.layout = id;
-  state.simMode = 'live';
-  $('sim_btn_live').className = 'sim-mode-btn active';
-  $('sim_btn_boot').className = 'sim-mode-btn';
-  renderAllControls();
+  setSimMode('live');
+  renderLayoutsGrid();
+  updateDirtyState();
 }
 
 function renderLayoutsGrid(){
@@ -1014,36 +2181,36 @@ function renderLayoutsGrid(){
   });
   var html = '';
   list.forEach(function(l){
-    var cls = 'item-card' + (state.layout === l.id ? ' active' : '') + (l.gemini ? ' gemini-special' : '');
-    var oriBadge = l.ori === 'h'
-      ? '<span class="ori-badge ori-h">H</span>'
-      : '<span class="ori-badge ori-v">V</span>';
-    html += '<div class="'+cls+'" onclick="selectLayout('+l.id+')">' +
-      '<div class="item-top"><span class="item-num">#'+l.id+'</span>'+oriBadge+'</div>' +
-      '<div class="item-title">'+l.name+'</div>' +
-    '</div>';
+    var sel = (state.layout === l.id);
+    html += '<button type="button" class="opt-card" aria-pressed="' + (sel ? 'true' : 'false') + '" onclick="selectLayout(' + l.id + ')">' +
+      layoutGlyphSvg(l.glyph) +
+      '<span class="opt-name">' + l.name + '</span>' +
+    '</button>';
   });
   box.innerHTML = html;
 }
 
 function selectAnim(id){
   state.animMode = id;
-  state.simMode = 'live';
-  $('sim_btn_live').className = 'sim-mode-btn active';
-  $('sim_btn_boot').className = 'sim-mode-btn';
-  renderAllControls();
+  setSimMode('live');
+  renderAnimsGrid();
+  updateDirtyState();
 }
 
 function renderAnimsGrid(){
   var box = $('anims_grid');
+  var list = ANIMS.filter(function(a){
+    if(state.animFilter === 'dyn') return !a.staticMode;
+    if(state.animFilter === 'static') return a.staticMode;
+    return true;
+  });
   var html = '';
-  ANIMS.forEach(function(a){
-    var cls = 'item-card' + (state.animMode === a.id ? ' active' : '') + (a.gemini ? ' gemini-special' : '');
-    var badgeCls = a.gemini ? 'ori-v' : (a.type === 'Estatico' ? 'ori-s' : 'ori-h');
-    html += '<div class="'+cls+'" onclick="selectAnim('+a.id+')">' +
-      '<div class="item-top"><span class="item-num">#'+a.id+'</span><span class="ori-badge '+badgeCls+'">'+a.type+'</span></div>' +
-      '<div class="item-title">'+a.name+'</div>' +
-    '</div>';
+  list.forEach(function(a){
+    var sel = (state.animMode === a.id);
+    html += '<button type="button" class="opt-card" aria-pressed="' + (sel ? 'true' : 'false') + '" onclick="selectAnim(' + a.id + ')">' +
+      animGlyphSvg(a.staticMode) +
+      '<span class="opt-name">' + a.name + '</span>' +
+    '</button>';
   });
   box.innerHTML = html;
 }
@@ -1051,26 +2218,25 @@ function renderAnimsGrid(){
 function setColorTarget(t){
   if(t === 'clock' && state.fullScreen === 1) return;
   state.colorTarget = t;
-  $('ctarg_wx').className = 'sub-filter-btn' + (t==='weather' ? ' active' : '');
-  $('ctarg_clk').className = 'sub-filter-btn' + (t==='clock' ? ' active' : '');
+  $('ctarg_wx').setAttribute('aria-pressed', t === 'weather' ? 'true' : 'false');
+  $('ctarg_clk').setAttribute('aria-pressed', t === 'clock' ? 'true' : 'false');
   renderSwatchesGrid();
 }
 
 function setColorCat(c){
   state.colorCat = c;
   ['all','triple','dual','mono','solid'].forEach(function(k){
-    $('ccat_'+k).className = 'sub-filter-btn' + (k===c ? ' active' : '');
+    $('ccat_' + k).setAttribute('aria-pressed', c === k ? 'true' : 'false');
   });
   renderSwatchesGrid();
 }
 
 function selectColorSwatch(val, isClockTarget){
-  if(isClockTarget){
-    state.clockBg = val;
-  } else {
-    state.grad = val;
-  }
-  renderAllControls();
+  if(isClockTarget) state.clockBg = val;
+  else state.grad = val;
+  syncAmbientColors();
+  renderSwatchesGrid();
+  updateDirtyState();
 }
 
 function renderSwatchesGrid(){
@@ -1079,23 +2245,23 @@ function renderSwatchesGrid(){
   var html = '';
 
   if(isClk && (state.colorCat === 'all' || state.colorCat === 'solid')){
-    html += '<div class="swatch-card'+(state.clockBg===0?' active':'')+'" onclick="selectColorSwatch(0,true)">' +
-      '<div class="swatch-circle" style="background:#f5f5f7"></div>' +
-      '<div class="swatch-name">Blanco Puro</div></div>';
-    html += '<div class="swatch-card'+(state.clockBg===1?' active':'')+'" onclick="selectColorSwatch(1,true)">' +
-      '<div class="swatch-circle" style="background:#08090f"></div>' +
-      '<div class="swatch-name">Negro Obsidiana</div></div>';
+    html += '<button type="button" class="swatch-card" aria-pressed="' + (state.clockBg === 0 ? 'true' : 'false') + '" onclick="selectColorSwatch(0,true)">' +
+      '<span class="swatch-dot" style="background:#f5f5f7"></span>' +
+      '<span class="swatch-name">Blanco Puro</span></button>';
+    html += '<button type="button" class="swatch-card" aria-pressed="' + (state.clockBg === 1 ? 'true' : 'false') + '" onclick="selectColorSwatch(1,true)">' +
+      '<span class="swatch-dot" style="background:#08090f"></span>' +
+      '<span class="swatch-name">Negro Puro</span></button>';
   }
 
-  if(state.colorCat !== 'solid'){
+  if(state.colorCat !== 'solid' || !isClk){
     GRADIENTS.filter(function(g){
       return state.colorCat === 'all' || g.cat === state.colorCat;
     }).forEach(function(g){
       var isSel = isClk ? (state.clockBg === (g.id + 2)) : (state.grad === g.id);
       var val = isClk ? (g.id + 2) : g.id;
-      html += '<div class="swatch-card'+(isSel?' active':'')+'" onclick="selectColorSwatch('+val+','+isClk+')">' +
-        '<div class="swatch-circle" style="background:'+g.css+'"></div>' +
-        '<div class="swatch-name">'+g.name+'</div></div>';
+      html += '<button type="button" class="swatch-card" aria-pressed="' + (isSel ? 'true' : 'false') + '" onclick="selectColorSwatch(' + val + ',' + (isClk ? 'true' : 'false') + ')">' +
+        '<span class="swatch-dot" style="background:' + g.css + '"></span>' +
+        '<span class="swatch-name">' + g.name + '</span></button>';
     });
   }
   box.innerHTML = html;
@@ -1103,47 +2269,183 @@ function renderSwatchesGrid(){
 
 function selectBoot(id){
   state.bootMode = id;
+  renderBootGrid();
   setSimMode('boot');
-  renderAllControls();
+  updateDirtyState();
 }
 
 function renderBootGrid(){
   var box = $('boot_grid');
   var html = '';
   BOOTS.forEach(function(b){
-    var cls = 'item-card' + (state.bootMode === b.id ? ' active' : '') + (b.gemini ? ' gemini-special' : '');
-    var badge = b.gemini ? '<span class="ori-badge ori-v">Gemini</span>' : '<span class="ori-badge ori-h">Seamless</span>';
-    html += '<div class="'+cls+'" onclick="selectBoot('+b.id+')">' +
-      '<div class="item-top"><span class="item-num">#'+b.id+'</span>'+badge+'</div>' +
-      '<div class="item-title">'+b.name+'</div>' +
-    '</div>';
+    var sel = (state.bootMode === b.id);
+    html += '<button type="button" class="opt-card" aria-pressed="' + (sel ? 'true' : 'false') + '" onclick="selectBoot(' + b.id + ')">' +
+      bootGlyphSvg() +
+      '<span class="opt-name">' + b.name + '</span>' +
+    '</button>';
   });
   box.innerHTML = html;
+}
+
+function syncBrightnessSlider(){
+  var sl = $('bright_slider');
+  if(!sl) return;
+  var pct = Math.round(Number(sl.value) / 2.55) + '%';
+  sl.style.setProperty('--attr-min', sl.min || '15');
+  sl.style.setProperty('--attr-max', sl.max || '255');
+  sl.style.setProperty('--control-value', sl.value);
+  sl.setAttribute('aria-valuetext', pct);
+  if($('bright_val')) $('bright_val').textContent = pct;
 }
 
 function renderAllControls(){
   if(state.fullScreen === 1 && state.colorTarget === 'clock'){
     state.colorTarget = 'weather';
   }
-  $('ctarg_wx').className = 'sub-filter-btn' + (state.colorTarget==='weather' ? ' active' : '');
-  $('ctarg_clk').className = 'sub-filter-btn' + (state.colorTarget==='clock' ? ' active' : '');
+  $('ctarg_wx').setAttribute('aria-pressed', state.colorTarget === 'weather' ? 'true' : 'false');
+  $('ctarg_clk').setAttribute('aria-pressed', state.colorTarget === 'clock' ? 'true' : 'false');
   $('ctarg_clk').disabled = (state.fullScreen === 1);
 
-  $('qt_fullscreen').className = 'quick-toggle-btn' + (state.fullScreen ? ' active' : '');
-  $('qt_full_lbl').textContent = state.fullScreen ? 'ON' : 'OFF';
-  $('qt_frost').className      = 'quick-toggle-btn' + (state.frostClk ? ' active' : '');
-  $('qt_frost_lbl').textContent= state.frostClk ? 'ON' : 'OFF';
-
+  $('sw_fullscreen').checked = (state.fullScreen === 1);
+  $('sw_frost').checked = (state.frostClk === 1);
   $('bright_slider').value = state.brightness;
-  $('bright_val').textContent = Math.round(state.brightness / 2.55) + '%';
+  syncBrightnessSlider();
+  syncAmbientColors();
 
   renderLayoutsGrid();
   renderAnimsGrid();
   renderSwatchesGrid();
   renderBootGrid();
+  updateDirtyState();
 }
 
-// ── MOTOR MATEMATICO 1:1 DE LA MATRIZ LED 64x64 ──
+// Switch y range listeners + fallback
+(function initControls(){
+  if(!('switch' in HTMLInputElement.prototype)){
+    [$('sw_fullscreen'), $('sw_frost')].forEach(function(el){
+      if(el){
+        el.classList.add('switch-fallback');
+        el.setAttribute('role', 'switch');
+      }
+    });
+  }
+  $('sw_fullscreen').addEventListener('change', function(){
+    state.fullScreen = this.checked ? 1 : 0;
+    renderAllControls();
+  });
+  $('sw_frost').addEventListener('change', function(){
+    state.frostClk = this.checked ? 1 : 0;
+    updateDirtyState();
+  });
+  $('bright_slider').addEventListener('input', function(){
+    state.brightness = Number(this.value);
+    syncBrightnessSlider();
+    updateDirtyState();
+  });
+  $('city_in').addEventListener('input', function(){
+    state.city = this.value;
+    updateDirtyState();
+  });
+  $('tz_sel').addEventListener('change', function(){
+    state.tz = this.value;
+    updateDirtyState();
+  });
+  $('btn_device_pill').addEventListener('click', function(){
+    $('device_dialog').showModal();
+  });
+  $('btn_apply').addEventListener('click', function(){
+    pushConfigToClock();
+  });
+})();
+
+// ── DIALOG TOP-LAYER ANIMATION & CLOSED-BY FALLBACKS (modern-web-guidance) ──
+var supportsDisplayTransition;
+function canTransitionDisplay(){
+  if(supportsDisplayTransition !== undefined) return supportsDisplayTransition;
+  if(!window.CSS || !CSS.supports || !CSS.supports('transition-behavior', 'allow-discrete') || !document.body){
+    return false;
+  }
+  var probe = document.createElement('div');
+  probe.style.cssText = 'transition: display 1s allow-discrete !important; display: block;';
+  document.body.appendChild(probe);
+  getComputedStyle(probe).display;
+  probe.style.display = 'none';
+  supportsDisplayTransition = (getComputedStyle(probe).display === 'block');
+  probe.remove();
+  return supportsDisplayTransition;
+}
+
+function supportsTopLayerExit(){
+  return Boolean(window.CSS && CSS.supports && CSS.supports('overlay', 'auto') && canTransitionDisplay());
+}
+
+async function closeTopLayer(dialog){
+  if(!dialog || !dialog.open) return;
+  if(!supportsTopLayerExit()){
+    dialog.setAttribute('data-closing', '');
+    var anims = dialog.getAnimations ? dialog.getAnimations({ subtree: true }) : [];
+    if(anims.length > 0){
+      await Promise.race([
+        Promise.allSettled(anims.map(function(a){ return a.finished; })),
+        new Promise(function(r){ setTimeout(r, 1500); })
+      ]);
+    }
+    if(!dialog.hasAttribute('data-closing')) return;
+    dialog.removeAttribute('data-closing');
+  }
+  dialog.close();
+}
+
+(function initDialogs(){
+  var dialogs = [$('device_dialog'), $('confirm_dialog')];
+  dialogs.forEach(function(dlg){
+    if(!dlg) return;
+    dlg.addEventListener('cancel', function(e){
+      e.preventDefault();
+      closeTopLayer(dlg);
+    });
+  });
+
+  if(!('closedBy' in HTMLDialogElement.prototype)){
+    var outside = function(e, dlg){
+      var r = dlg.getBoundingClientRect();
+      return e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom;
+    };
+    document.querySelectorAll('dialog[closedby="any"]').forEach(function(dlg){
+      var pressedOutside = false;
+      dlg.addEventListener('pointerdown', function(e){ pressedOutside = outside(e, dlg); });
+      dlg.addEventListener('pointerup', function(e){
+        if(pressedOutside && outside(e, dlg)) closeTopLayer(dlg);
+      });
+    });
+  }
+})();
+
+var pendingConfirmCb = null;
+function openConfirmDialog(title, msg, actionLabel, isDanger, onConfirm){
+  var dlg = $('confirm_dialog');
+  $('confirm_dialog_title').textContent = title;
+  $('confirm_dialog_msg').textContent = msg;
+  var okBtn = $('confirm_dialog_ok');
+  okBtn.textContent = actionLabel || 'Continuar';
+  okBtn.className = isDanger ? 'btn-glass btn-danger' : 'btn-solid';
+  pendingConfirmCb = onConfirm;
+  dlg.showModal();
+}
+
+$('confirm_dialog').addEventListener('close', function(){
+  var rv = this.returnValue;
+  this.returnValue = '';
+  if(rv === 'confirm' && typeof pendingConfirmCb === 'function'){
+    var fn = pendingConfirmCb;
+    pendingConfirmCb = null;
+    fn();
+  } else {
+    pendingConfirmCb = null;
+  }
+});
+
+
 var ditherTab = [-3,1,-2,2, 3,-1,4,0, -2,2,-3,1, 4,0,3,-1];
 
 function isMonoModeJS(m){
@@ -1512,8 +2814,7 @@ function renderMatrixFrame(){
       }
     } else {
       state.simMode = 'live';
-      $('sim_btn_live').className = 'sim-mode-btn active';
-      $('sim_btn_boot').className = 'sim-mode-btn';
+      if(typeof onBootSimFinished === 'function') onBootSimFinished();
     }
   }
 
@@ -2161,38 +3462,26 @@ function animLoop(){
   requestAnimationFrame(animLoop);
 }
 
-// ── COMUNICACION CON EL RELOJ, BRIDGE HTTP Y BUSCADOR DE RED ──
+// ── COMUNICACION CON EL RELOJ, MODO LOCAL/PAGES Y BUSCADOR DE RED ──
 var cloudRadarCache = {};
 var activeBridgeWin = null;
 var toastTimer = null;
 
-function ensureFloatingToast(){
-  var ft = $('floating_toast');
-  if(!ft){
-    ft = document.createElement('div');
-    ft.id = 'floating_toast';
-    ft.className = 'floating-toast';
-    document.body.appendChild(ft);
-  }
-  return ft;
-}
-
 function showToast(msg, isErr){
-  var el = $('toast_box');
-  if(el){
-    el.style.color = isErr ? '#f87171' : '#34d399';
-    el.textContent = msg;
+  var ft = $('floating_toast');
+  var txt = $('toast_msg');
+  var ico = $('toast_icon');
+  if(!ft || !txt) return;
+  ft.hidden = false;
+  ft.setAttribute('data-tone', isErr ? 'err' : 'ok');
+  txt.textContent = msg;
+  if(ico){
+    ico.innerHTML = isErr
+      ? '<circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M5.5 5.5L10.5 10.5M10.5 5.5L5.5 10.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>'
+      : '<circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M5.5 8.2L7.2 9.9L10.8 6.3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>';
   }
-  var ft = ensureFloatingToast();
-  ft.style.display = 'block';
-  ft.style.color = isErr ? '#f87171' : '#34d399';
-  ft.style.borderColor = isErr ? 'rgba(248,113,113,0.5)' : 'rgba(52,211,153,0.45)';
-  ft.textContent = msg;
   if(toastTimer) clearTimeout(toastTimer);
-  toastTimer = setTimeout(function(){
-    if(el && el.textContent === msg) el.textContent = '';
-    ft.style.display = 'none';
-  }, 4000);
+  toastTimer = setTimeout(function(){ ft.hidden = true; }, 3800);
 }
 
 function normalizeIp(raw){
@@ -2205,29 +3494,70 @@ function normalizeIp(raw){
 }
 
 function getBaseUrl(){
-  var ip = normalizeIp($('clock_ip').value);
+  var ip = normalizeIp(state.connectedIp || ($('manual_ip_in') && $('manual_ip_in').value));
   if(!ip) return '';
-  $('clock_ip').value = ip;
-  if($('manual_ip_in')) $('manual_ip_in').value = ip;
+  if(IS_LOCAL_HOST && ip === HOST_NAME) return '';
   return 'http://' + ip;
+}
+
+function ensureTzOption(tzVal){
+  var sel = $('tz_sel');
+  if(!sel || tzVal === undefined || tzVal === null) return;
+  var str = String(tzVal);
+  for(var i = 0; i < sel.options.length; i++){
+    if(sel.options[i].value === str){
+      sel.value = str;
+      return;
+    }
+  }
+  var hrs = Math.round((Number(tzVal) / 3600) * 10) / 10;
+  var opt = document.createElement('option');
+  opt.value = str;
+  opt.textContent = 'UTC' + (hrs >= 0 ? '+' : '') + hrs;
+  sel.appendChild(opt);
+  sel.value = str;
+}
+
+function updateDevicePill(){
+  var pill = $('btn_device_pill');
+  var lbl = $('device_pill_lbl');
+  if(!pill || !lbl) return;
+  var ip = normalizeIp(state.connectedIp);
+  lbl.textContent = ip || 'Conectar';
+}
+
+function updateFwMetaText(){
+  var el = $('sys_fw_meta');
+  if(!el) return;
+  var txt = 'v' + state.fwVer;
+  if(state.latestCloudVer && state.latestCloudVer !== state.fwVer){
+    txt += ' · Nueva v' + state.latestCloudVer;
+  }
+  el.textContent = txt;
 }
 
 function applyClockConfigData(ip, d, silent){
   var cleanIp = normalizeIp((d && d.ip && d.ip !== '0.0.0.0') ? d.ip : ip);
   if(cleanIp){
     state.connectedIp = cleanIp;
-    $('clock_ip').value = cleanIp;
     if($('manual_ip_in')) $('manual_ip_in').value = cleanIp;
-    localStorage.setItem('esp32_clock_ip', cleanIp);
+    if(!IS_LOCAL_HOST) localStorage.setItem('esp32_clock_ip', cleanIp);
   }
-  $('conn_dot').className = 'status-dot online';
-  if($('btn_top_conn')) $('btn_top_conn').textContent = 'Conectado';
+  $('btn_device_pill').setAttribute('data-online', 'true');
+  updateDevicePill();
 
   if(d){
     cloudRadarCache[cleanIp] = d;
     if(d.brightness !== undefined) state.brightness = Number(d.brightness);
-    if(d.tz !== undefined) $('tz_sel').value = String(d.tz);
-    if(d.city !== undefined) $('city_in').value = String(d.city).split('|')[0];
+    if(d.tz !== undefined){
+      ensureTzOption(d.tz);
+      state.tz = String(d.tz);
+    }
+    if(d.city !== undefined){
+      var cClean = String(d.city).split('|')[0];
+      $('city_in').value = cClean;
+      state.city = cClean;
+    }
     if(d.grad !== undefined) state.grad = Number(d.grad);
     if(d.clock_bg !== undefined) state.clockBg = Number(d.clock_bg);
     if(d.full_screen !== undefined) state.fullScreen = Number(d.full_screen);
@@ -2236,30 +3566,31 @@ function applyClockConfigData(ip, d, silent){
     if(d.anim_mode !== undefined) state.animMode = Number(d.anim_mode);
     if(d.boot_mode !== undefined) state.bootMode = Number(d.boot_mode);
     if(d.fw_ver){
-      $('top_ver').textContent = 'v' + d.fw_ver;
-      if($('ota_ver_title')) $('ota_ver_title').textContent = 'Sistema y Firmware · v' + d.fw_ver;
+      state.fwVer = String(d.fw_ver);
+      updateFwMetaText();
     }
     renderFoundClockCard(cleanIp, d, true);
   }
   renderAllControls();
+  commitSnapshot();
   if(!silent){
-    showToast('Conectado a ' + cleanIp + (d && d.fw_ver ? ' (v' + d.fw_ver + ')' : ''));
+    showToast('Conectado a ' + cleanIp + (d && d.fw_ver ? ' · v' + d.fw_ver : ''));
   }
 }
 
 window.addEventListener('message', function(e){
   if(!e || !e.data || e.data.type !== 'esp32_clock_bridge') return;
   var d = e.data.data || {};
-  var ip = d.ip || state.connectedIp || normalizeIp($('clock_ip').value);
+  var ip = d.ip || state.connectedIp || normalizeIp($('manual_ip_in').value);
   applyClockConfigData(ip, d, true);
   if(e.data.saved){
     showToast('Ajustes aplicados en ' + ip);
   } else {
-    showToast('Sincronizado con ' + ip + (d.fw_ver ? ' (v' + d.fw_ver + ')' : ''));
+    showToast('Sincronizado con ' + ip + (d.fw_ver ? ' · v' + d.fw_ver : ''));
   }
 });
 
-function sendViaHttpBridge(ip, formParamsObj, actionSuccessMsg){
+function sendViaHttpBridge(ip, formParamsObj, actionSuccessMsg, commitOnSubmit){
   var cleanIp = normalizeIp(ip);
   if(!cleanIp) return;
   try {
@@ -2290,88 +3621,79 @@ function sendViaHttpBridge(ip, formParamsObj, actionSuccessMsg){
   document.body.appendChild(form);
   try {
     form.submit();
-    $('conn_dot').className = 'status-dot online';
-    if($('btn_top_conn')) $('btn_top_conn').textContent = 'Conectado';
+    $('btn_device_pill').setAttribute('data-online', 'true');
+    if(commitOnSubmit) commitSnapshot();
     showToast(actionSuccessMsg || ('Enviado a ' + cleanIp));
   } catch(err){
     showToast('No se pudo conectar al reloj.', true);
   }
-  setTimeout(function(){
-    try { document.body.removeChild(form); } catch(e){}
-  }, 300);
-  setTimeout(function(){
-    try { if(activeBridgeWin && !activeBridgeWin.closed) activeBridgeWin.close(); } catch(e){}
-  }, 650);
+  setTimeout(function(){ try { document.body.removeChild(form); } catch(e){} }, 300);
+  setTimeout(function(){ try { if(activeBridgeWin && !activeBridgeWin.closed) activeBridgeWin.close(); } catch(e){} }, 650);
 }
 
-function openDirectStudioOnClock(ipOpt){
-  var ip = normalizeIp(ipOpt || $('clock_ip').value || ($('manual_ip_in') && $('manual_ip_in').value));
-  if(!ip){
-    showToast('Ingresa la IP de tu reloj primero.', true);
-    return;
-  }
-  window.open('http://' + ip + '/studio', '_blank');
-}
-
-function connectManualIpFromTab(){
-  var raw = ($('manual_ip_in') && $('manual_ip_in').value) || $('clock_ip').value;
-  var clean = normalizeIp(raw);
+function connectManualIpFromDialog(){
+  var clean = normalizeIp($('manual_ip_in').value);
   if(!clean){
-    showToast('Ingresa la IP de tu reloj primero.', true);
+    showToast('Ingresa la IP del reloj.', true);
     return;
   }
   connectToClock(clean, true);
+  closeTopLayer($('device_dialog'));
 }
 
 function connectToClock(customIp, fromUserGesture){
-  var ip = normalizeIp(customIp || $('clock_ip').value || ($('manual_ip_in') && $('manual_ip_in').value));
+  var ip = normalizeIp(customIp || state.connectedIp || ($('manual_ip_in') && $('manual_ip_in').value));
   if(!ip){
-    switchMainTab('net');
-    showToast('Ingresa la IP o usa Buscar en red.', true);
+    $('device_dialog').showModal();
     return;
   }
-  $('clock_ip').value = ip;
-  if($('manual_ip_in')) $('manual_ip_in').value = ip;
   state.connectedIp = ip;
-  localStorage.setItem('esp32_clock_ip', ip);
+  if($('manual_ip_in')) $('manual_ip_in').value = ip;
+  if(!IS_LOCAL_HOST) localStorage.setItem('esp32_clock_ip', ip);
+  updateDevicePill();
 
-  showToast('Conectando con ' + ip + '...');
-
-  fetch('http://' + ip + '/config?t=' + Date.now())
+  var cfgUrl = (IS_LOCAL_HOST && ip === HOST_NAME) ? ('/config?t=' + Date.now()) : ('http://' + ip + '/config?t=' + Date.now());
+  fetch(cfgUrl)
     .then(function(r){ return r.json(); })
     .then(function(d){
-      applyClockConfigData(ip, d, false);
+      applyClockConfigData(ip, d, fromUserGesture === false);
     })
     .catch(function(){
       if(cloudRadarCache[ip]){
-        applyClockConfigData(ip, cloudRadarCache[ip], false);
+        applyClockConfigData(ip, cloudRadarCache[ip], fromUserGesture === false);
         return;
       }
-      $('conn_dot').className = 'status-dot online';
-      if($('btn_top_conn')) $('btn_top_conn').textContent = 'IP lista';
-      renderFoundClockCard(ip, { ip: ip, fw_ver: 'LAN', city: state.city, layout: state.layout }, true);
+      $('btn_device_pill').setAttribute('data-online', 'true');
+      renderFoundClockCard(ip, { ip: ip, fw_ver: state.fwVer, city: state.city, layout: state.layout }, true);
       if(fromUserGesture !== false && window.location.protocol === 'https:'){
         try {
           var w = window.open('http://' + ip + '/bridge?t=' + Date.now(), 'esp32_bridge', 'width=340,height=180,left=9999,top=9999');
           setTimeout(function(){ try { if(w && !w.closed) w.close(); } catch(e){} }, 750);
         } catch(e){}
       }
-      showToast('IP ' + ip + ' vinculada.');
+      if(fromUserGesture) showToast('Reloj seleccionado: ' + ip);
     });
 }
 
 function pushConfigToClock(){
-  var base = getBaseUrl();
-  if(!base){
-    switchMainTab('net');
-    showToast('Conecta primero la IP de tu reloj.', true);
+  var ip = normalizeIp(state.connectedIp);
+  if(!ip){
+    $('device_dialog').showModal();
+    showToast('Conecta primero la IP del reloj.', true);
     return;
   }
-  var ip = normalizeIp($('clock_ip').value);
+  var base = getBaseUrl();
+  var btn = $('btn_apply');
+  btn.disabled = true;
+
+  var cityVal = $('city_in').value.trim() || DEFAULT_CITY;
+  state.city = cityVal;
+  state.tz = $('tz_sel').value;
+
   var params = {
     brightness: $('bright_slider').value,
-    tz: $('tz_sel').value,
-    city: $('city_in').value.trim() || 'Morelia, MX',
+    tz: state.tz,
+    city: cityVal,
     full_screen: state.fullScreen,
     grad: state.grad,
     clock_bg: state.clockBg,
@@ -2391,7 +3713,6 @@ function pushConfigToClock(){
              '&anim_mode=' + params.anim_mode +
              '&boot_mode=' + params.boot_mode;
 
-  showToast('Aplicando a ' + ip + '...');
   fetch(base + '/config', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -2399,22 +3720,25 @@ function pushConfigToClock(){
   })
   .then(function(r){ return r.json(); })
   .then(function(){
-    $('conn_dot').className = 'status-dot online';
+    btn.disabled = false;
+    $('btn_device_pill').setAttribute('data-online', 'true');
+    commitSnapshot();
     showToast('Ajustes aplicados en ' + ip);
   })
   .catch(function(){
-    sendViaHttpBridge(ip, params, 'Ajustes enviados a ' + ip);
+    btn.disabled = false;
+    sendViaHttpBridge(ip, params, 'Ajustes enviados a ' + ip, true);
   });
 }
 
 function previewBootOnHardware(){
-  var base = getBaseUrl();
-  if(!base){
-    switchMainTab('net');
-    showToast('Conecta primero la IP de tu reloj.', true);
+  var ip = normalizeIp(state.connectedIp);
+  if(!ip){
+    $('device_dialog').showModal();
+    showToast('Conecta primero el reloj.', true);
     return;
   }
-  var ip = normalizeIp($('clock_ip').value);
+  var base = getBaseUrl();
   fetch(base + '/config', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -2422,47 +3746,62 @@ function previewBootOnHardware(){
   })
   .then(function(){ showToast('Probando inicio en ' + ip); })
   .catch(function(){
-    sendViaHttpBridge(ip, { boot_mode: state.bootMode, preview_boot: state.bootMode }, 'Probando inicio en ' + ip);
+    sendViaHttpBridge(ip, { boot_mode: state.bootMode, preview_boot: state.bootMode }, 'Probando inicio en ' + ip, false);
   });
 }
 
-function triggerClockOta(){
-  var base = getBaseUrl();
-  if(!base){
-    switchMainTab('net');
-    showToast('Conecta primero la IP de tu reloj.', true);
-    return;
-  }
-  var ip = normalizeIp($('clock_ip').value);
-  if(!confirm('Actualizar firmware OTA en ' + ip + '?')) return;
-  fetch(base + '/config', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: 'start_ota=1'
-  })
-  .then(function(){ showToast('Actualizacion OTA iniciada en ' + ip); })
-  .catch(function(){
-    sendViaHttpBridge(ip, { start_ota: 1 }, 'Actualizacion OTA iniciada en ' + ip);
+function requestClockOta(){
+  var ip = normalizeIp(state.connectedIp);
+  if(!ip){ $('device_dialog').showModal(); return; }
+  openConfirmDialog('Actualizar firmware', 'Se descargará e instalará la versión más reciente en ' + ip + '.', 'Actualizar', false, function(){
+    var base = getBaseUrl();
+    fetch(base + '/config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'start_ota=1'
+    })
+    .then(function(){ showToast('Actualización iniciada en ' + ip); })
+    .catch(function(){
+      sendViaHttpBridge(ip, { start_ota: 1 }, 'Actualización iniciada en ' + ip, false);
+    });
   });
 }
 
-function rebootClockRemote(){
-  var base = getBaseUrl();
-  if(!base) return;
-  var ip = normalizeIp($('clock_ip').value);
-  if(!confirm('Reiniciar el reloj ' + ip + '?')) return;
-  fetch(base + '/config', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: 'reboot=1'
-  })
-  .then(function(){ showToast('Reiniciando ' + ip + '...'); })
-  .catch(function(){
-    sendViaHttpBridge(ip, { reboot: 1 }, 'Reiniciando ' + ip + '...');
+function requestClockReboot(){
+  var ip = normalizeIp(state.connectedIp);
+  if(!ip){ $('device_dialog').showModal(); return; }
+  openConfirmDialog('Reiniciar reloj', 'El reloj ' + ip + ' se reiniciará manteniendo sus ajustes.', 'Reiniciar', false, function(){
+    var base = getBaseUrl();
+    fetch(base + '/config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'reboot=1'
+    })
+    .then(function(){ showToast('Reiniciando ' + ip + '...'); })
+    .catch(function(){
+      sendViaHttpBridge(ip, { reboot: 1 }, 'Reiniciando ' + ip + '...', false);
+    });
   });
 }
 
-// ── DESCUBRIMIENTO DE RELOJES (CLOUD RADAR HTTPS + ESCANEO MULTI-RANGO) ──
+function requestResetWifi(){
+  var ip = normalizeIp(state.connectedIp);
+  if(!ip){ $('device_dialog').showModal(); return; }
+  openConfirmDialog('Restablecer Wi-Fi', 'Se borrará la red guardada en ' + ip + ' y se abrirá el portal de configuración.', 'Restablecer', true, function(){
+    var base = getBaseUrl();
+    fetch(base + '/config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'reset_wifi=1'
+    })
+    .then(function(){ showToast('Wi-Fi restablecido en ' + ip); })
+    .catch(function(){
+      sendViaHttpBridge(ip, { reset_wifi: 1 }, 'Wi-Fi restablecido en ' + ip, false);
+    });
+  });
+}
+
+// ── DESCUBRIMIENTO DE RELOJES ──
 var scanRunning = false;
 var scanAbortFlag = false;
 var discoveredIps = {};
@@ -2471,7 +3810,7 @@ function ipToUint32(ip){
   var p = normalizeIp(ip).split('.');
   if(p.length !== 4) return null;
   var n = 0;
-  for(var i=0;i<4;i++){
+  for(var i = 0; i < 4; i++){
     var v = parseInt(p[i], 10);
     if(isNaN(v) || v < 0 || v > 255) return null;
     n = (n * 256) + v;
@@ -2492,47 +3831,66 @@ function renderFoundClockCard(ip, data, skipAutoConnect){
   var foundBox = $('found_clocks');
   if(!foundBox) return;
 
-  var existingCard = $('clock_card_' + realIp.replace(/[^a-zA-Z0-9]/g, '_'));
+  var cid = 'clock_card_' + realIp.replace(/[^a-zA-Z0-9]/g, '_');
+  var existingCard = $(cid);
+  var isCur = (normalizeIp(state.connectedIp) === realIp);
+  var cityLabel = (((data && data.city) || '').split('|')[0]) || DEFAULT_CITY;
+  var verLabel = 'v' + ((data && data.fw_ver) || state.fwVer);
+
+  var localLink = IS_LOCAL_HOST ? '' :
+    '<a href="http://' + realIp + '/" target="_blank" rel="noopener" class="btn-glass" aria-label="Abrir interfaz local en ' + realIp + '">Local</a>';
+
   var html =
-    '<div>' +
-      '<div style="font-size:13px;font-weight:700;color:#34d399">' + realIp + '</div>' +
-      '<div style="font-size:11.5px;color:#cbd5e1">' +
-        'v' + ((data && data.fw_ver) || '1.0') + ' · ' + (((data && data.city)||'').split('|')[0] || 'Morelia, MX') +
-      '</div>' +
-    '</div>' +
-    '<div style="display:flex;gap:6px;flex-wrap:wrap">' +
-      '<button type="button" class="btn-pill btn-primary" onclick="connectToClock(\'' + realIp + '\', true)">Conectar</button>' +
-      '<button type="button" class="btn-pill" onclick="connectToClock(\'' + realIp + '\', false);pushConfigToClock()">Aplicar</button>' +
-      '<a href="http://' + realIp + '/studio" target="_blank" class="btn-pill">Local</a>' +
+    '<button type="button" class="clock-pick" onclick="pickClockFromDialog(\'' + realIp + '\')">' +
+      '<span class="clock-ip num">' + realIp + '</span>' +
+      '<span class="clock-sub">' + verLabel + ' · ' + cityLabel + '</span>' +
+    '</button>' +
+    '<div style="display:flex;gap:0.35rem;align-items:center">' +
+      localLink +
+      '<button type="button" class="btn-glass" onclick="pickClockFromDialog(\'' + realIp + '\')">' + (isCur ? 'Activo' : 'Usar') + '</button>' +
     '</div>';
 
   if(existingCard){
+    existingCard.setAttribute('data-current', isCur ? 'true' : 'false');
     existingCard.innerHTML = html;
   } else {
     var card = document.createElement('div');
-    card.id = 'clock_card_' + realIp.replace(/[^a-zA-Z0-9]/g, '_');
-    card.className = 'found-clock-item';
+    card.id = cid;
+    card.className = 'clock-item';
+    card.setAttribute('data-current', isCur ? 'true' : 'false');
     card.innerHTML = html;
     foundBox.appendChild(card);
   }
 
   var isFirst = (Object.keys(discoveredIps).length === 0);
   discoveredIps[realIp] = true;
-  if(!skipAutoConnect && isFirst){
+  if(!skipAutoConnect && isFirst && !state.connectedIp){
     applyClockConfigData(realIp, data, false);
   }
 }
 
+function pickClockFromDialog(ip){
+  connectToClock(ip, true);
+  closeTopLayer($('device_dialog'));
+}
+
 async function fetchCloudRadarClocks(){
   var foundCount = 0;
+  var verUrl = IS_LOCAL_HOST
+    ? 'https://raw.githubusercontent.com/AlexGremory255/esp32customclock/main/version.json?t=' + Date.now()
+    : './version.json?t=' + Date.now();
   try {
-    var vr = await fetch('./version.json?t=' + Date.now());
+    var ctrlVer = new AbortController();
+    var tVer = setTimeout(function(){ ctrlVer.abort(); }, 2500);
+    var vr = await fetch(verUrl, { signal: ctrlVer.signal });
+    clearTimeout(tVer);
     if(vr && vr.ok){
       var vd = await vr.json();
-      if(vd && vd.version && $('ota_ver_sub')){
-        $('ota_ver_sub').textContent = 'Disponible: v' + vd.version;
+      if(vd && vd.version){
+        state.latestCloudVer = String(vd.version);
+        updateFwMetaText();
       }
-      if(vd && Array.isArray(vd.clocks)){
+      if(!IS_LOCAL_HOST && vd && Array.isArray(vd.clocks)){
         vd.clocks.forEach(function(clk){
           if(clk && clk.ip){
             renderFoundClockCard(clk.ip, clk, false);
@@ -2542,6 +3900,8 @@ async function fetchCloudRadarClocks(){
       }
     }
   } catch(e){}
+
+  if(IS_LOCAL_HOST) return foundCount;
 
   var topics = ['esp32clock_alexgremory255_radar_v2', 'esp32clock_alexgremory255_radar'];
   for(var ti = 0; ti < topics.length; ti++){
@@ -2588,7 +3948,7 @@ async function probeClockHost(hostOrIp, timeoutMs){
     if(r && r.ok){
       var d = await r.json();
       if(d && d.fw_ver !== undefined){
-        renderFoundClockCard(cleanHost, d, false);
+        renderFoundClockCard(cleanHost, d, true);
         return d;
       }
     }
@@ -2596,7 +3956,7 @@ async function probeClockHost(hostOrIp, timeoutMs){
     clearTimeout(tid);
   }
   if(cloudRadarCache[cleanHost]){
-    renderFoundClockCard(cleanHost, cloudRadarCache[cleanHost], false);
+    renderFoundClockCard(cleanHost, cloudRadarCache[cleanHost], true);
     return cloudRadarCache[cleanHost];
   }
   return null;
@@ -2635,7 +3995,7 @@ async function scanSubnet254(prefix, labelPrefix){
     var pct = Math.round((end / 254) * 100);
     $('scan_prog_lbl').textContent = (labelPrefix || '') + prefix + '.' + start + '-' + end;
     $('scan_prog_pct').textContent = pct + '%';
-    $('scan_prog_fill').style.width = pct + '%';
+    $('scan_prog_fill').style.inlineSize = pct + '%';
 
     var promises = [];
     for(var h = start; h <= end; h++){
@@ -2655,14 +4015,14 @@ async function startUniversalScan(){
   scanAbortFlag = false;
   discoveredIps = {};
   $('found_clocks').innerHTML = '';
-  $('scan_prog_wrap').style.display = 'block';
+  $('scan_prog_wrap').hidden = false;
   $('btn_start_scan').disabled = true;
   $('btn_start_scan').textContent = 'Buscando...';
-  $('btn_stop_scan').style.display = 'inline-flex';
+  $('btn_stop_scan').hidden = false;
 
   $('scan_prog_lbl').textContent = 'Consultando red...';
   $('scan_prog_pct').textContent = '15%';
-  $('scan_prog_fill').style.width = '15%';
+  $('scan_prog_fill').style.inlineSize = '15%';
 
   var rtcPrefixPromise = detectWebRtcSubnetPrefix();
   await Promise.all([
@@ -2673,14 +4033,13 @@ async function startUniversalScan(){
 
   if(Object.keys(discoveredIps).length > 0){
     var foundN = Object.keys(discoveredIps).length;
-    $('scan_prog_lbl').textContent = foundN + ' reloj(es) detectado(s).';
+    $('scan_prog_lbl').textContent = foundN + ' relojes encontrados';
     $('scan_prog_pct').textContent = '100%';
-    $('scan_prog_fill').style.width = '100%';
+    $('scan_prog_fill').style.inlineSize = '100%';
     $('btn_start_scan').disabled = false;
     $('btn_start_scan').textContent = 'Buscar en red';
-    $('btn_stop_scan').style.display = 'none';
+    $('btn_stop_scan').hidden = true;
     scanRunning = false;
-    showToast(foundN + ' reloj(es) encontrado(s).');
     return;
   }
 
@@ -2693,20 +4052,25 @@ async function startUniversalScan(){
 
   for(var i = 0; i < activeSubnets.length; i++){
     if(scanAbortFlag) break;
-    await scanSubnet254(activeSubnets[i], 'Subred ' + (i+1) + '/' + activeSubnets.length + ' · ');
+    await scanSubnet254(activeSubnets[i], 'Subred ' + (i + 1) + '/' + activeSubnets.length + ' · ');
     if(Object.keys(discoveredIps).length > 0) break;
   }
 
   var totalFound = Object.keys(discoveredIps).length;
   $('scan_prog_lbl').textContent = totalFound > 0
-    ? (totalFound + ' reloj(es) encontrado(s).')
-    : 'Sin resultados. Usa IP manual arriba.';
+    ? (totalFound + ' relojes encontrados')
+    : 'Sin resultados. Usa IP manual.';
   $('scan_prog_pct').textContent = '100%';
-  $('scan_prog_fill').style.width = '100%';
+  $('scan_prog_fill').style.inlineSize = '100%';
   $('btn_start_scan').disabled = false;
   $('btn_start_scan').textContent = 'Buscar en red';
-  $('btn_stop_scan').style.display = 'none';
+  $('btn_stop_scan').hidden = true;
   scanRunning = false;
+}
+
+function setRangePreset(r){
+  $('scan_custom_range').value = r;
+  startCustomRangeScan();
 }
 
 async function startCustomRangeScan(){
@@ -2719,8 +4083,6 @@ async function startCustomRangeScan(){
     stopUniversalScan();
     await new Promise(function(r){ setTimeout(r, 250); });
   }
-
-  await fetchCloudRadarClocks();
 
   var startInt = null, endInt = null;
   var clean = raw.replace(/,/g, '.').replace(/\s+/g, '');
@@ -2764,35 +4126,15 @@ async function startCustomRangeScan(){
   }
 
   if(startInt === null || endInt === null || endInt < startInt){
-    showToast('Rango invalido.', true);
-    return;
-  }
-
-  if(startInt === 0 && endInt === 0xFFFFFFFF){
-    startUniversalScan();
-    return;
-  }
-
-  Object.keys(cloudRadarCache).forEach(function(cachedIp){
-    var n = ipToUint32(cachedIp);
-    if(n !== null && n >= startInt && n <= endInt){
-      renderFoundClockCard(cachedIp, cloudRadarCache[cachedIp], false);
-    }
-  });
-
-  if(Object.keys(discoveredIps).length > 0 && (endInt - startInt) <= 256){
-    $('scan_prog_wrap').style.display = 'block';
-    $('scan_prog_lbl').textContent = 'Reloj encontrado en rango.';
-    $('scan_prog_pct').textContent = '100%';
-    $('scan_prog_fill').style.width = '100%';
+    showToast('Rango inválido.', true);
     return;
   }
 
   scanRunning = true;
   scanAbortFlag = false;
-  $('scan_prog_wrap').style.display = 'block';
+  $('scan_prog_wrap').hidden = false;
   $('btn_start_scan').disabled = true;
-  $('btn_stop_scan').style.display = 'inline-flex';
+  $('btn_stop_scan').hidden = false;
 
   var totalIps = (endInt - startInt) + 1;
   var batch = 32;
@@ -2804,7 +4146,7 @@ async function startCustomRangeScan(){
     var pct = Math.min(100, Math.round(((done + 1) / totalIps) * 100));
     $('scan_prog_lbl').textContent = uint32ToIp(cur) + ' - ' + uint32ToIp(batchEnd);
     $('scan_prog_pct').textContent = pct + '%';
-    $('scan_prog_fill').style.width = pct + '%';
+    $('scan_prog_fill').style.inlineSize = pct + '%';
 
     var jobs = [];
     for(var ipNum = cur; ipNum <= batchEnd; ipNum++){
@@ -2817,23 +4159,32 @@ async function startCustomRangeScan(){
     if(batchEnd === 0xFFFFFFFF) break;
   }
 
-  $('scan_prog_lbl').textContent = 'Finalizado (' + Object.keys(discoveredIps).length + ' encontrado(s)).';
+  $('scan_prog_lbl').textContent = 'Finalizado · ' + Object.keys(discoveredIps).length + ' encontrados';
   $('scan_prog_pct').textContent = '100%';
-  $('scan_prog_fill').style.width = '100%';
+  $('scan_prog_fill').style.inlineSize = '100%';
   $('btn_start_scan').disabled = false;
-  $('btn_stop_scan').style.display = 'none';
+  $('btn_stop_scan').hidden = true;
   scanRunning = false;
 }
 
+if(state.connectedIp && $('manual_ip_in')) $('manual_ip_in').value = state.connectedIp;
+updateDevicePill();
 renderAllControls();
+commitSnapshot();
 requestAnimationFrame(animLoop);
-fetchCloudRadarClocks().then(function(found){
-  if(state.connectedIp){
-    connectToClock(state.connectedIp, false);
-  } else if(found === 0){
-    probeClockHost('esp32clock.local', 900);
-  }
-});
+
+if(IS_LOCAL_HOST){
+  connectToClock(HOST_NAME, false);
+  fetchCloudRadarClocks();
+} else {
+  fetchCloudRadarClocks().then(function(found){
+    if(state.connectedIp){
+      connectToClock(state.connectedIp, false);
+    } else if(found === 0){
+      probeClockHost('esp32clock.local', 900);
+    }
+  });
+}
 </script>
 </body>
 </html>
