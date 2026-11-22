@@ -95,8 +95,10 @@ try{var s=localStorage.getItem('color-scheme');if(s==='light'||s==='dark')docume
   --btn-bg-d: rgba(255, 255, 255, 0.075);
   --btn-hover-l: rgba(255, 255, 255, 0.8);
   --btn-hover-d: rgba(255, 255, 255, 0.13);
-  --apply-dirty-bg-l: rgba(255, 255, 255, 0.88);
-  --apply-dirty-bg-d: rgba(24, 28, 42, 0.84);
+  --card-mob-top-l: rgba(255, 255, 255, 0.76);
+  --card-mob-bot-l: rgba(255, 255, 255, 0.56);
+  --card-mob-top-d: rgba(24, 29, 44, 0.72);
+  --card-mob-bot-d: rgba(14, 18, 30, 0.58);
   --seg-bg-l: rgba(15, 23, 42, 0.045);
   --seg-bg-d: rgba(255, 255, 255, 0.045);
 
@@ -146,12 +148,13 @@ try{var s=localStorage.getItem('color-scheme');if(s==='light'||s==='dark')docume
   --sb-track: var(--sb-track-l);
   --btn-bg: var(--btn-bg-l);
   --btn-hover: var(--btn-hover-l);
-  --apply-dirty-bg: var(--apply-dirty-bg-l);
+  --card-mob-top: var(--card-mob-top-l);
+  --card-mob-bot: var(--card-mob-bot-l);
   --seg-bg: var(--seg-bg-l);
   --glass-bright: 1.06;
   --glint-strength: 0.72;
   --orb-opacity: 0.62;
-  --bezel-glow-opacity: 0.34;
+  --bezel-glow-opacity: 0.30;
 
   --ambient-a: #4285f4;
   --ambient-b: #d96570;
@@ -198,12 +201,13 @@ try{var s=localStorage.getItem('color-scheme');if(s==='light'||s==='dark')docume
     --sb-track: var(--sb-track-d);
     --btn-bg: var(--btn-bg-d);
     --btn-hover: var(--btn-hover-d);
-    --apply-dirty-bg: var(--apply-dirty-bg-d);
+    --card-mob-top: var(--card-mob-top-d);
+    --card-mob-bot: var(--card-mob-bot-d);
     --seg-bg: var(--seg-bg-d);
     --glass-bright: 1.1;
     --glint-strength: 0.24;
     --orb-opacity: 0.52;
-    --bezel-glow-opacity: 0.48;
+    --bezel-glow-opacity: 0.38;
   }
 }
 
@@ -211,14 +215,14 @@ try{var s=localStorage.getItem('color-scheme');if(s==='light'||s==='dark')docume
   --glass-bright: 1.12;
   --glint-strength: 0.26;
   --orb-opacity: 0.52;
-  --bezel-glow-opacity: 0.48;
+  --bezel-glow-opacity: 0.38;
 }
 
 :root:has(> head > meta[name="color-scheme"][content="light"]) {
   --glass-bright: 1.06;
   --glint-strength: 0.72;
   --orb-opacity: 0.62;
-  --bezel-glow-opacity: 0.34;
+  --bezel-glow-opacity: 0.30;
 }
 
 @supports (color: light-dark(white, black)) {
@@ -250,7 +254,8 @@ try{var s=localStorage.getItem('color-scheme');if(s==='light'||s==='dark')docume
     --sb-track: light-dark(var(--sb-track-l), var(--sb-track-d));
     --btn-bg: light-dark(var(--btn-bg-l), var(--btn-bg-d));
     --btn-hover: light-dark(var(--btn-hover-l), var(--btn-hover-d));
-    --apply-dirty-bg: light-dark(var(--apply-dirty-bg-l), var(--apply-dirty-bg-d));
+    --card-mob-top: light-dark(var(--card-mob-top-l), var(--card-mob-top-d));
+    --card-mob-bot: light-dark(var(--card-mob-bot-l), var(--card-mob-bot-d));
     --seg-bg: light-dark(var(--seg-bg-l), var(--seg-bg-d));
   }
 }
@@ -268,18 +273,23 @@ try{var s=localStorage.getItem('color-scheme');if(s==='light'||s==='dark')docume
   }
 
   .lg-surface {
-    -webkit-backdrop-filter: blur(20px) saturate(185%) brightness(var(--glass-bright));
-    backdrop-filter: blur(20px) saturate(185%) brightness(var(--glass-bright));
+    -webkit-backdrop-filter: blur(18px) saturate(185%) brightness(var(--glass-bright));
+    backdrop-filter: blur(18px) saturate(185%) brightness(var(--glass-bright));
+  }
+
+  .opt-card,
+  .swatch-card {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: linear-gradient(142deg, var(--card-mob-top), var(--card-mob-bot));
+    contain: layout style;
   }
 
   .orb-1,
   .orb-2,
-  .orb-3 {
-    filter: none;
-  }
-
+  .orb-3,
   .orb-4 {
-    filter: blur(18px);
+    filter: none;
   }
 }
 
@@ -630,16 +640,10 @@ body {
 
 .apply-btn[data-dirty="true"],
 .apply-btn[data-dirty="true"]:hover:not(:disabled) {
-  background: var(--apply-dirty-bg);
-  color: var(--text);
-  border-color: transparent;
-  box-shadow:
-    -5px -5px 16px -4px rgba(37, 99, 235, 0.24),
-    5px -5px 16px -4px rgba(255, 42, 95, 0.22),
-    5px 5px 16px -4px rgba(255, 214, 10, 0.16),
-    -5px 5px 16px -4px rgba(34, 197, 94, 0.20),
-    0 8px 22px -6px var(--drop),
-    inset 0 1px 0 0 var(--rim-top);
+  background: var(--accent-solid);
+  color: var(--accent-ink);
+  border-color: var(--accent-solid);
+  box-shadow: 0 8px 24px -4px var(--drop), inset 0 1px 0 rgba(255, 255, 255, 0.35);
 }
 
 .apply-btn[disabled] {
@@ -680,7 +684,7 @@ body {
   min-inline-size: 0;
 }
 
-/* ── Bisel del reloj (Solo glow RGB animado por detrás + contorno RGB activo en selección y Aplicar) ── */
+/* ── Bisel del reloj (Marco oscuro al raz + solo glow RGB sutil detrás en el fondo) ── */
 .clock-stage {
   position: relative;
   isolation: isolate;
@@ -690,9 +694,9 @@ body {
 .clock-stage::before {
   content: "";
   position: absolute;
-  inset: 4px;
+  inset: -2px;
   z-index: 0;
-  border-radius: calc(var(--radius-xl) + 4px);
+  border-radius: calc(var(--radius-xl) + 2px);
   background: conic-gradient(
     from var(--rgb-angle),
     #ff2a5f 0deg,
@@ -704,8 +708,7 @@ body {
     #a855f7 328deg,
     #ff2a5f 360deg
   );
-  transform: translateY(8px) scale(1.01);
-  filter: blur(26px) saturate(140%);
+  filter: blur(28px) saturate(130%);
   opacity: var(--bezel-glow-opacity);
   pointer-events: none;
 }
@@ -713,13 +716,14 @@ body {
 .clock-bezel {
   position: relative;
   z-index: 1;
-  isolation: isolate;
   inline-size: 100%;
-  padding: 0.85rem;
+  padding: 0.32rem;
   border-radius: var(--radius-xl);
+  background: #07090e;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow: 0 18px 40px -14px rgba(0, 0, 0, 0.72), inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
-.apply-btn[data-dirty="true"]::before,
 .opt-card[aria-pressed="true"]::before,
 .swatch-card[aria-pressed="true"]::before {
   content: "";
@@ -760,7 +764,6 @@ body {
     animation: rgb-spin 6s linear infinite;
   }
 
-  .apply-btn[data-dirty="true"],
   .opt-card[aria-pressed="true"],
   .swatch-card[aria-pressed="true"] {
     animation: rgb-spin 4s linear infinite;
@@ -769,11 +772,12 @@ body {
 
 .canvas-well {
   position: relative;
-  border-radius: 0.9rem;
+  border-radius: calc(var(--radius-xl) - 0.32rem);
   background: #040508;
-  padding: 0.25rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: inset 0 2px 12px rgba(0, 0, 0, 0.85);
+  padding: 0;
+  border: none;
+  box-shadow: none;
+  overflow: hidden;
 }
 
 #led_canvas {
@@ -781,8 +785,8 @@ body {
   inline-size: 100%;
   block-size: auto;
   aspect-ratio: 1;
-  border-radius: 0.68rem;
-  background: #000;
+  border-radius: inherit;
+  background: #040508;
 }
 
 .bezel-actions {
@@ -1805,7 +1809,6 @@ dialog {
 /* ── Forced Colors Mode ── */
 @media (forced-colors: active) {
   .clock-stage::before,
-  .apply-btn[data-dirty="true"]::before,
   .opt-card[aria-pressed="true"]::before,
   .swatch-card[aria-pressed="true"]::before {
     display: none;
@@ -1904,7 +1907,7 @@ dialog {
 <main class="app-shell">
   <aside class="stage-col">
     <div class="clock-stage">
-      <div class="clock-bezel lg-surface">
+      <div class="clock-bezel">
         <div class="canvas-well">
           <canvas id="led_canvas" width="256" height="256" role="img" aria-label="Reloj en vivo"></canvas>
           <div class="bezel-actions" id="bezel_actions" hidden>
@@ -2674,6 +2677,7 @@ function selectLayout(id){
   state.layout = id;
   setSimMode('live');
   if(!syncGridSelection('layouts_grid', id)) renderLayoutsGrid();
+  if(window.requestMatrixImmediate) window.requestMatrixImmediate();
   updateDirtyState();
 }
 
@@ -2699,6 +2703,7 @@ function selectAnim(id){
   state.animMode = id;
   setSimMode('live');
   if(!syncGridSelection('anims_grid', id)) renderAnimsGrid();
+  if(window.requestMatrixImmediate) window.requestMatrixImmediate();
   updateDirtyState();
 }
 
@@ -2741,6 +2746,7 @@ function selectColorSwatch(val, isClockTarget){
   else state.grad = val;
   syncAmbientColors();
   if(!syncGridSelection('swatches_grid', val)) renderSwatchesGrid();
+  if(window.requestMatrixImmediate) window.requestMatrixImmediate();
   updateDirtyState();
 }
 
@@ -2776,6 +2782,7 @@ function selectBoot(id){
   state.bootMode = id;
   if(!syncGridSelection('boot_grid', id)) renderBootGrid();
   setSimMode('boot');
+  if(window.requestMatrixImmediate) window.requestMatrixImmediate();
   updateDirtyState();
 }
 
@@ -2821,6 +2828,7 @@ function renderAllControls(){
   renderAnimsGrid();
   renderSwatchesGrid();
   renderBootGrid();
+  if(window.requestMatrixImmediate) window.requestMatrixImmediate();
   updateDirtyState();
 }
 
@@ -2839,11 +2847,13 @@ function renderAllControls(){
   });
   $('sw_frost').addEventListener('change', function(){
     state.frostClk = this.checked ? 1 : 0;
+    if(window.requestMatrixImmediate) window.requestMatrixImmediate();
     updateDirtyState();
   });
   $('bright_slider').addEventListener('input', function(){
     state.brightness = Number(this.value);
     syncBrightnessSlider();
+    if(window.requestMatrixImmediate) window.requestMatrixImmediate();
     updateDirtyState();
   });
   $('city_in').addEventListener('input', function(){
@@ -3947,23 +3957,90 @@ function renderMatrixFrame(){
     }
   }
 
-  ctx.fillStyle = '#040508';
-  ctx.fillRect(0, 0, 256, 256);
-  for(var py=0;py<64;py++){
-    for(var px=0;px<64;px++){
-      var c = fb[py*64+px];
-      if(c[0]===0 && c[1]===0 && c[2]===0){
-        ctx.fillStyle = '#0e1017';
-      } else {
-        ctx.fillStyle = 'rgb(' + c[0] + ',' + c[1] + ',' + c[2] + ')';
-      }
-      ctx.fillRect(px*4, py*4, 3.35, 3.35);
+  if(!_ledImg){
+    _ledImg = ctx.createImageData(256, 256);
+    _ledBytes = _ledImg.data;
+    _ledU32 = new Uint32Array(_ledBytes.buffer);
+    if(_ledIsLE){
+      _ledU32.fill(0xFF080504);
+    } else {
+      for(var p=0;p<_ledBytes.length;p+=4){ _ledBytes[p]=4; _ledBytes[p+1]=5; _ledBytes[p+2]=8; _ledBytes[p+3]=255; }
     }
   }
+  if(_ledIsLE){
+    var u32 = _ledU32;
+    for(var py=0;py<64;py++){
+      var y0 = py * 1024;
+      for(var px=0;px<64;px++){
+        var c = fb[py*64+px];
+        var r = c[0], g = c[1], b = c[2];
+        var col = (r === 0 && g === 0 && b === 0) ? 0xFF17100E : ((0xFF << 24) | (b << 16) | (g << 8) | r);
+        var o = y0 + (px << 2);
+        u32[o] = col; u32[o+1] = col; u32[o+2] = col;
+        o += 256;
+        u32[o] = col; u32[o+1] = col; u32[o+2] = col;
+        o += 256;
+        u32[o] = col; u32[o+1] = col; u32[o+2] = col;
+      }
+    }
+  } else {
+    var d8 = _ledBytes;
+    for(var py=0;py<64;py++){
+      for(var px=0;px<64;px++){
+        var c = fb[py*64+px];
+        var isOff = (c[0]===0 && c[1]===0 && c[2]===0);
+        var rr = isOff ? 14 : c[0];
+        var gg = isOff ? 16 : c[1];
+        var bb = isOff ? 23 : c[2];
+        for(var dy=0;dy<3;dy++){
+          var rowOff = ((py*4 + dy)*256 + px*4)*4;
+          for(var dx=0;dx<3;dx++){
+            var idx = rowOff + dx*4;
+            d8[idx]=rr; d8[idx+1]=gg; d8[idx+2]=bb; d8[idx+3]=255;
+          }
+        }
+      }
+    }
+  }
+  ctx.putImageData(_ledImg, 0, 0);
 }
 
-function animLoop(){
-  renderMatrixFrame();
+var _ledImg = null, _ledU32 = null, _ledBytes = null, _ledIsLE = true;
+var _canvasVisible = true, _isScrolling = false, _scrollTimer = 0, _lastMatrixDraw = 0, _immediateDraw = true;
+var _isCoarsePtr = (window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+(function initMatrixPerf(){
+  try {
+    var u8 = new Uint8Array(new Uint32Array([0x11223344]).buffer);
+    _ledIsLE = (u8[0] === 0x44);
+  } catch(e){ _ledIsLE = true; }
+  var cv = document.getElementById('led_canvas');
+  if(cv && 'IntersectionObserver' in window){
+    var io = new IntersectionObserver(function(entries){
+      if(entries && entries[0]){
+        _canvasVisible = entries[0].isIntersecting;
+        if(_canvasVisible) _immediateDraw = true;
+      }
+    }, { threshold: 0.05 });
+    io.observe(cv);
+  }
+  if(_isCoarsePtr){
+    window.addEventListener('scroll', function(){
+      _isScrolling = true;
+      if(_scrollTimer) clearTimeout(_scrollTimer);
+      _scrollTimer = setTimeout(function(){ _isScrolling = false; _immediateDraw = true; }, 140);
+    }, { passive: true });
+  }
+  window.requestMatrixImmediate = function(){ _immediateDraw = true; };
+})();
+
+function animLoop(ts){
+  var now = ts || performance.now();
+  var minGap = _isCoarsePtr ? 33 : 20;
+  if(_immediateDraw || (_canvasVisible && !(_isCoarsePtr && _isScrolling) && (now - _lastMatrixDraw >= minGap))){
+    _immediateDraw = false;
+    _lastMatrixDraw = now;
+    renderMatrixFrame();
+  }
   requestAnimationFrame(animLoop);
 }
 
