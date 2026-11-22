@@ -1,7 +1,7 @@
 {
-  "version": "1.0.24",
-  "build_time": "22/11/2026 14:58",
-  "notes": "22/11/2026 14:58",
+  "version": "1.0.25",
+  "build_time": "22/11/2026 15:07",
+  "notes": "22/11/2026 15:07",
   "changelog": [
     "Auditoria y rediseno total con 20 Layouts profesionales de Reloj + Clima + Segundero (10 Horizontales y 10 Verticales, cero traslapes).",
     "Nuevos Layouts inspirados en la UX de Google Gemini AI (Gemini AI Studio H y Gemini AI Vertical V) con estrella de 4 puntas y chips de pronostico.",
@@ -15,19 +15,25 @@
   "url": "https://raw.githubusercontent.com/AlexGremory255/esp32customclock/main/firmware.bin",
   "clocks": [
     {
-      "brightness": 255,
+      "brightness": 89,
       "tz": -21600,
-      "grad": 39,
-      "clock_bg": 18,
+      "grad": 35,
+      "clock_bg": 32,
       "full_screen": 0,
       "frost_clk": 1,
-      "layout": 12,
+      "layout": 19,
       "anim_mode": 6,
       "boot_mode": 3,
       "city": "Morelia, Michoacán, MX",
       "owm": "935513c1fa37302feeafa46980de3ddd",
-      "fw_ver": "1.0.19",
-      "ip": "192.168.68.113"
+      "fw_ver": "1.0.24",
+      "ip": "192.168.68.123",
+      "heap": 113208,
+      "maxblk": 57332,
+      "rssi": -20,
+      "fps": 34,
+      "render_us": 16247,
+      "wx_ok": 1
     }
   ]
 }
