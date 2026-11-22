@@ -95,6 +95,8 @@ try{var s=localStorage.getItem('color-scheme');if(s==='light'||s==='dark')docume
   --btn-bg-d: rgba(255, 255, 255, 0.075);
   --btn-hover-l: rgba(255, 255, 255, 0.8);
   --btn-hover-d: rgba(255, 255, 255, 0.13);
+  --apply-dirty-bg-l: rgba(255, 255, 255, 0.88);
+  --apply-dirty-bg-d: rgba(24, 28, 42, 0.84);
   --seg-bg-l: rgba(15, 23, 42, 0.045);
   --seg-bg-d: rgba(255, 255, 255, 0.045);
 
@@ -144,10 +146,12 @@ try{var s=localStorage.getItem('color-scheme');if(s==='light'||s==='dark')docume
   --sb-track: var(--sb-track-l);
   --btn-bg: var(--btn-bg-l);
   --btn-hover: var(--btn-hover-l);
+  --apply-dirty-bg: var(--apply-dirty-bg-l);
   --seg-bg: var(--seg-bg-l);
   --glass-bright: 1.06;
   --glint-strength: 0.72;
   --orb-opacity: 0.62;
+  --bezel-glow-opacity: 0.34;
 
   --ambient-a: #4285f4;
   --ambient-b: #d96570;
@@ -194,10 +198,12 @@ try{var s=localStorage.getItem('color-scheme');if(s==='light'||s==='dark')docume
     --sb-track: var(--sb-track-d);
     --btn-bg: var(--btn-bg-d);
     --btn-hover: var(--btn-hover-d);
+    --apply-dirty-bg: var(--apply-dirty-bg-d);
     --seg-bg: var(--seg-bg-d);
     --glass-bright: 1.1;
     --glint-strength: 0.24;
     --orb-opacity: 0.52;
+    --bezel-glow-opacity: 0.48;
   }
 }
 
@@ -205,6 +211,14 @@ try{var s=localStorage.getItem('color-scheme');if(s==='light'||s==='dark')docume
   --glass-bright: 1.12;
   --glint-strength: 0.26;
   --orb-opacity: 0.52;
+  --bezel-glow-opacity: 0.48;
+}
+
+:root:has(> head > meta[name="color-scheme"][content="light"]) {
+  --glass-bright: 1.06;
+  --glint-strength: 0.72;
+  --orb-opacity: 0.62;
+  --bezel-glow-opacity: 0.34;
 }
 
 @supports (color: light-dark(white, black)) {
@@ -236,6 +250,7 @@ try{var s=localStorage.getItem('color-scheme');if(s==='light'||s==='dark')docume
     --sb-track: light-dark(var(--sb-track-l), var(--sb-track-d));
     --btn-bg: light-dark(var(--btn-bg-l), var(--btn-bg-d));
     --btn-hover: light-dark(var(--btn-hover-l), var(--btn-hover-d));
+    --apply-dirty-bg: light-dark(var(--apply-dirty-bg-l), var(--apply-dirty-bg-d));
     --seg-bg: light-dark(var(--seg-bg-l), var(--seg-bg-d));
   }
 }
@@ -250,6 +265,21 @@ try{var s=localStorage.getItem('color-scheme');if(s==='light'||s==='dark')docume
 @media (pointer: coarse) {
   :root {
     --target-size: 44px;
+  }
+
+  .lg-surface {
+    -webkit-backdrop-filter: blur(20px) saturate(185%) brightness(var(--glass-bright));
+    backdrop-filter: blur(20px) saturate(185%) brightness(var(--glass-bright));
+  }
+
+  .orb-1,
+  .orb-2,
+  .orb-3 {
+    filter: none;
+  }
+
+  .orb-4 {
+    filter: blur(18px);
   }
 }
 
@@ -269,7 +299,7 @@ html {
 
 body {
   margin: 0;
-  min-block-size: 100dvb;
+  min-block-size: 100svh;
   background: transparent;
   color: var(--text);
   overflow-wrap: break-word;
@@ -313,12 +343,19 @@ body {
 /* ── Fondo fluido animado multi-capa para dar vida real al Liquid Glass ── */
 .ambient-scene {
   position: fixed;
-  inset: 0;
+  top: -60px;
+  left: 0;
+  width: 100%;
+  height: calc(100vh + 120px);
+  height: var(--scene-h, calc(100lvh + 120px));
   z-index: 0;
   isolation: isolate;
   overflow: clip;
   pointer-events: none;
   background: var(--bg);
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  contain: strict;
 }
 
 .ambient-orb {
@@ -329,46 +366,52 @@ body {
 }
 
 .orb-1 {
-  inset-block-start: -10vmax;
-  inset-inline-start: -6vmax;
-  inline-size: 58vmax;
-  block-size: 52vmax;
+  top: -8%;
+  left: -8%;
+  width: 58%;
+  height: 52%;
   background:
     radial-gradient(closest-side,
-      color-mix(in oklab, var(--ambient-a) 68%, transparent),
-      color-mix(in oklab, var(--ambient-a) 26%, transparent) 55%,
-      transparent 80%);
+      color-mix(in oklab, var(--ambient-a) 68%, transparent) 0%,
+      color-mix(in oklab, var(--ambient-a) 38%, transparent) 38%,
+      color-mix(in oklab, var(--ambient-a) 12%, transparent) 62%,
+      transparent 78%);
   filter: blur(36px);
 }
 
 .orb-2 {
-  inset-block-start: 14vh;
-  inset-inline-start: 42vw;
-  inline-size: 54vmax;
-  block-size: 46vmax;
+  top: 16%;
+  left: 42%;
+  width: 54%;
+  height: 46%;
   background:
     radial-gradient(closest-side,
-      color-mix(in oklab, var(--ambient-b) 66%, transparent),
-      rgba(168, 85, 247, 0.34) 52%,
-      transparent 80%);
+      color-mix(in oklab, var(--ambient-b) 66%, transparent) 0%,
+      rgba(168, 85, 247, 0.34) 44%,
+      color-mix(in oklab, var(--ambient-b) 10%, transparent) 66%,
+      transparent 78%);
   filter: blur(40px);
 }
 
 .orb-3 {
-  inset-block-end: -14vmax;
-  inset-inline-start: 16vw;
-  inline-size: 62vmax;
-  block-size: 44vmax;
+  top: 56%;
+  left: 16%;
+  width: 62%;
+  height: 46%;
   background:
     radial-gradient(closest-side,
-      rgba(56, 189, 248, 0.54),
-      rgba(99, 102, 241, 0.3) 50%,
+      rgba(56, 189, 248, 0.54) 0%,
+      rgba(99, 102, 241, 0.3) 44%,
+      rgba(99, 102, 241, 0.1) 66%,
       transparent 78%);
   filter: blur(42px);
 }
 
 .orb-4 {
-  inset: -15vmax;
+  top: -12%;
+  left: -12%;
+  width: 124%;
+  height: 124%;
   background:
     linear-gradient(122deg,
       transparent 22%,
@@ -381,19 +424,19 @@ body {
 
 @keyframes float-orb-1 {
   0%   { transform: translate3d(0, 0, 0) scale(1) rotate(0deg); }
-  50%  { transform: translate3d(12vw, 9vh, 0) scale(1.12) rotate(18deg); }
+  50%  { transform: translate3d(14%, 10%, 0) scale(1.12) rotate(18deg); }
   100% { transform: translate3d(0, 0, 0) scale(1) rotate(0deg); }
 }
 
 @keyframes float-orb-2 {
   0%   { transform: translate3d(0, 0, 0) scale(1) rotate(0deg); }
-  50%  { transform: translate3d(-14vw, -8vh, 0) scale(1.14) rotate(-20deg); }
+  50%  { transform: translate3d(-14%, -9%, 0) scale(1.14) rotate(-20deg); }
   100% { transform: translate3d(0, 0, 0) scale(1) rotate(0deg); }
 }
 
 @keyframes float-orb-3 {
   0%   { transform: translate3d(0, 0, 0) scale(1); }
-  50%  { transform: translate3d(-10vw, -12vh, 0) scale(1.15); }
+  50%  { transform: translate3d(-10%, -12%, 0) scale(1.15); }
   100% { transform: translate3d(0, 0, 0) scale(1); }
 }
 
@@ -587,10 +630,16 @@ body {
 
 .apply-btn[data-dirty="true"],
 .apply-btn[data-dirty="true"]:hover:not(:disabled) {
-  background: var(--accent-solid);
-  color: var(--accent-ink);
-  border-color: var(--accent-solid);
-  box-shadow: 0 8px 24px -4px var(--drop), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  background: var(--apply-dirty-bg);
+  color: var(--text);
+  border-color: transparent;
+  box-shadow:
+    -5px -5px 16px -4px rgba(37, 99, 235, 0.24),
+    5px -5px 16px -4px rgba(255, 42, 95, 0.22),
+    5px 5px 16px -4px rgba(255, 214, 10, 0.16),
+    -5px 5px 16px -4px rgba(34, 197, 94, 0.20),
+    0 8px 22px -6px var(--drop),
+    inset 0 1px 0 0 var(--rim-top);
 }
 
 .apply-btn[disabled] {
@@ -631,23 +680,46 @@ body {
   min-inline-size: 0;
 }
 
-/* ── Bisel del reloj (Contorno RGB estilo Google Modern Web Guidance + 4-corner glow) ── */
-.clock-bezel {
+/* ── Bisel del reloj (Solo glow RGB animado por detrás + contorno RGB activo en selección y Aplicar) ── */
+.clock-stage {
   position: relative;
   isolation: isolate;
-  padding: 0.85rem;
-  border-radius: var(--radius-xl);
-  border-color: transparent;
-  box-shadow:
-    -10px -10px 30px -5px rgba(37, 99, 235, 0.24),
-    10px -10px 30px -5px rgba(255, 42, 95, 0.22),
-    10px 10px 30px -5px rgba(255, 214, 10, 0.16),
-    -10px 10px 30px -5px rgba(34, 197, 94, 0.20),
-    0 14px 36px -12px var(--drop),
-    inset 0 1px 0 0 var(--rim-top);
+  inline-size: 100%;
 }
 
-.clock-bezel::before,
+.clock-stage::before {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  z-index: 0;
+  border-radius: calc(var(--radius-xl) + 4px);
+  background: conic-gradient(
+    from var(--rgb-angle),
+    #ff2a5f 0deg,
+    #ff9500 58deg,
+    #ffd60a 112deg,
+    #22c55e 170deg,
+    #06b6d4 226deg,
+    #2563eb 282deg,
+    #a855f7 328deg,
+    #ff2a5f 360deg
+  );
+  transform: translateY(8px) scale(1.01);
+  filter: blur(26px) saturate(140%);
+  opacity: var(--bezel-glow-opacity);
+  pointer-events: none;
+}
+
+.clock-bezel {
+  position: relative;
+  z-index: 1;
+  isolation: isolate;
+  inline-size: 100%;
+  padding: 0.85rem;
+  border-radius: var(--radius-xl);
+}
+
+.apply-btn[data-dirty="true"]::before,
 .opt-card[aria-pressed="true"]::before,
 .swatch-card[aria-pressed="true"]::before {
   content: "";
@@ -684,7 +756,11 @@ body {
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .clock-bezel,
+  .clock-stage {
+    animation: rgb-spin 6s linear infinite;
+  }
+
+  .apply-btn[data-dirty="true"],
   .opt-card[aria-pressed="true"],
   .swatch-card[aria-pressed="true"] {
     animation: rgb-spin 4s linear infinite;
@@ -1657,8 +1733,12 @@ dialog {
     justify-items: center;
   }
 
-  .clock-bezel {
+  .clock-stage {
     inline-size: min(17.5rem, 100%);
+  }
+
+  .clock-bezel {
+    inline-size: 100%;
   }
 
   .quick-controls {
@@ -1724,7 +1804,8 @@ dialog {
 
 /* ── Forced Colors Mode ── */
 @media (forced-colors: active) {
-  .clock-bezel::before,
+  .clock-stage::before,
+  .apply-btn[data-dirty="true"]::before,
   .opt-card[aria-pressed="true"]::before,
   .swatch-card[aria-pressed="true"]::before {
     display: none;
@@ -1822,12 +1903,14 @@ dialog {
 
 <main class="app-shell">
   <aside class="stage-col">
-    <div class="clock-bezel lg-surface">
-      <div class="canvas-well">
-        <canvas id="led_canvas" width="256" height="256" role="img" aria-label="Reloj en vivo"></canvas>
-        <div class="bezel-actions" id="bezel_actions" hidden>
-          <button type="button" class="bezel-chip" id="btn_replay_boot" onclick="setSimMode('boot')">Repetir</button>
-          <button type="button" class="bezel-chip" id="btn_back_live" onclick="setSimMode('live')">Ver reloj</button>
+    <div class="clock-stage">
+      <div class="clock-bezel lg-surface">
+        <div class="canvas-well">
+          <canvas id="led_canvas" width="256" height="256" role="img" aria-label="Reloj en vivo"></canvas>
+          <div class="bezel-actions" id="bezel_actions" hidden>
+            <button type="button" class="bezel-chip" id="btn_replay_boot" onclick="setSimMode('boot')">Repetir</button>
+            <button type="button" class="bezel-chip" id="btn_back_live" onclick="setSimMode('live')">Ver reloj</button>
+          </div>
         </div>
       </div>
     </div>
@@ -4588,6 +4671,28 @@ async function startCustomRangeScan(){
   $('btn_stop_scan').hidden = true;
   scanRunning = false;
 }
+
+(function lockMobileAmbientHeight(){
+  var lastW = window.innerWidth;
+  function applySceneHeight(){
+    var isMobileLike = (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) || window.innerWidth <= 864;
+    if(isMobileLike){
+      var avail = (window.screen && (window.screen.availHeight || window.screen.height)) || window.innerHeight;
+      var h = Math.max(window.innerHeight, avail) + 120;
+      document.documentElement.style.setProperty('--scene-h', h + 'px');
+    } else {
+      document.documentElement.style.removeProperty('--scene-h');
+    }
+    lastW = window.innerWidth;
+  }
+  applySceneHeight();
+  window.addEventListener('orientationchange', function(){
+    setTimeout(applySceneHeight, 120);
+  });
+  window.addEventListener('resize', function(){
+    if(Math.abs(window.innerWidth - lastW) > 40) applySceneHeight();
+  }, { passive: true });
+})();
 
 if(state.connectedIp && $('manual_ip_in')) $('manual_ip_in').value = state.connectedIp;
 updateDevicePill();
