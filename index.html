@@ -2128,7 +2128,7 @@ dialog {
               <div class="sys-row">
                 <div>
                   <div class="sys-title">Firmware</div>
-                  <div class="sys-meta num" id="sys_fw_meta">v1.0.29</div>
+                  <div class="sys-meta num" id="sys_fw_meta">v1.0.22</div>
                 </div>
                 <button type="button" class="btn-glass glass-btn-base glint-target" onclick="requestClockOta()">Actualizar</button>
               </div>
@@ -2269,7 +2269,7 @@ var state = {
   simMode: 'live',
   bootSimStart: 0,
   connectedIp: initialIp,
-  fwVer: '1.0.29',
+  fwVer: '1.0.22',
   latestCloudVer: '',
   activeTab: 'layouts'
 };
@@ -2400,20 +2400,27 @@ function updateDirtyState(){
 
 // ── CATALOGOS ──
 var LAYOUTS = [
-  { id:0,  ori:'h', glyph:'h-split',  name:'Clásico' },
-  { id:2,  ori:'h', glyph:'h-gemini', name:'Gemini Studio' },
-  { id:3,  ori:'h', glyph:'h-bento',  name:'Bento Ultra' },
-  { id:10, ori:'h', glyph:'h-pill',   name:'Dual Pill' },
-  { id:4,  ori:'h', glyph:'h-zen',    name:'Aura Glass' },
-  { id:5,  ori:'h', glyph:'h-edit',   name:'Nordic Pure' },
-  { id:6,  ori:'h', glyph:'h-flip',   name:'Monolith' },
+  { id:0,  ori:'h', glyph:'h-split',   name:'Clásico' },
+  { id:2,  ori:'h', glyph:'h-gemini',  name:'Gemini Studio' },
+  { id:3,  ori:'h', glyph:'h-bento',   name:'Bento Ultra' },
+  { id:4,  ori:'h', glyph:'h-dot',     name:'Nothing Dot' },
+  { id:5,  ori:'h', glyph:'h-ring',    name:'Swiss Chrono' },
+  { id:6,  ori:'h', glyph:'h-hud',     name:'Cyber HUD' },
+  { id:7,  ori:'h', glyph:'h-flip',    name:'Flip Cards' },
+  { id:8,  ori:'h', glyph:'h-edit',    name:'Editorial' },
+  { id:9,  ori:'h', glyph:'h-zen',     name:'Zen Horizon' },
+  { id:10, ori:'h', glyph:'h-pill',    name:'Dual Pill' },
 
-  { id:1,  ori:'v', glyph:'v-split',  name:'Clásico Columna' },
-  { id:11, ori:'v', glyph:'v-gemini', name:'Gemini Vertical' },
-  { id:12, ori:'v', glyph:'v-bento',  name:'Bento Split' },
-  { id:19, ori:'v', glyph:'v-zen',    name:'Zen Pillar' },
-  { id:13, ori:'v', glyph:'v-flip',   name:'Duo Glass' },
-  { id:14, ori:'v', glyph:'v-edit',   name:'Kyoto Gallery' }
+  { id:1,  ori:'v', glyph:'v-split',   name:'Clásico Columna' },
+  { id:11, ori:'v', glyph:'v-gemini',  name:'Gemini Vertical' },
+  { id:12, ori:'v', glyph:'v-bento',   name:'Bento Split' },
+  { id:13, ori:'v', glyph:'v-dot',     name:'Nothing Torre' },
+  { id:14, ori:'v', glyph:'v-ring',    name:'Swiss Gallery' },
+  { id:15, ori:'v', glyph:'v-hud',     name:'Cyber Tower' },
+  { id:16, ori:'v', glyph:'v-flip',    name:'Flip Stack' },
+  { id:17, ori:'v', glyph:'v-edit',    name:'Brutalist Bold' },
+  { id:18, ori:'v', glyph:'v-ring',    name:'Chrono Orbital' },
+  { id:19, ori:'v', glyph:'v-zen',     name:'Zen Pillar' }
 ];
 
 var ANIMS = [
@@ -2450,8 +2457,7 @@ var BOOTS = [
   { id:6,  name:'Nothing Grid' },
   { id:7,  name:'Apertura Iris' },
   { id:8,  name:'Ondas Armónicas' },
-  { id:9,  name:'Barrido Láser' },
-  { id:10, name:'Cristal 3D' }
+  { id:9,  name:'Barrido Láser' }
 ];
 
 var GRADIENTS = [
@@ -2500,18 +2506,7 @@ var GRADIENTS = [
   { id:39, cat:'mono', a:'#914be1', b:'#1d0f2d', name:'Lavanda Zen', css:'radial-gradient(circle at 35% 35%,#914be1,#1d0f2d)' }
 ];
 
-function normalizeLayoutJS(lay){
-  lay = Number(lay);
-  if(lay === 7 || lay === 8 || lay === 9) return 2;
-  if(lay >= 15 && lay <= 18) return 12;
-  if(isNaN(lay) || lay < 0 || lay > 19) return 0;
-  return lay;
-}
-
-function isVertLayout(lay){
-  lay = normalizeLayoutJS(lay);
-  return lay === 1 || (lay >= 11 && lay <= 19);
-}
+function isVertLayout(lay){ return lay === 1 || (lay >= 11 && lay <= 19); }
 
 function syncAmbientColors(){
   var match = GRADIENTS.find(function(g){ return g.id === state.grad; }) || GRADIENTS[0];
@@ -2972,95 +2967,52 @@ function isMonoModeJS(m){
   return (m>=8 && m<=13) || (m>=15 && m<=17) || (m>=36 && m<=39);
 }
 
-var GRAD_PALETTES_JS = [
-  [6,3,12,  210,48,118,  42,30,192,   0,0,0,       1, 2],
-  [2,8,14,  22,192,210,  24,58,188,   0,0,0,       1, 1],
-  [3,10,12, 42,212,140,  112,48,190,  0,0,0,       1, 1],
-  [6,2,10,  228,24,132,  0,182,220,   0,0,0,       1, 2],
-  [4,8,3,   24,190,82,   216,142,24,  0,0,0,       1, 4],
-  [8,3,10,  220,56,40,   92,26,188,   0,0,0,       1, 2],
-  [12,3,2,  235,30,18,   232,142,18,  0,0,0,       1, 6],
-  [6,3,10,  166,54,205,  40,204,170,  0,0,0,       1, 0],
-  [4,8,24,  38,94,215,   0,0,0,       0,0,0,       0, 3],
-  [3,18,7,  24,175,66,   0,0,0,       0,0,0,       0, 5],
-  [22,4,6,  200,26,44,   0,0,0,       0,0,0,       0, 6],
-  [16,4,24, 156,24,215,  0,0,0,       0,0,0,       0, 2],
-  [22,12,3, 200,120,18,  0,0,0,       0,0,0,       0, 6],
-  [3,18,22, 20,176,200,  0,0,0,       0,0,0,       0, 1],
-  [5,4,10,  32,96,220,   235,124,20,  0,0,0,       1, 2],
-  [22,6,14, 204,56,118,  0,0,0,       0,0,0,       0, 2],
-  [4,12,26, 26,112,230,  0,0,0,       0,0,0,       0, 1],
-  [14,16,22,112,130,160, 0,0,0,       0,0,0,       0, 3],
-  [2,8,12,  14,212,174,  24,56,220,   0,0,0,       1, 1],
-  [8,3,6,   226,48,140,  214,136,26,  0,0,0,       1, 2],
-  [3,8,12,  28,212,78,   80,22,220,   0,0,0,       1, 1],
-  [5,2,10,  204,24,132,  82,18,156,   14,186,216,  2, 0],
-  [6,2,10,  245,120,10,  216,24,158,  24,52,184,   2, 2],
-  [2,6,10,  16,198,88,   20,98,220,   152,28,190,  2, 1],
-  [5,2,10,  222,20,112,  118,30,214,  10,202,222,  2, 2],
-  [8,3,8,   245,168,14,  220,30,72,   66,18,130,   2, 2],
-  [2,6,12,  12,220,210,  22,92,222,   106,22,186,  2, 1],
-  [2,8,10,  20,220,82,   10,172,184,  22,34,142,   2, 1],
-  [6,3,10,  245,140,20,  212,20,122,  20,62,212,   2, 2],
-  [6,3,8,   240,70,40,   172,36,142,  16,122,194,  2, 2],
-  [6,5,10,  230,190,110, 22,34,104,   0,0,0,       1, 2],
-  [4,6,6,   40,202,80,   164,26,112,  0,0,0,       1, 4],
-  [8,2,6,   240,60,16,   72,18,86,    0,0,0,       1, 2],
-  [4,4,10,  122,22,230,  12,224,132,  0,0,0,       1, 2],
-  [6,5,6,   220,110,30,  20,178,142,  0,0,0,       1, 4],
-  [6,3,10,  235,50,132,  30,142,230,  0,0,0,       1, 0],
-  [18,16,14,136,126,112, 0,0,0,       0,0,0,       0, 7],
-  [3,20,12, 20,170,102,  0,0,0,       0,0,0,       0, 1],
-  [22,16,3, 200,150,22,  0,0,0,       0,0,0,       0, 4],
-  [14,8,22, 136,70,206,  0,0,0,       0,0,0,       0, 2],
-  [4,5,12,  66,133,244,  155,114,203, 217,101,112, 2, 2]
-];
-
 function evalGradRatiosJS(x, y, dr1, dr2, mode){
-  var p = GRAD_PALETTES_JS[mode] || GRAD_PALETTES_JS[0];
-  var dr1FP = Math.max(0, Math.min(256, (dr1 * 256) | 0));
-  var dr2FP = Math.max(0, Math.min(256, (dr2 * 256) | 0));
-  var dither = ditherTab[(x & 3) | ((y & 3) << 2)];
-  var dHalf = (dither / 2) | 0;
-  var w1 = 256 - dr1FP, w2 = 256 - dr2FP;
-  var hm = p[13];
-  var dR = (hm & 1) ? dHalf : dither;
-  var dG = (hm & 2) ? dHalf : dither;
-  var dB = (hm & 4) ? dHalf : dither;
-  var r = 0, g = 0, b = 0;
-
-  if(p[12] === 0){
-    r = p[0] + ((w1 * p[3]) >> 8) + dR;
-    g = p[1] + ((w1 * p[4]) >> 8) + dG;
-    b = p[2] + ((w1 * p[5]) >> 8) + dB;
-  } else {
-    var t = Math.max(0, Math.min(256, 128 + (((w2 - w1) * 192) >> 8)));
-    var mx = Math.max(w1, w2), mn = Math.min(w1, w2);
-    var env = Math.min(256, 48 + ((mx * 184 + mn * 48) >> 8));
-    var cr, cg, cb;
-    if(p[12] === 1){
-      var invT = 256 - t;
-      cr = (invT * p[3] + t * p[6]) >> 8;
-      cg = (invT * p[4] + t * p[7]) >> 8;
-      cb = (invT * p[5] + t * p[8]) >> 8;
-    } else {
-      if(t < 128){
-        var u = t << 1, invU = 256 - u;
-        cr = (invU * p[3] + u * p[6]) >> 8;
-        cg = (invU * p[4] + u * p[7]) >> 8;
-        cb = (invU * p[5] + u * p[8]) >> 8;
-      } else {
-        var u2 = (t - 128) << 1, invU2 = 256 - u2;
-        cr = (invU2 * p[6] + u2 * p[9])  >> 8;
-        cg = (invU2 * p[7] + u2 * p[10]) >> 8;
-        cb = (invU2 * p[8] + u2 * p[11]) >> 8;
-      }
-    }
-    r = p[0] + ((cr * env) >> 8) + dR;
-    g = p[1] + ((cg * env) >> 8) + dG;
-    b = p[2] + ((cb * env) >> 8) + dB;
-  }
-  return [Math.max(0, Math.min(255, r)), Math.max(0, Math.min(255, g)), Math.max(0, Math.min(255, b))];
+  var d = ditherTab[(x & 3) | ((y & 3) << 2)];
+  var w1 = 1.0 - dr1, w2 = 1.0 - dr2;
+  var r=0, g=0, b=0;
+  if(mode===40){ var w3=dr1*dr2*0.92; r=66*w1+155*w2+217*w3+d; g=133*w1+114*w2+101*w3+d/2; b=244*w1+203*w2+112*w3+d; }
+  else if(mode===39){ r=145*(0.2+0.8*w1)+d/2; g=75*(0.2+0.8*w1)+d/2; b=225*(0.2+0.8*w1)+d; }
+  else if(mode===38){ r=220*(0.2+0.8*w1)+d; g=165*(0.2+0.8*w1)+d/2; b=25*(0.2+0.8*w1)+d/2; }
+  else if(mode===37){ r=20*(0.2+0.8*w1)+d/2; g=185*(0.2+0.8*w1)+d; b=110*(0.2+0.8*w1)+d/2; }
+  else if(mode===36){ r=150*(0.2+0.8*w1)+d/2; g=140*(0.2+0.8*w1)+d/2; b=125*(0.2+0.8*w1)+d/2; }
+  else if(mode===35){ r=235*w1+30*w2+d; g=50*w1+140*w2+d/2; b=130*w1+230*w2+d; }
+  else if(mode===34){ r=220*w1+20*w2+d; g=110*w1+175*w2+d; b=30*w1+140*w2+d/2; }
+  else if(mode===33){ r=120*w1+10*w2+d/2; g=20*w1+225*w2+d; b=230*w1+130*w2+d; }
+  else if(mode===32){ r=240*w1+60*w2+d; g=60*w1+15*w2+d/2; b=15*w1+70*w2+d/2; }
+  else if(mode===31){ r=40*w1+160*w2+d/2; g=200*w1+25*w2+d; b=80*w1+110*w2+d/2; }
+  else if(mode===30){ r=230*w1+20*w2+d; g=190*w1+30*w2+d/2; b=110*w1+90*w2+d/2; }
+  else if(mode===29){ var w3=dr1*dr2*0.85; r=240*w1+170*w2+15*w3+d; g=70*w1+35*w2+120*w3+d/2; b=40*w1+140*w2+190*w3+d; }
+  else if(mode===28){ var w3=dr1*dr2*0.85; r=250*w1+210*w2+20*w3+d; g=140*w1+20*w2+60*w3+d/2; b=20*w1+120*w2+210*w3+d; }
+  else if(mode===27){ var w3=dr1*dr2*0.85; r=20*w1+10*w2+20*w3+d/2; g=220*w1+170*w2+30*w3+d; b=80*w1+180*w2+130*w3+d; }
+  else if(mode===26){ var w3=dr1*dr2*0.85; r=10*w1+20*w2+100*w3+d/2; g=220*w1+90*w2+20*w3+d; b=210*w1+220*w2+180*w3+d; }
+  else if(mode===25){ var w3=dr1*dr2*0.85; r=255*w1+220*w2+60*w3+d; g=170*w1+30*w2+15*w3+d/2; b=12*w1+70*w2+115*w3+d; }
+  else if(mode===24){ var w3=dr1*dr2*0.85; r=220*w1+10*w2+115*w3+d; g=20*w1+200*w2+30*w3+d/2; b=110*w1+220*w2+210*w3+d; }
+  else if(mode===23){ var w3=dr1*dr2*0.85; r=8*w1+10*w2+72*w3+d/2; g=88*w1+42*w2+12*w3+d; b=38*w1+102*w2+85*w3+d; }
+  else if(mode===22){ var w3=dr1*dr2*0.85; r=102*w1+88*w2+12*w3+d; g=48*w1+10*w2+24*w3+d/2; b=6*w1+72*w2+88*w3+d; }
+  else if(mode===21){ var w3=dr1*dr2*0.85; r=95*w1+8*w2+44*w3+d; g=12*w1+82*w2+10*w3+d; b=65*w1+95*w2+82*w3+d; }
+  else if(mode===20){ r=12*w1+38*w2+d/2; g=92*w1+10*w2+d; b=35*w1+105*w2+d; }
+  else if(mode===19){ r=100*w1+85*w2+d; g=20*w1+52*w2+d/2; b=62*w1+10*w2+d; }
+  else if(mode===18){ r=6*w1+12*w2+d/2; g=95*w1+24*w2+d; b=78*w1+108*w2+d; }
+  else if(mode===17){ r=52-dr1*42+d/2; g=60-dr1*48+d/2; b=78-dr1*62+d; }
+  else if(mode===16){ r=12-dr1*10+d/2; g=52-dr1*42+d; b=115-dr1*92+d; }
+  else if(mode===15){ r=98-dr1*78+d; g=26-dr1*21+d/2; b=56-dr1*45+d; }
+  else if(mode===14){ r=15*w1+105*w2+d; g=45*w1+55*w2+d/2; b=105*w1+8*w2+d; }
+  else if(mode===13){ r=8-dr1*7+d/2; g=80-dr1*65+d; b=95-dr1*75+d; }
+  else if(mode===12){ r=95-dr1*75+d; g=55-dr1*45+d/2; b=8-dr1*6+d/2; }
+  else if(mode===11){ r=75-dr1*60+d; g=10-dr1*8+d/2; b=98-dr1*80+d; }
+  else if(mode===10){ r=98-dr1*80+d; g=12-dr1*10+d/2; b=20-dr1*16+d/2; }
+  else if(mode===9){ r=8-dr1*6+d/2; g=85-dr1*70+d; b=25-dr1*20+d/2; }
+  else if(mode===8){ r=10-dr1*8+d/2; g=28-dr1*24+d/2; b=105-dr1*85+d; }
+  else if(mode===7){ r=70-dr1*62+d; g=18*w1+70*w2+d; b=78*w1+58*w2+d; }
+  else if(mode===6){ r=115-dr1*100+d; g=45-dr2*40+d/2; b=10-dr1*8+d/2; }
+  else if(mode===5){ r=98*w1+32*w2+d; g=28-dr1*24+d/2; b=98-dr2*85+d; }
+  else if(mode===4){ r=92-dr2*85+d; g=80*w1+48*w2+d; b=24-dr1*20+d/2; }
+  else if(mode===3){ r=98-dr1*90+d; g=68-dr2*60+d/2; b=52*w1+102*w2+d; }
+  else if(mode===2){ r=25-dr1*20+d/2; g=95-dr1*60+d; b=90-dr2*55+d; }
+  else if(mode===1){ r=12-dr1*10+d/2; g=90-dr1*75+d; b=110-dr2*85+d; }
+  else { r=95-dr1*85+d; g=25-dr1*20+d/2; b=130-dr2*105+d; }
+  return [Math.max(0,Math.min(255,r|0)), Math.max(0,Math.min(255,g|0)), Math.max(0,Math.min(255,b|0))];
 }
 
 function evalGradColorJS(x, y, w, h, rev, mode){
@@ -3076,32 +3028,24 @@ function evalGradColorJS(x, y, w, h, rev, mode){
   var dr1 = 0, dr2 = 0;
   var am = state.animMode;
   var t = dir * t_ms * 0.001 + phase;
-  var t1_ang = dir * t_ms * 0.00180;
-  var t1_sub = -dir * t_ms * 0.00135;
-  var t2_ang = dir * t_ms * 0.00153 + Math.PI * 0.5;
-  var t2_sub = -dir * t_ms * 0.00117 + Math.PI;
-  var nx = x / Math.max(1, w - 1);
-  var ny = y / Math.max(1, h - 1);
 
   if(am === 20){
-    var warpX = Math.sin(ny * 4.42 + t1_sub) * 0.164;
-    var warpY = Math.cos(nx * 4.42 - t2_sub) * 0.164;
-    var c1 = Math.sin((nx + warpX - ny * 0.5) * 4.17 + t1_ang);
-    var c2 = Math.cos((ny + warpY + nx * 0.5) * 3.93 - t2_ang);
-    dr1 = (1.0 - c1) * 0.5;
-    dr2 = (1.0 - c2) * 0.5;
+    var wA = h*0.30 + Math.sin(x*0.11 + t*1.9)*5.0 + Math.cos(x*0.21 - t*1.3)*2.5;
+    var wB = h*0.54 + Math.cos(x*0.09 - t*1.6)*5.5 + Math.sin(x*0.18 + t*2.1)*2.5;
+    var wC = h*0.76 + Math.sin(x*0.13 + t*1.4 + 1.2)*4.5;
+    var dA = Math.abs(y - wA), dB = Math.abs(y - wB), dC = Math.abs(y - wC);
+    var minAB = Math.min(dA, Math.min(dB, dC));
+    var env = Math.max(0, 1.0 - minAB / (h*0.26));
+    env = env * env * (3.0 - 2.0 * env);
+    dr1 = Math.min(1.0, (x / Math.max(1, w)) * 0.65 + (dA / Math.max(1, h)) * 0.45);
+    dr2 = Math.min(1.0, ((w - x) / Math.max(1, w)) * 0.65 + (dB / Math.max(1, h)) * 0.45);
     if(isMonoModeJS(mode)) dr2 = dr1;
     var baseRgb = evalGradRatiosJS(x, y, dr1, dr2, mode);
-    var archY = 0.5 + Math.sin(nx * 3.93 + t1_ang) * 0.18 + Math.cos(nx * 2.36 - t2_ang) * 0.11;
-    var distY = Math.abs(ny - archY);
-    var veil = Math.max(0, 1.0 - distY / 0.70);
-    veil = veil * veil * (3.0 - 2.0 * veil);
-    var shimmer = (Math.sin(nx * 5.15 + ny * 3.44 - t1_sub) + 1.0) * 0.125;
-    var env = Math.min(1.0, (58 / 256) + veil * (164 / 256) + shimmer);
+    var k = 0.08 + 0.92 * env;
     return [
-      Math.min(255, Math.round(baseRgb[0] * env)),
-      Math.min(255, Math.round(baseRgb[1] * env)),
-      Math.min(255, Math.round(baseRgb[2] * env))
+      Math.min(255, Math.round(4 + baseRgb[0]*k)),
+      Math.min(255, Math.round(5 + baseRgb[1]*k)),
+      Math.min(255, Math.round(12 + baseRgb[2]*k))
     ];
   } else if(am === 1){
     var w1 = Math.sin(x*0.11 + y*0.07 + t + Math.sin(y*0.09 - t*0.7));
@@ -3114,86 +3058,81 @@ function evalGradColorJS(x, y, w, h, rev, mode){
   } else if(am === 3){
     var mx = (cx1+cx2)*0.5, my = (cy1+cy2)*0.5;
     var d = Math.hypot(x-mx, y-my);
-    var r1 = Math.sin(d*0.24 - t1_ang)*0.5 + 0.5;
-    var r2 = Math.cos(d*0.24 - t1_ang)*0.5 + 0.5;
+    var r1 = Math.sin(d*0.24 - t*2.5)*0.5 + 0.5;
+    var r2 = Math.cos(d*0.24 - t*2.5)*0.5 + 0.5;
     var at = Math.max(0.2, 1.0 - d*invD*0.65);
     dr1 = 1.0 - r1*at; dr2 = 1.0 - r2*at;
   } else if(am === 4){
     var dx = x - w*0.5, dy = y - h*0.5;
     var d = Math.hypot(dx, dy);
     var ang = Math.atan2(dy, dx);
-    dr1 = 1.0 - (Math.sin(ang*2 + d*0.177 - t1_ang)*0.5 + 0.5);
-    dr2 = 1.0 - (Math.cos(ang*2 - d*0.177 + t2_ang)*0.5 + 0.5);
+    dr1 = 1.0 - (Math.sin(ang*2 + d*0.18 - t*2.2)*0.5 + 0.5);
+    dr2 = 1.0 - (Math.cos(ang*2 - d*0.16 + t*1.8)*0.5 + 0.5);
   } else if(am === 5){
-    var md1 = Math.abs(x - cx1) + Math.abs(y - cy1);
-    var md2 = Math.abs(x - cx2) + Math.abs(y - cy2);
-    dr1 = 1.0 - (Math.sin(md1*0.222 - t1_ang)*0.5 + 0.5);
-    dr2 = 1.0 - (Math.cos(md2*0.199 + t2_ang)*0.5 + 0.5);
+    var dx = Math.abs(x - cx1), dy = Math.abs(y - cy1);
+    var md = dx + dy;
+    dr1 = 1.0 - (Math.sin(md*0.22 - t*2.4)*0.5 + 0.5);
+    dr2 = 1.0 - (Math.cos((Math.abs(x-cx2)+Math.abs(y-cy2))*0.20 + t*2.0)*0.5 + 0.5);
   } else if(am === 6){
-    dr1 = Math.min(1.0, Math.max(0.0, ny + Math.sin(x*0.080 + t1_ang)*0.172));
-    dr2 = Math.min(1.0, Math.max(0.0, (1.0 - ny) + Math.cos(x*0.061 - t2_ang)*0.172));
+    var hy = h*0.5 + Math.sin(x*0.1 + t)*5.0;
+    dr1 = Math.min(1.0, Math.abs(y - hy) / (h*0.55));
+    dr2 = Math.min(1.0, y / Math.max(1, h));
   } else if(am === 7){
-    var q1 = Math.sin(x*0.220 + t1_ang) * Math.cos(y*0.220 - t1_sub);
-    var q2 = Math.cos(x*0.192 - t2_ang) * Math.sin(y*0.240 + t2_sub);
+    var q1 = Math.sin(x*0.22 + t*1.8) * Math.cos(y*0.22 - t*1.5);
+    var q2 = Math.cos(x*0.19 - t*1.4) * Math.sin(y*0.24 + t*1.9);
     dr1 = 1.0 - (q1*0.5 + 0.5); dr2 = 1.0 - (q2*0.5 + 0.5);
   } else if(am === 8){
-    var breath = 0.68 + 0.32 * Math.sin(t1_ang);
-    var invBreath = 1.35 - breath * 0.40;
+    var breath = 0.68 + 0.32*Math.sin(t*1.8);
     var d = Math.hypot(x - w*0.5, y - h*0.5);
     dr1 = Math.min(1.0, d / (maxD * breath));
-    dr2 = 1.0 - Math.min(1.0, d / (maxD * invBreath));
+    dr2 = Math.min(1.0, d / (maxD * (1.35 - breath*0.4)));
   } else if(am === 9){
-    var wave1 = 0.156*Math.sin(x*0.120 + t1_ang) + 0.094*Math.cos(x*0.216 - t1_sub);
-    var wave2 = 0.156*Math.cos(x*0.101 - t2_ang) + 0.094*Math.sin(x*0.177 + t2_sub);
-    dr1 = Math.min(1.0, Math.abs(ny - (0.38 + wave1)) / 0.55);
-    dr2 = Math.min(1.0, Math.abs(ny - (0.62 + wave2)) / 0.55);
+    var wave1 = Math.sin(x*0.12 + t*1.7) * 5.0 + Math.cos(x*0.22 - t*1.1) * 3.0;
+    var wave2 = Math.cos(x*0.10 - t*1.4) * 5.0 + Math.sin(x*0.18 + t*1.9) * 3.0;
+    dr1 = Math.min(1.0, Math.abs(y - (h*0.38 + wave1)) / (h*0.55));
+    dr2 = Math.min(1.0, Math.abs(y - (h*0.62 + wave2)) / (h*0.55));
   } else if(am === 10){
     var fx = Math.abs(x - w*0.5), fy = Math.abs(y - h*0.5);
     var hi = Math.max(fx, fy), lo = Math.min(fx, fy);
-    dr1 = 1.0 - (Math.sin((hi*0.249 + lo*0.119) - t1_ang)*0.5 + 0.5);
-    dr2 = 1.0 - (Math.cos((hi*0.149 - lo*0.249) + t2_ang)*0.5 + 0.5);
+    dr1 = 1.0 - (Math.sin((hi*0.25 + lo*0.12) - t*2.2)*0.5 + 0.5);
+    dr2 = 1.0 - (Math.cos((hi*0.15 - lo*0.25) + t*1.9)*0.5 + 0.5);
   } else if(am === 11){
-    var rib1 = Math.sin((x + y)*0.120 + Math.sin(x*0.100 - t1_sub)*1.18 + t1_ang);
-    var rib2 = Math.cos((x - y)*0.120 + Math.cos(y*0.100 + t2_sub)*1.18 - t2_ang);
+    var rib1 = Math.sin((x + y)*0.12 + Math.sin(x*0.1 - t)*1.2 + t*1.6);
+    var rib2 = Math.cos((x - y)*0.12 + Math.cos(y*0.1 + t)*1.2 - t*1.4);
     dr1 = 1.0 - (rib1*0.5 + 0.5); dr2 = 1.0 - (rib2*0.5 + 0.5);
   } else if(am === 12){
     var d = Math.hypot(x - w*0.5, y - h*0.5);
-    var twist = Math.atan2(y - h*0.5, x - w*0.5) + d*0.149 - t1_ang;
+    var twist = Math.atan2(y - h*0.5, x - w*0.5) + d*0.15 - t*2.8;
     dr1 = 1.0 - (Math.sin(twist)*0.5 + 0.5);
     dr2 = Math.min(1.0, d * invD);
   } else if(am === 13){
-    var colPhase = ((x * 37) & 63) * 0.098;
-    var drop1 = Math.sin(y*0.150 - t1_ang + colPhase);
-    var drop2 = Math.cos(y*0.120 - t2_ang - colPhase*0.703);
+    var colPhase = ((x * 37) & 63) / 10.0;
+    var drop1 = Math.sin(y*0.15 - t*3.0 + colPhase);
+    var drop2 = Math.cos(y*0.12 - t*2.3 - colPhase*0.7);
     dr1 = 1.0 - (drop1*0.5 + 0.5); dr2 = 1.0 - (drop2*0.5 + 0.5);
   } else if(am === 14){
-    var ridge = 0.48 + Math.sin(x*0.090 + y*0.050 + t1_ang) * 0.1875;
-    dr1 = Math.min(1.0, Math.abs(ny - ridge) / 0.55);
-    dr2 = Math.min(1.0, (nx + ny) * 0.5);
+    var ridge = Math.sin(x*0.09 + y*0.05 + t*1.2) * 6.0;
+    dr1 = Math.min(1.0, Math.abs(y - (h*0.48 + ridge)) / (h*0.55));
+    dr2 = Math.min(1.0, (x + y) / Math.max(1, w + h));
   } else if(am === 15){
     var d = Math.hypot(x - w*0.5, y - h*0.5);
-    var dNorm = Math.min(1.0, d * invD);
-    var phaseNorm = ((t1_ang / (Math.PI * 2.0)) % 1.0 + 1.0) % 1.0;
-    var ringDist = Math.abs(dNorm - phaseNorm);
-    if(ringDist > 0.5) ringDist = 1.0 - ringDist;
-    dr1 = Math.min(1.0, ringDist * 2.34);
-    dr2 = dNorm;
+    var ring = Math.abs(d - ((t*14) % maxD));
+    dr1 = Math.min(1.0, ring / (maxD*0.42));
+    dr2 = Math.min(1.0, d * invD);
   } else if(am === 16){
-    var tv = Math.min(1.0, (nx + ny) * 0.5);
-    dr1 = tv * tv * (3.0 - 2.0 * tv);
+    dr1 = Math.min(1.0, (x + y) / Math.max(1, w + h));
     dr2 = 1.0 - dr1;
   } else if(am === 17){
     var d = Math.hypot(x - w*0.5, y - h*0.5);
-    var dNorm = Math.min(1.0, d * invD);
-    dr1 = Math.min(1.0, dNorm * 1.13);
-    dr2 = Math.max(0.0, 1.0 - dNorm * dNorm);
+    dr1 = Math.min(1.0, d / (maxD * 0.88));
+    dr2 = Math.min(1.0, (d * d) / (maxD * maxD * 0.78));
   } else if(am === 18){
-    dr1 = ny * ny * (3.0 - 2.0 * ny);
+    dr1 = Math.min(1.0, y / Math.max(1, h - 1));
     dr2 = 1.0 - dr1;
   } else if(am === 19){
-    var adx = Math.abs(2.0 * nx - 1.0), ady = Math.abs(2.0 * ny - 1.0);
-    dr1 = Math.min(1.0, (adx + ady) * 0.5);
-    dr2 = Math.max(0.0, 1.0 - Math.abs(nx - ny));
+    var md = Math.abs(x - w*0.5) + Math.abs(y - h*0.5);
+    dr1 = Math.min(1.0, md / Math.max(1, (w + h)*0.5));
+    dr2 = Math.min(1.0, Math.abs(x - y) / Math.max(1, Math.max(w, h)));
   } else {
     if(isMonoModeJS(mode)){
       dr1 = Math.min(1.0, Math.hypot(x-cx1, y-cy1) / 45.0);
@@ -3292,15 +3231,6 @@ function evalBootShapeMaskAct1JS(bootMode, x, y, dx, dy, dist, p1){
     var beam = Math.max(0, 1.0 - Math.abs(scanY - barPos) / 3.8);
     var fill = (scanY < barPos) ? (0.40 + 0.40 * (1.0 - scanY / (barPos + 1.0))) : 0.0;
     return Math.min(1.0, fill + beam);
-  } else if(bootMode === 10){
-    var spinAng = (1.0 - ease1) * (1.0 - ease1) * 7.85;
-    var angC = Math.atan2(dy, dx);
-    var bladeWave = Math.sin(angC * 6.0 + dist * 0.19 - spinAng) * 0.56;
-    var irisRad = 3.9 + ease1 * 18.0 + bladeWave * 2.2;
-    if(dist > irisRad) return 0.0;
-    var rim = 1.0 - (dist * 0.78) / (irisRad + 0.01);
-    if(irisRad - dist < 3.5) rim += 0.35;
-    return Math.min(1.0, Math.max(0.0, rim));
   }
   var coreR = 2.5 + ease1 * 12.0;
   var coreGlow = Math.max(0, 1.0 - dist / coreR);
@@ -3317,9 +3247,7 @@ function renderMatrixFrame(){
   if(!cv) return;
   var ctx = cv.getContext('2d');
   var fb = new Array(4096);
-  var bgFb = new Array(4096);
-  for(var i=0;i<4096;i++){ fb[i] = [0,0,0]; bgFb[i] = [0,0,0]; }
-  var curCardBounds = { x:0, y:0, w:64, h:64, solid:false };
+  for(var i=0;i<4096;i++) fb[i] = [0,0,0];
 
   function setPx(x, y, rgb){
     x = x|0; y = y|0;
@@ -3357,7 +3285,7 @@ function renderMatrixFrame(){
     return true;
   }
 
-  var lay = normalizeLayoutJS(state.layout);
+  var lay = state.layout;
   var isFull = state.fullScreen === 1;
   var isVert = isVertLayout(lay);
   var isFrost = (state.frostClk === 1) && (isFull || state.clockBg >= 2);
@@ -3375,7 +3303,7 @@ function renderMatrixFrame(){
           var dist = Math.hypot(dx, dy);
           var mask = evalBootShapeMaskAct1JS(state.bootMode, bx, by, dx, dy, dist, p1);
           var c = evalGradColorJS(bx, by, 64, 64, true, state.grad);
-          var wBoost = mask * mask * 75.0;
+          var wBoost = mask * mask * 95.0;
           setPx(bx, by, [
             Math.min(255, Math.round(c[0]*mask + wBoost)),
             Math.min(255, Math.round(c[1]*mask + wBoost)),
@@ -3406,80 +3334,20 @@ function renderMatrixFrame(){
   }
 
   function fillCardGrad(x, y, w, h, r, mode, rev, invY){
-    curCardBounds = { x:x, y:y, w:w, h:h, solid:false };
     for(var j=0;j<h;j++){
       var ej = invY ? (h-1-j) : j;
       for(var i=0;i<w;i++){
         if(insideRound(i, j, w, h, r)){
-          var px = (x+i)|0, py = (y+j)|0;
-          var col = evalGradColorJS(i, ej, w, h, rev, mode);
-          if(px>=0 && px<64 && py>=0 && py<64){
-            fb[py*64+px] = col;
-            bgFb[py*64+px] = col;
-          }
+          setPx(x+i, y+j, evalGradColorJS(i, ej, w, h, rev, mode));
         }
       }
     }
   }
   function fillCardSolid(x, y, w, h, r, rgb){
-    curCardBounds = { x:x, y:y, w:w, h:h, solid:true };
-    for(var j=0;j<h;j++) for(var i=0;i<w;i++) if(insideRound(i, j, w, h, r)){
-      var px = (x+i)|0, py = (y+j)|0;
-      if(px>=0 && px<64 && py>=0 && py<64){
-        fb[py*64+px] = rgb;
-        bgFb[py*64+px] = rgb;
-      }
-    }
-  }
-  function sampleBgTap(nx, ny){
-    var minX = Math.max(0, curCardBounds.x), maxX = Math.min(63, curCardBounds.x + curCardBounds.w - 1);
-    var minY = Math.max(0, curCardBounds.y), maxY = Math.min(63, curCardBounds.y + curCardBounds.h - 1);
-    if(nx < minX) nx = minX; else if(nx > maxX) nx = maxX;
-    if(ny < minY) ny = minY; else if(ny > maxY) ny = maxY;
-    return bgFb[ny*64 + nx];
+    for(var j=0;j<h;j++) for(var i=0;i<w;i++) if(insideRound(i, j, w, h, r)) setPx(x+i, y+j, rgb);
   }
   function fillGlassPill(x, y, w, h, r, tint, a){
-    var effDark = a + (1.0 - a) * 0.36;
-    var blendFP = Math.max(0, Math.min(256, Math.round(effDark * uiAlpha * 256)));
-    var invBlendFP = 256 - blendFP;
-    var uiFP = (uiAlpha >= 0.995) ? 256 : Math.round(uiAlpha * 256);
-    for(var j=0;j<h;j++){
-      var sy = (y+j)|0;
-      if(sy<0 || sy>=64) continue;
-      var isTopRim = (j === 0 && !curCardBounds.solid);
-      for(var i=0;i<w;i++){
-        var sx = (x+i)|0;
-        if(sx<0 || sx>=64 || !insideRound(i, j, w, h, r)) continue;
-        var bgR, bgG, bgB;
-        if(curCardBounds.solid){
-          var sc = bgFb[sy*64+sx];
-          bgR = sc[0]; bgG = sc[1]; bgB = sc[2];
-        } else {
-          var c0 = sampleBgTap(sx, sy);
-          var c1 = sampleBgTap(sx-1, sy-1), c2 = sampleBgTap(sx+1, sy-1);
-          var c3 = sampleBgTap(sx-1, sy+1), c4 = sampleBgTap(sx+1, sy+1);
-          var c5 = sampleBgTap(sx-2, sy),   c6 = sampleBgTap(sx+2, sy);
-          var c7 = sampleBgTap(sx, sy-2),   c8 = sampleBgTap(sx, sy+2);
-          bgR = (c0[0]*4 + (c1[0]+c2[0]+c3[0]+c4[0])*2 + c5[0] + c6[0] + c7[0] + c8[0]) >> 4;
-          bgG = (c0[1]*4 + (c1[1]+c2[1]+c3[1]+c4[1])*2 + c5[1] + c6[1] + c7[1] + c8[1]) >> 4;
-          bgB = (c0[2]*4 + (c1[2]+c2[2]+c3[2]+c4[2])*2 + c5[2] + c6[2] + c7[2] + c8[2]) >> 4;
-        }
-        var rOut = ((bgR * invBlendFP) + (tint[0] * blendFP)) >> 8;
-        var gOut = ((bgG * invBlendFP) + (tint[1] * blendFP)) >> 8;
-        var bOut = ((bgB * invBlendFP) + (tint[2] * blendFP)) >> 8;
-        if(isTopRim && i >= r && i < w - r){
-          rOut = Math.min(255, rOut + 12);
-          gOut = Math.min(255, gOut + 14);
-          bOut = Math.min(255, bOut + 20);
-        }
-        if(uiFP < 256){
-          rOut = (rOut * uiFP) >> 8;
-          gOut = (gOut * uiFP) >> 8;
-          bOut = (bOut * uiFP) >> 8;
-        }
-        fb[sy*64+sx] = [rOut, gOut, bOut];
-      }
-    }
+    for(var j=0;j<h;j++) for(var i=0;i<w;i++) if(insideRound(i, j, w, h, r)) blendPx(x+i, y+j, tint, a * uiAlpha);
   }
   function fillSolidBlend(x, y, w, h, col){
     for(var j=0;j<h;j++) for(var i=0;i<w;i++) blendPx(x+i, y+j, col, uiAlpha);
@@ -3487,6 +3355,16 @@ function renderMatrixFrame(){
   function strokeRect(x, y, w, h, col){
     for(var i=0;i<w;i++){ blendPx(x+i, y, col, uiAlpha); blendPx(x+i, y+h-1, col, uiAlpha); }
     for(var j=0;j<h;j++){ blendPx(x, y+j, col, uiAlpha); blendPx(x+w-1, y+j, col, uiAlpha); }
+  }
+  function drawSparkle(cx, cy){
+    var p = (Math.sin(performance.now() * 0.004) + 1.0) * 0.5;
+    var r1 = [Math.round(70 + 150*p), Math.round(135 + 50*(1-p)), 255];
+    var r2 = [225, Math.round(95 + 80*p), Math.round(180 + 65*(1-p))];
+    blendPx(cx, cy, [255,255,255], uiAlpha);
+    blendPx(cx, cy-1, r1, uiAlpha); blendPx(cx, cy+1, r1, uiAlpha);
+    blendPx(cx-1, cy, r1, uiAlpha); blendPx(cx+1, cy, r1, uiAlpha);
+    blendPx(cx, cy-2, r2, uiAlpha); blendPx(cx, cy+2, r2, uiAlpha);
+    blendPx(cx-2, cy, r2, uiAlpha); blendPx(cx+2, cy, r2, uiAlpha);
   }
   function drawMiniIcon5x5(x, y, kind){
     if(kind===1){
@@ -3528,27 +3406,19 @@ function renderMatrixFrame(){
     blendPx(x+2, y+7, ray, uiAlpha); blendPx(x+8, y+7, ray, uiAlpha);
   }
 
-  var clkCardBounds = { x:0, y:0, w:64, h:64, solid:false };
-  var wxCardBounds  = { x:0, y:0, w:64, h:64, solid:false };
   if(state.simMode === 'live' || bootElapsed >= 2100){
     if(isFull){
       fillCardGrad(0, 0, 64, 64, 0, state.grad, true, false);
-      clkCardBounds = { x:0, y:0, w:64, h:64, solid:false };
-      wxCardBounds  = { x:0, y:0, w:64, h:64, solid:false };
     } else if(isVert){
       if(state.clockBg === 0) fillCardSolid(1, 1, 29, 62, 4, [255,255,255]);
       else if(state.clockBg === 1) fillCardSolid(1, 1, 29, 62, 4, [0,0,0]);
       else fillCardGrad(1, 1, 29, 62, 4, clkGrad, true, true);
-      clkCardBounds = { x:1, y:1, w:29, h:62, solid:(state.clockBg < 2) };
       fillCardGrad(33, 1, 30, 62, 4, state.grad, false, false);
-      wxCardBounds = { x:33, y:1, w:30, h:62, solid:false };
     } else {
       if(state.clockBg === 0) fillCardSolid(1, 0, 62, 31, 4, [255,255,255]);
       else if(state.clockBg === 1) fillCardSolid(1, 0, 62, 31, 4, [0,0,0]);
       else fillCardGrad(1, 0, 62, 31, 4, clkGrad, true, false);
-      clkCardBounds = { x:1, y:0, w:62, h:31, solid:(state.clockBg < 2) };
       fillCardGrad(1, 32, 62, 31, 4, state.grad, false, false);
-      wxCardBounds = { x:1, y:32, w:62, h:31, solid:false };
     }
   }
 
@@ -3558,9 +3428,8 @@ function renderMatrixFrame(){
     var inkMain = isSolidWhite ? [0,0,0] : [255,255,255];
     var inkSub  = isSolidWhite ? [70,75,90] : [185,195,215];
     var inkCyan = isSolidWhite ? [0,115,180] : [90,235,255];
-    var sepLine = [140,150,180];
-    var clkPillTint = isSolidWhite ? [205,212,226] : (isSolidBlack ? [24,28,40] : [5,7,12]);
-    var wxPillTint  = [5,7,12];
+    var clkPillTint = isSolidWhite ? [205,212,226] : (isSolidBlack ? [28,32,46] : [8,10,16]);
+    var wxPillTint  = [8,10,16];
 
     function frostedColorAt(px, py, vr){
       if(!isFrost) return inkMain;
@@ -3646,6 +3515,7 @@ function renderMatrixFrame(){
     var hPad = (h < 10 ? '0' : '') + h;
     var mPad = (m < 10 ? '0' : '') + m;
     var timeStr = hPad + ':' + mPad;
+    var sPad = (s < 10 ? '0' : '') + s;
     var dStr = (now.getDate() < 10 ? '0' : '') + now.getDate() + '/' + ((now.getMonth()+1) < 10 ? '0' : '') + (now.getMonth()+1);
     var dDay = (now.getDate() < 10 ? '0' : '') + now.getDate();
 
@@ -3655,55 +3525,83 @@ function renderMatrixFrame(){
         fillSolidBlend(2, 31, barW, 1, inkCyan);
       }
 
-      // ── DISEÑOS DE RELOJ HORIZONTAL (0, 2..6, 10) ──
-      curCardBounds = clkCardBounds;
+      // ── 10 DISEÑOS DE RELOJ HORIZONTAL (0, 2..10) ──
       if(lay === 2){
-        fillGlassPill(3, 2, 58, 27, 5, clkPillTint, 0.46);
-        drawGFXCentered(wday + ' ' + dStr, 32, 9, GFX_FONTS.micro, false, inkSub);
-        drawGFXCentered(timeStr, 32, 24, GFX_FONTS.bento, isFrost, inkMain);
-        var gFill = Math.min(44, 1 + Math.floor((s * 43) / 59));
-        for(var gx=0;gx<44;gx++){
-          if(gx < gFill){
-            var gCol;
-            if(gx < 22){
-              var gu = gx / 22;
-              gCol = [Math.round(66 + (155-66)*gu), Math.round(133 + (114-133)*gu), Math.round(244 + (203-244)*gu)];
-            } else {
-              var gu2 = (gx - 22) / 21;
-              gCol = [Math.round(155 + (217-155)*gu2), Math.round(114 + (101-114)*gu2), Math.round(203 + (112-203)*gu2)];
-            }
-            blendPx(10 + gx, 27, gCol, uiAlpha);
-          } else {
-            blendPx(10 + gx, 27, [25, 30, 45], uiAlpha);
-          }
-        }
+        fillGlassPill(2, 1, 60, 27, 5, clkPillTint, 0.42);
+        drawSparkle(7, 5);
+        drawGFXText('AI', 12, 8, GFX_FONTS.micro, false, [195,165,255]);
+        drawGFXText(dStr, 41, 8, GFX_FONTS.micro, false, inkSub);
+        drawGFXText(timeStr, 6, 24, GFX_FONTS.bento, isFrost, inkMain);
+        fillGlassPill(48, 12, 12, 10, 3, clkPillTint, 0.50);
+        drawGFXText(sPad, 51, 19, GFX_FONTS.micro, false, [140,210,255]);
+        for(var gx=4;gx<60;gx++) blendPx(gx, 29, gx<24?[66,133,244]:(gx<44?[155,114,203]:[217,101,112]), uiAlpha);
       } else if(lay === 3){
-        fillGlassPill(3, 2, 58, 27, 5, clkPillTint, 0.46);
-        drawGFXCentered(dStr, 32, 9, GFX_FONTS.micro, false, inkSub);
+        fillGlassPill(2, 1, 17, 7, 2, clkPillTint, 0.36);
+        fillGlassPill(21, 1, 22, 7, 2, clkPillTint, 0.30);
+        fillGlassPill(45, 1, 17, 7, 2, clkPillTint, 0.36);
+        drawGFXText(wday, 5, 7, GFX_FONTS.micro, false, inkCyan);
+        drawGFXText(dStr, 23, 7, GFX_FONTS.micro, false, inkMain);
+        drawGFXText(':'+sPad, 48, 7, GFX_FONTS.micro, false, inkCyan);
+        fillGlassPill(4, 10, 56, 18, 4, clkPillTint, 0.28);
         drawGFXCentered(timeStr, 32, 25, GFX_FONTS.bento, isFrost, inkMain);
         drawBottomSecBarJS();
       } else if(lay === 4){
-        fillGlassPill(7, 3, 50, 25, 6, clkPillTint, 0.48);
-        drawGFXCentered(dStr, 32, 10, GFX_FONTS.micro, false, inkSub);
-        drawGFXCentered(timeStr, 32, 25, GFX_FONTS.bento, isFrost, inkMain);
+        for(var gx2=3;gx2<61;gx2+=3){ blendPx(gx2, 1, inkSub, uiAlpha); blendPx(gx2, 29, inkSub, uiAlpha); }
+        blendPx(5, 5, [255,45,55], uiAlpha); blendPx(6, 5, [255,45,55], uiAlpha);
+        drawGFXText(wday+' '+dStr, 10, 8, GFX_FONTS.micro, false, inkSub);
+        drawGFXText(timeStr, 5, 24, GFX_FONTS.dot, isFrost, inkMain);
+        fillGlassPill(47, 12, 14, 12, 1, clkPillTint, 0.40);
+        strokeRect(47, 12, 14, 12, [255,45,55]);
+        drawGFXText(sPad, 51, 20, GFX_FONTS.micro, false, inkMain);
         drawBottomSecBarJS();
       } else if(lay === 5){
-        fillGlassPill(3, 2, 58, 27, 5, clkPillTint, 0.44);
-        drawGFXCentered(timeStr, 23, 23, GFX_FONTS.swiss, isFrost, inkMain);
-        fillGlassPill(44, 5, 15, 21, 4, clkPillTint, 0.52);
-        drawGFXCentered(wday, 51, 13, GFX_FONTS.micro, false, inkSub);
-        drawGFXCentered(dDay, 51, 22, GFX_FONTS.micro, false, inkMain);
+        for(var tx=3;tx<61;tx+=2) blendPx(tx, 1, (tx%10===3)?inkMain:inkSub, uiAlpha);
+        drawGFXText(dStr, 6, 8, GFX_FONTS.micro, false, inkSub);
+        drawGFXText(timeStr, 5, 25, GFX_FONTS.swiss, isFrost, inkMain);
+        fillGlassPill(45, 8, 17, 17, 8, clkPillTint, 0.42);
+        for(var a=0;a<12;a++){ var rA=a*Math.PI/6; blendPx(Math.round(53+Math.cos(rA)*7), Math.round(16+Math.sin(rA)*7), inkSub, uiAlpha); }
+        var sA = (s - 15) * Math.PI / 30;
+        drawLinePx(53, 16, Math.round(53+Math.cos(sA)*6), Math.round(16+Math.sin(sA)*6), [255,60,60]);
         drawBottomSecBarJS();
       } else if(lay === 6){
-        fillGlassPill(2, 2, 60, 27, 5, clkPillTint, 0.48);
-        drawGFXCentered(wday + ' ' + dStr, 32, 8, GFX_FONTS.micro, false, inkSub);
-        drawGFXCentered(timeStr, 32, 25, GFX_FONTS.impact, isFrost, inkMain);
+        for(var k=0;k<5;k++){ blendPx(2+k,1,inkCyan,uiAlpha); blendPx(2,1+k,inkCyan,uiAlpha); blendPx(61-k,1,inkCyan,uiAlpha); blendPx(61,1+k,inkCyan,uiAlpha); }
+        drawGFXText(dStr, 5, 8, GFX_FONTS.micro, false, inkCyan);
+        drawGFXText('S:'+sPad, 44, 8, GFX_FONTS.micro, false, inkMain);
+        drawGFXText(timeStr, 5, 25, GFX_FONTS.cyber, isFrost, inkMain);
+        for(var bi=0;bi<4;bi++){ var bh=3+((s+bi*3)%9); fillSolidBlend(48+bi*3, 24-bh, 2, bh, (bi&1)?inkCyan:inkMain); }
         drawBottomSecBarJS();
+      } else if(lay === 7){
+        drawGFXText(wday+' '+dStr, 15, 7, GFX_FONTS.micro, false, inkSub);
+        fillGlassPill(3, 9, 21, 19, 3, clkPillTint, 0.50);
+        fillGlassPill(26, 9, 21, 19, 3, clkPillTint, 0.50);
+        fillGlassPill(49, 12, 12, 16, 2, clkPillTint, 0.50);
+        drawGFXCentered(hPad, 13, 25, GFX_FONTS.bento, isFrost, inkMain);
+        drawGFXCentered(mPad, 36, 25, GFX_FONTS.bento, isFrost, inkMain);
+        drawGFXText(sPad, 52, 23, GFX_FONTS.micro, false, inkCyan);
+        for(var fx=3;fx<61;fx++) blendPx(fx, 18, [0,0,0], uiAlpha);
+        drawBottomSecBarJS();
+      } else if(lay === 8){
+        fillGlassPill(2, 3, 18, 25, 3, clkPillTint, 0.38);
+        drawGFXText(wday, 5, 10, GFX_FONTS.micro, false, inkCyan);
+        drawGFXText(dDay, 7, 17, GFX_FONTS.micro, false, inkMain);
+        drawGFXText(':'+sPad, 5, 25, GFX_FONTS.micro, false, inkSub);
+        drawGFXText(timeStr, 23, 21, GFX_FONTS.bento, isFrost, inkMain);
+        drawBottomSecBarJS();
+      } else if(lay === 9){
+        drawGFXCentered(timeStr, 32, 16, GFX_FONTS.bento, isFrost, inkMain);
+        for(var zx=6;zx<58;zx++) blendPx(zx, 20, inkSub, uiAlpha);
+        var orbX = 6 + Math.floor((s * 51) / 59);
+        blendPx(orbX, 20, inkCyan, uiAlpha);
+        blendPx(orbX - 1, 20, inkCyan, uiAlpha);
+        drawGFXText(wday, 10, 28, GFX_FONTS.micro, false, inkSub);
+        drawGFXText(dStr, 36, 28, GFX_FONTS.micro, false, inkSub);
       } else if(lay === 10){
-        fillGlassPill(12, 2, 40, 7, 3, clkPillTint, 0.44);
-        drawGFXCentered(wday + ' ' + dStr, 32, 8, GFX_FONTS.micro, false, inkSub);
-        fillGlassPill(5, 11, 54, 18, 6, clkPillTint, 0.42);
-        drawGFXCentered(timeStr, 32, 26, GFX_FONTS.bento, isFrost, inkMain);
+        fillGlassPill(8, 1, 48, 7, 3, clkPillTint, 0.38);
+        drawGFXText(wday+' '+dStr, 14, 7, GFX_FONTS.micro, false, inkMain);
+        fillGlassPill(3, 10, 58, 18, 6, clkPillTint, 0.34);
+        drawGFXText(timeStr, 6, 25, GFX_FONTS.bento, isFrost, inkMain);
+        fillGlassPill(47, 13, 12, 12, 4, clkPillTint, 0.45);
+        drawGFXText(sPad, 50, 22, GFX_FONTS.micro, false, inkCyan);
         drawBottomSecBarJS();
       } else {
         drawGFXText(dStr, 23, 7, GFX_FONTS.micro, isFrost, inkMain);
@@ -3714,71 +3612,117 @@ function renderMatrixFrame(){
         drawBottomSecBarJS();
       }
 
-      // ── DISEÑOS DE CLIMA HORIZONTAL (0, 2..6, 10) ──
-      curCardBounds = wxCardBounds;
+      // ── 10 DISEÑOS DE CLIMA HORIZONTAL (0, 2..10) ──
       var wx = 1, wy = isFull ? 33 : 32;
       var hrs = ['03','06','09'], tps = ['25','22','19'];
       if(lay === 2){
-        fillGlassPill(wx+2, wy+2, 22, 27, 5, wxPillTint, 0.46);
-        drawMainIcon11x9(wx+7, wy+4);
-        drawGFXCentered('24C', wx+13, wy+24, GFX_FONTS.micro, false, [255,255,255]);
-        fillGlassPill(wx+26, wy+2, 34, 27, 5, wxPillTint, 0.40);
-        var gCols = [wx+32, wx+43, wx+54];
+        fillGlassPill(wx+1, wy+2, 23, 27, 5, wxPillTint, 0.44);
+        drawSparkle(wx+6, wy+7);
+        drawIcon7x7(wx+13, wy+4, 0);
+        drawGFXCentered('24C', wx+12, wy+23, GFX_FONTS.micro, false, [255,255,255]);
         for(var gi=0;gi<3;gi++){
-          drawGFXCentered(hrs[gi], gCols[gi], wy+9, GFX_FONTS.micro, false, [185,195,220]);
-          drawMiniIcon5x5(gCols[gi]-2, wy+12, gi===2?1:0);
-          drawGFXCentered(tps[gi], gCols[gi], wy+24, GFX_FONTS.micro, false, [255,255,255]);
+          var ry = wy + 2 + gi*9;
+          fillGlassPill(wx+26, ry, 35, 8, 3, wxPillTint, 0.38);
+          blendPx(wx+28, ry+4, gi===0?[66,133,244]:(gi===1?[155,114,203]:[217,101,112]), uiAlpha);
+          drawGFXText(hrs[gi]+'H', wx+31, ry+6, GFX_FONTS.micro, false, [185,195,220]);
+          drawMiniIcon5x5(wx+44, ry+1, gi===2?1:0);
+          drawGFXText(tps[gi], wx+52, ry+6, GFX_FONTS.micro, false, [255,255,255]);
         }
       } else if(lay === 3){
-        fillGlassPill(wx+1, wy+2, 21, 27, 4, wxPillTint, 0.46);
-        drawMainIcon11x9(wx+6, wy+4);
-        drawGFXCentered('24C', wx+11, wy+23, GFX_FONTS.micro, false, [255,255,255]);
+        fillGlassPill(wx+1, wy+2, 22, 27, 4, wxPillTint, 0.40);
+        fillGlassPill(wx+25, wy+2, 36, 27, 4, wxPillTint, 0.32);
+        drawMainIcon11x9(wx+7, wy+4);
+        drawGFXCentered('24C', wx+12, wy+23, GFX_FONTS.micro, false, [255,255,255]);
+        var bw = [13, 8, 4];
         for(var bi2=0;bi2<3;bi2++){
-          var btx = wx + 24 + bi2*13;
-          fillGlassPill(btx, wy+2, 12, 27, 3, wxPillTint, 0.40);
-          drawGFXCentered(hrs[bi2], btx+6, wy+8, GFX_FONTS.micro, false, [185,195,220]);
-          drawIcon7x7(btx+2, wy+10, bi2===2?1:0);
-          drawGFXCentered(tps[bi2], btx+6, wy+24, GFX_FONTS.micro, false, [255,255,255]);
+          var by3 = wy + 4 + bi2*8;
+          drawGFXText(hrs[bi2], wx+27, by3+5, GFX_FONTS.micro, false, [185,195,220]);
+          fillGlassPill(wx+36, by3+1, 13, 3, 1, [0,0,0], 0.48);
+          fillSolidBlend(wx+36, by3+1, bw[bi2], 3, [90,235,255]);
+          drawGFXText(tps[bi2], wx+51, by3+5, GFX_FONTS.micro, false, [255,255,255]);
         }
       } else if(lay === 4){
-        fillGlassPill(wx+5, wy+3, 52, 25, 6, wxPillTint, 0.46);
-        drawIcon7x7(wx+11, wy+6, 0);
-        drawGFXCentered('24C', wx+15, wy+22, GFX_FONTS.micro, false, [255,255,255]);
-        fillSolidBlend(wx+25, wy+7, 1, 17, sepLine);
-        for(var ai=0;ai<3;ai++){
-          var ary = wy + 9 + ai*7;
-          drawGFXText(hrs[ai]+'H', wx+29, ary, GFX_FONTS.micro, false, [185,195,220]);
-          drawGFXText(tps[ai]+'C', wx+44, ary, GFX_FONTS.micro, false, [255,255,255]);
-        }
-      } else if(lay === 5){
-        fillGlassPill(wx+2, wy+2, 58, 27, 5, wxPillTint, 0.42);
-        drawIcon7x7(wx+18, wy+4, 0);
-        drawGFXText('24C', wx+28, wy+10, GFX_FONTS.micro, false, [255,255,255]);
-        fillSolidBlend(wx+8, wy+13, 46, 1, sepLine);
-        var nCols = [wx+13, wx+31, wx+49];
+        fillGlassPill(wx+1, wy+2, 35, 27, 3, wxPillTint, 0.34);
         for(var ni=0;ni<3;ni++){
-          drawGFXCentered(hrs[ni]+'H', nCols[ni], wy+20, GFX_FONTS.micro, false, [185,195,220]);
-          drawGFXCentered(tps[ni], nCols[ni], wy+26, GFX_FONTS.micro, false, [255,255,255]);
+          var ny = wy + 8 + ni*9;
+          drawGFXText(hrs[ni], wx+3, ny, GFX_FONTS.micro, false, [185,195,220]);
+          for(var dx2=wx+12;dx2<=wx+22;dx2+=2) blendPx(dx2, ny-2, [140,150,180], uiAlpha);
+          drawGFXText(tps[ni]+'C', wx+24, ny, GFX_FONTS.micro, false, [255,255,255]);
+        }
+        fillGlassPill(wx+38, wy+2, 23, 27, 2, wxPillTint, 0.42);
+        strokeRect(wx+38, wy+2, 23, 27, [140,150,180]);
+        fillSolidBlend(wx+41, wy+5, 2, 2, [255,45,55]);
+        drawIcon7x7(wx+49, wy+4, 0);
+        drawGFXCentered('24C', wx+49, wy+23, GFX_FONTS.micro, false, [255,255,255]);
+      } else if(lay === 5){
+        fillGlassPill(wx+1, wy+2, 20, 27, 4, wxPillTint, 0.36);
+        drawMainIcon11x9(wx+6, wy+4);
+        drawGFXCentered('24C', wx+11, wy+23, GFX_FONTS.micro, false, [255,255,255]);
+        for(var vy2=wy+3;vy2<wy+28;vy2++) blendPx(wx+22, vy2, [140,150,180], uiAlpha);
+        fillGlassPill(wx+24, wy+2, 37, 27, 4, wxPillTint, 0.32);
+        var sxP = [wx+29, wx+42, wx+55], syP = [wy+12, wy+15, wy+18];
+        drawLinePx(sxP[0], syP[0], sxP[1], syP[1], [90,235,255]);
+        drawLinePx(sxP[1], syP[1], sxP[2], syP[2], [90,235,255]);
+        for(var si2=0;si2<3;si2++){
+          drawGFXCentered(hrs[si2], sxP[si2], wy+8, GFX_FONTS.micro, false, [185,195,220]);
+          blendPx(sxP[si2], syP[si2], [255,255,255], uiAlpha);
+          drawGFXCentered(tps[si2], sxP[si2], wy+27, GFX_FONTS.micro, false, [255,255,255]);
         }
       } else if(lay === 6){
-        fillGlassPill(wx+2, wy+2, 23, 27, 5, wxPillTint, 0.46);
-        drawMainIcon11x9(wx+8, wy+4);
-        drawGFXCentered('24C', wx+13, wy+23, GFX_FONTS.micro, false, [255,255,255]);
-        fillGlassPill(wx+27, wy+2, 33, 27, 5, wxPillTint, 0.42);
-        for(var mi=0;mi<3;mi++){
-          var mry = wy + 9 + mi*8;
-          drawGFXText(hrs[mi]+'H', wx+31, mry, GFX_FONTS.micro, false, [185,195,220]);
-          drawGFXText(tps[mi]+'C', wx+46, mry, GFX_FONTS.micro, false, [255,255,255]);
+        fillGlassPill(wx+1, wy+1, 60, 10, 0, wxPillTint, 0.42);
+        strokeRect(wx+1, wy+1, 60, 10, [80,220,255]);
+        drawMiniIcon5x5(wx+5, wy+3, 0);
+        drawGFXText('NOW 24C', wx+13, wy+8, GFX_FONTS.micro, false, [255,255,255]);
+        for(var ci3=0;ci3<3;ci3++){
+          var cx3 = wx + 1 + ci3*20;
+          fillGlassPill(cx3, wy+13, 19, 17, 0, wxPillTint, 0.38);
+          strokeRect(cx3, wy+13, 19, 17, [60,155,210]);
+          drawGFXText(hrs[ci3]+'H', cx3+4, wy+19, GFX_FONTS.micro, false, [90,235,255]);
+          drawGFXText(tps[ci3]+'C', cx3+4, wy+27, GFX_FONTS.micro, false, [255,255,255]);
+        }
+      } else if(lay === 7){
+        fillGlassPill(wx+1, wy+2, 22, 27, 3, wxPillTint, 0.48);
+        drawMainIcon11x9(wx+7, wy+3);
+        for(var fx4=wx+1;fx4<wx+23;fx4++) blendPx(fx4, wy+14, [0,0,0], uiAlpha);
+        drawGFXCentered('24C', wx+12, wy+23, GFX_FONTS.micro, false, [255,255,255]);
+        for(var fi3=0;fi3<3;fi3++){
+          var tx2 = wx + 25 + fi3*12;
+          fillGlassPill(tx2, wy+2, 11, 27, 2, wxPillTint, 0.46);
+          drawGFXCentered(hrs[fi3], tx2+5, wy+9, GFX_FONTS.micro, false, [185,195,220]);
+          for(var lx2=tx2;lx2<tx2+11;lx2++) blendPx(lx2, wy+13, [0,0,0], uiAlpha);
+          drawGFXCentered(tps[fi3], tx2+5, wy+23, GFX_FONTS.micro, false, [255,255,255]);
+        }
+      } else if(lay === 8){
+        fillGlassPill(wx+1, wy+2, 36, 27, 4, wxPillTint, 0.34);
+        for(var ei=0;ei<3;ei++){
+          var ex = wx + 7 + ei*12;
+          drawGFXCentered(hrs[ei], ex, wy+8, GFX_FONTS.micro, false, [185,195,220]);
+          drawIcon7x7(ex-3, wy+10, ei===2?1:0);
+          drawGFXCentered(tps[ei], ex, wy+25, GFX_FONTS.micro, false, [255,255,255]);
+        }
+        fillGlassPill(wx+39, wy+2, 22, 27, 4, wxPillTint, 0.42);
+        drawMainIcon11x9(wx+45, wy+4);
+        drawGFXCentered('24C', wx+50, wy+23, GFX_FONTS.micro, false, [255,255,255]);
+      } else if(lay === 9){
+        fillGlassPill(wx+12, wy+1, 38, 10, 4, wxPillTint, 0.36);
+        drawIcon7x7(wx+17, wy+2, 0);
+        drawGFXText('24C', wx+27, wy+8, GFX_FONTS.micro, false, [255,255,255]);
+        for(var zx2=wx+5;zx2<wx+57;zx2++) blendPx(zx2, wy+12, [140,150,180], uiAlpha);
+        for(var zi=0;zi<3;zi++){
+          var zpx = wx + 3 + zi*19;
+          blendPx(zpx+8, wy+12, [90,235,255], uiAlpha);
+          drawGFXText(hrs[zi]+'H', zpx+3, wy+19, GFX_FONTS.micro, false, [185,195,220]);
+          drawGFXText(tps[zi]+'C', zpx+3, wy+26, GFX_FONTS.micro, false, [255,255,255]);
         }
       } else if(lay === 10){
-        fillGlassPill(wx+4, wy+2, 54, 11, 5, wxPillTint, 0.44);
-        drawIcon7x7(wx+18, wy+4, 0);
-        drawGFXText('24C', wx+28, wy+10, GFX_FONTS.micro, false, [255,255,255]);
-        fillGlassPill(wx+3, wy+15, 56, 14, 5, wxPillTint, 0.38);
-        var pCols = [wx+13, wx+31, wx+49];
+        fillGlassPill(wx+2, wy+2, 58, 11, 5, wxPillTint, 0.40);
+        drawMiniIcon5x5(wx+7, wy+5, 0);
+        drawGFXText('HOY 24C', wx+17, wy+9, GFX_FONTS.micro, false, [255,255,255]);
+        fillGlassPill(wx+2, wy+15, 58, 14, 5, wxPillTint, 0.34);
         for(var pi=0;pi<3;pi++){
-          drawGFXCentered(hrs[pi]+'H', pCols[pi], wy+21, GFX_FONTS.micro, false, [185,195,220]);
-          drawGFXCentered(tps[pi]+'C', pCols[pi], wy+27, GFX_FONTS.micro, false, [255,255,255]);
+          var px2 = wx + 5 + pi*18;
+          drawIcon7x7(px2, wy+18, pi===2?1:0);
+          drawGFXText(tps[pi], px2+8, wy+24, GFX_FONTS.micro, false, [255,255,255]);
         }
       } else {
         drawIcon7x7(wx+8, wy+4, 0);
@@ -3797,55 +3741,88 @@ function renderMatrixFrame(){
         fillSolidBlend(31, 1, 1, barH, inkCyan);
       }
 
-      // ── DISEÑOS DE RELOJ VERTICAL (1, 11..14, 19) ──
-      curCardBounds = clkCardBounds;
+      // ── 10 DISEÑOS DE RELOJ VERTICAL (1, 11..19) ──
       if(lay === 11){
-        fillGlassPill(2, 2, 27, 60, 5, clkPillTint, 0.46);
-        drawGFXCentered(wday, 15, 10, GFX_FONTS.micro, false, inkSub);
-        drawGFXCentered(hPad, 15, 26, GFX_FONTS.bento, isFrost, inkMain);
-        for(var gx3=0;gx3<19;gx3++){
-          var gvCol;
-          if(gx3 < 9){
-            var gvu = gx3 / 9;
-            gvCol = [Math.round(66 + (155-66)*gvu), Math.round(133 + (114-133)*gvu), Math.round(244 + (203-244)*gvu)];
-          } else {
-            var gvu2 = (gx3 - 9) / 9;
-            gvCol = [Math.round(155 + (217-155)*gvu2), Math.round(114 + (101-114)*gvu2), Math.round(203 + (112-203)*gvu2)];
-          }
-          blendPx(6 + gx3, 31, gvCol, uiAlpha);
-        }
+        fillGlassPill(2, 2, 27, 60, 5, clkPillTint, 0.42);
+        drawSparkle(7, 7);
+        drawGFXText(dStr, 10, 10, GFX_FONTS.micro, false, [195,165,255]);
+        drawGFXCentered(hPad, 15, 27, GFX_FONTS.bento, isFrost, inkMain);
+        for(var gx3=5;gx3<=25;gx3++) blendPx(gx3, 31, gx3<12?[66,133,244]:(gx3<19?[155,114,203]:[217,101,112]), uiAlpha);
         drawGFXCentered(mPad, 15, 47, GFX_FONTS.bento, isFrost, inkMain);
-        drawGFXCentered(dStr, 15, 57, GFX_FONTS.micro, false, inkSub);
+        fillGlassPill(6, 51, 19, 8, 3, clkPillTint, 0.50);
+        drawGFXText(':'+sPad, 10, 58, GFX_FONTS.micro, false, [140,210,255]);
         drawVertSecBarJS();
       } else if(lay === 12){
-        fillGlassPill(3, 2, 25, 10, 3, clkPillTint, 0.44);
-        fillGlassPill(3, 14, 25, 22, 4, clkPillTint, 0.40);
-        fillGlassPill(3, 38, 25, 22, 4, clkPillTint, 0.40);
-        drawGFXCentered(dStr, 15, 9, GFX_FONTS.micro, false, inkMain);
+        fillGlassPill(3, 2, 25, 10, 3, clkPillTint, 0.35);
+        fillGlassPill(3, 14, 25, 22, 4, clkPillTint, 0.30);
+        fillGlassPill(3, 38, 25, 22, 4, clkPillTint, 0.30);
+        drawGFXText(dStr, 6, 10, GFX_FONTS.micro, false, inkMain);
         drawGFXCentered(hPad, 15, 31, GFX_FONTS.bento, isFrost, inkMain);
         drawGFXCentered(mPad, 15, 55, GFX_FONTS.bento, isFrost, inkMain);
         drawVertSecBarJS();
       } else if(lay === 13){
-        fillGlassPill(3, 2, 25, 28, 5, clkPillTint, 0.44);
-        drawGFXCentered(wday, 15, 10, GFX_FONTS.micro, false, inkSub);
-        drawGFXCentered(hPad, 15, 26, GFX_FONTS.bento, isFrost, inkMain);
-        fillGlassPill(3, 32, 25, 28, 5, clkPillTint, 0.44);
-        drawGFXCentered(mPad, 15, 48, GFX_FONTS.bento, isFrost, inkMain);
-        drawGFXCentered(dStr, 15, 57, GFX_FONTS.micro, false, inkSub);
+        for(var gy=3;gy<61;gy+=4){ blendPx(2, gy, inkSub, uiAlpha); blendPx(28, gy, inkSub, uiAlpha); }
+        drawGFXText(dStr, 6, 9, GFX_FONTS.micro, false, inkSub);
+        drawGFXCentered(hPad, 15, 26, GFX_FONTS.dot, isFrost, inkMain);
+        blendPx(14, 30, [255,45,55], uiAlpha); blendPx(16, 30, [255,45,55], uiAlpha);
+        drawGFXCentered(mPad, 15, 46, GFX_FONTS.dot, isFrost, inkMain);
+        fillGlassPill(7, 50, 17, 9, 1, clkPillTint, 0.40);
+        strokeRect(7, 50, 17, 9, [255,45,55]);
+        drawGFXText(sPad, 12, 57, GFX_FONTS.micro, false, inkMain);
         drawVertSecBarJS();
       } else if(lay === 14){
-        fillGlassPill(3, 2, 25, 60, 6, clkPillTint, 0.46);
-        drawGFXCentered(hPad, 15, 24, GFX_FONTS.swiss, isFrost, inkMain);
-        fillSolidBlend(13, 28, 5, 1, inkSub);
-        drawGFXCentered(mPad, 15, 46, GFX_FONTS.swiss, isFrost, inkMain);
-        drawGFXCentered(dStr, 15, 57, GFX_FONTS.micro, false, inkSub);
+        for(var sy0=3;sy0<61;sy0+=2) blendPx(2, sy0, (sy0%10===3)?inkMain:inkSub, uiAlpha);
+        drawGFXText(dStr, 7, 9, GFX_FONTS.micro, false, inkSub);
+        drawGFXCentered(hPad, 16, 28, GFX_FONTS.swiss, isFrost, inkMain);
+        fillSolidBlend(7, 31, 19, 1, inkCyan);
+        drawGFXCentered(mPad, 16, 49, GFX_FONTS.swiss, isFrost, inkMain);
+        drawGFXText(':'+sPad, 11, 57, GFX_FONTS.micro, false, inkCyan);
+        drawVertSecBarJS();
+      } else if(lay === 15){
+        fillGlassPill(2, 2, 27, 60, 0, clkPillTint, 0.36);
+        strokeRect(2, 2, 27, 60, inkCyan);
+        drawGFXText(dStr, 6, 10, GFX_FONTS.micro, false, inkCyan);
+        drawGFXCentered(hPad, 15, 28, GFX_FONTS.cyber, isFrost, inkMain);
+        drawGFXCentered(mPad, 15, 47, GFX_FONTS.cyber, isFrost, inkMain);
+        drawGFXText('S:'+sPad, 8, 57, GFX_FONTS.micro, false, inkMain);
+        drawVertSecBarJS();
+      } else if(lay === 16){
+        drawGFXText(dStr, 6, 9, GFX_FONTS.micro, false, inkSub);
+        fillGlassPill(3, 12, 25, 21, 3, clkPillTint, 0.48);
+        fillGlassPill(3, 36, 25, 21, 3, clkPillTint, 0.48);
+        drawGFXCentered(hPad, 15, 28, GFX_FONTS.bento, isFrost, inkMain);
+        drawGFXCentered(mPad, 15, 52, GFX_FONTS.bento, isFrost, inkMain);
+        for(var fx3=3;fx3<28;fx3++){ blendPx(fx3, 22, [0,0,0], uiAlpha); blendPx(fx3, 46, [0,0,0], uiAlpha); }
+        drawVertSecBarJS();
+      } else if(lay === 17){
+        fillGlassPill(2, 2, 27, 9, 2, clkPillTint, 0.38);
+        drawGFXText(dStr, 6, 9, GFX_FONTS.micro, false, inkMain);
+        drawGFXCentered(hPad, 15, 27, GFX_FONTS.impact, isFrost, inkMain);
+        fillSolidBlend(4, 30, 23, 2, inkCyan);
+        drawGFXCentered(mPad, 15, 48, GFX_FONTS.impact, isFrost, inkMain);
+        drawGFXText(':'+sPad, 10, 57, GFX_FONTS.micro, false, inkMain);
+        drawVertSecBarJS();
+      } else if(lay === 18){
+        fillGlassPill(2, 2, 27, 60, 2, clkPillTint, 0.34);
+        strokeRect(2, 2, 27, 60, inkSub);
+        var perimPos = Math.floor((s * 164) / 60);
+        var cxP = 2, cyP = 15;
+        if(perimPos < 25){ cxP = 3 + perimPos; cyP = 2; }
+        else if(perimPos < 82){ cxP = 28; cyP = 3 + (perimPos - 25); }
+        else if(perimPos < 107){ cxP = 28 - (perimPos - 82); cyP = 61; }
+        else { cxP = 2; cyP = 61 - (perimPos - 107); }
+        fillSolidBlend(cxP, cyP, 2, 2, inkCyan);
+        drawGFXText(dStr, 6, 10, GFX_FONTS.micro, false, inkSub);
+        drawGFXCentered(hPad, 15, 28, GFX_FONTS.bento, isFrost, inkMain);
+        drawGFXCentered(mPad, 15, 48, GFX_FONTS.bento, isFrost, inkMain);
+        drawGFXText(sPad, 12, 58, GFX_FONTS.micro, false, inkCyan);
         drawVertSecBarJS();
       } else if(lay === 19){
-        fillGlassPill(3, 2, 25, 60, 5, clkPillTint, 0.42);
-        drawGFXCentered(wday, 15, 10, GFX_FONTS.micro, false, inkSub);
-        drawGFXCentered(hPad, 15, 26, GFX_FONTS.bento, isFrost, inkMain);
+        drawGFXText(wday, 10, 9, GFX_FONTS.micro, false, inkSub);
+        drawGFXCentered(hPad, 15, 25, GFX_FONTS.bento, isFrost, inkMain);
+        blendPx(15, 29, inkCyan, uiAlpha);
         drawGFXCentered(mPad, 15, 45, GFX_FONTS.bento, isFrost, inkMain);
-        drawGFXCentered(dStr, 15, 57, GFX_FONTS.micro, false, inkSub);
+        drawGFXText(dStr, 6, 58, GFX_FONTS.micro, false, inkSub);
         drawVertSecBarJS();
       } else {
         drawGFXText(dStr, 6, 8, GFX_FONTS.micro, isFrost, inkMain);
@@ -3854,64 +3831,117 @@ function renderMatrixFrame(){
         drawVertSecBarJS();
       }
 
-      // ── DISEÑOS DE CLIMA VERTICAL (1, 11..14, 19) ──
-      curCardBounds = wxCardBounds;
+      // ── 10 DISEÑOS DE CLIMA VERTICAL (1, 11..19) ──
       var vx = 33, vy = 1, vcX = 48;
       var hrsV = ['03','06','09'], tpsV = ['25','22','19'];
       if(lay === 11){
-        fillGlassPill(vx+1, vy+2, 28, 24, 5, wxPillTint, 0.46);
-        drawMainIcon11x9(vcX-5, vy+4);
-        drawGFXCentered('24C', vcX, vy+22, GFX_FONTS.micro, false, [255,255,255]);
-        fillGlassPill(vx+1, vy+28, 28, 32, 5, wxPillTint, 0.40);
+        fillGlassPill(vx+1, vy+1, 28, 25, 5, wxPillTint, 0.44);
+        drawSparkle(vx+6, vy+6);
+        drawMainIcon11x9(vx+13, vy+3);
+        drawGFXCentered('24C', vcX, vy+21, GFX_FONTS.micro, false, [255,255,255]);
         for(var gvi=0;gvi<3;gvi++){
-          var gry = vy + 36 + gvi*10;
-          drawGFXText(hrsV[gvi], vx+4, gry, GFX_FONTS.micro, false, [180,190,215]);
-          drawMiniIcon5x5(vx+13, gry-5, gvi===2?1:0);
-          drawGFXText(tpsV[gvi], vx+20, gry, GFX_FONTS.micro, false, [255,255,255]);
+          var gry = vy + 29 + gvi*11;
+          fillGlassPill(vx+1, gry, 28, 9, 3, wxPillTint, 0.38);
+          blendPx(vx+3, gry+4, gvi===0?[66,133,244]:(gvi===1?[155,114,203]:[217,101,112]), uiAlpha);
+          drawGFXText(hrsV[gvi], vx+6, gry+7, GFX_FONTS.micro, false, [180,190,215]);
+          drawMiniIcon5x5(vx+15, gry+2, gvi===2?1:0);
+          drawGFXText(tpsV[gvi], vx+21, gry+7, GFX_FONTS.micro, false, [255,255,255]);
         }
       } else if(lay === 12){
-        fillGlassPill(vx+1, vy+1, 28, 24, 4, wxPillTint, 0.44);
+        fillGlassPill(vx+1, vy+1, 28, 24, 4, wxPillTint, 0.40);
         drawMainIcon11x9(vx+10, vy+3);
         drawGFXCentered('24C', vcX, vy+20, GFX_FONTS.micro, false, [255,255,255]);
         for(var bvi=0;bvi<3;bvi++){
           var bry = vy + 27 + bvi*11;
-          fillGlassPill(vx+1, bry, 28, 9, 3, wxPillTint, 0.38);
+          fillGlassPill(vx+1, bry, 28, 9, 3, wxPillTint, 0.34);
           drawGFXText(hrsV[bvi], vx+3, bry+7, GFX_FONTS.micro, false, [180,190,215]);
           drawMiniIcon5x5(vx+12, bry+2, bvi===2?1:0);
           drawGFXText(tpsV[bvi], vx+20, bry+7, GFX_FONTS.micro, false, [255,255,255]);
         }
       } else if(lay === 13){
-        fillGlassPill(vx+1, vy+2, 28, 27, 5, wxPillTint, 0.44);
-        drawMainIcon11x9(vcX-5, vy+5);
-        drawGFXCentered('24C', vcX, vy+24, GFX_FONTS.micro, false, [255,255,255]);
-        fillGlassPill(vx+1, vy+32, 28, 27, 5, wxPillTint, 0.40);
-        var dCols = [vx+6, vx+15, vx+24];
-        for(var dvi=0;dvi<3;dvi++){
-          drawGFXCentered(hrsV[dvi], dCols[dvi], vy+40, GFX_FONTS.micro, false, [180,190,215]);
-          drawMiniIcon5x5(dCols[dvi]-2, vy+43, dvi===2?1:0);
-          drawGFXCentered(tpsV[dvi], dCols[dvi], vy+55, GFX_FONTS.micro, false, [255,255,255]);
+        fillGlassPill(vx+1, vy+1, 28, 24, 2, wxPillTint, 0.42);
+        strokeRect(vx+1, vy+1, 28, 24, [140,150,180]);
+        fillSolidBlend(vx+4, vy+4, 2, 2, [255,45,55]);
+        drawMainIcon11x9(vx+11, vy+3);
+        drawGFXCentered('24C', vcX, vy+20, GFX_FONTS.micro, false, [255,255,255]);
+        var nCols = [vx+6, vx+15, vx+24];
+        for(var nvi=0;nvi<3;nvi++){
+          drawGFXCentered(hrsV[nvi], nCols[nvi], vy+33, GFX_FONTS.micro, false, [180,190,215]);
+          for(var dty=vy+36;dty<=vy+48;dty+=2) blendPx(nCols[nvi], dty, dty>=vy+40?[255,45,55]:[140,150,180], uiAlpha);
+          drawGFXCentered(tpsV[nvi], nCols[nvi], vy+58, GFX_FONTS.micro, false, [255,255,255]);
         }
       } else if(lay === 14){
-        fillGlassPill(vx+2, vy+2, 26, 58, 6, wxPillTint, 0.44);
-        drawMainIcon11x9(vcX-5, vy+5);
-        drawGFXCentered('24C', vcX, vy+23, GFX_FONTS.micro, false, [255,255,255]);
-        fillSolidBlend(vx+6, vy+27, 18, 1, sepLine);
-        for(var kvi=0;kvi<3;kvi++){
-          var kry = vy + 36 + kvi*10;
-          drawGFXText(hrsV[kvi]+'H', vx+5, kry, GFX_FONTS.micro, false, [180,190,215]);
-          drawGFXText(tpsV[kvi], vx+19, kry, GFX_FONTS.micro, false, [255,255,255]);
+        fillGlassPill(vx+1, vy+1, 28, 23, 4, wxPillTint, 0.36);
+        drawMainIcon11x9(vx+10, vy+3);
+        drawGFXCentered('24C', vcX, vy+20, GFX_FONTS.micro, false, [255,255,255]);
+        fillSolidBlend(vx+2, vy+25, 26, 1, [140,150,180]);
+        var svx = [vx+5, vx+15, vx+25], svy = [vy+39, vy+42, vy+46];
+        drawLinePx(svx[0], svy[0], svx[1], svy[1], [90,235,255]);
+        drawLinePx(svx[1], svy[1], svx[2], svy[2], [90,235,255]);
+        for(var svi=0;svi<3;svi++){
+          drawGFXCentered(hrsV[svi], svx[svi], vy+34, GFX_FONTS.micro, false, [180,190,215]);
+          blendPx(svx[svi], svy[svi], [255,255,255], uiAlpha);
+          drawGFXCentered(tpsV[svi], svx[svi], vy+58, GFX_FONTS.micro, false, [255,255,255]);
+        }
+      } else if(lay === 15){
+        fillGlassPill(vx+1, vy+1, 28, 24, 0, wxPillTint, 0.42);
+        strokeRect(vx+1, vy+1, 28, 24, [80,220,255]);
+        drawMainIcon11x9(vx+10, vy+3);
+        drawGFXCentered('24C', vcX, vy+20, GFX_FONTS.micro, false, [255,255,255]);
+        fillGlassPill(vx+1, vy+27, 28, 33, 0, wxPillTint, 0.36);
+        strokeRect(vx+1, vy+27, 28, 33, [60,155,210]);
+        var cbw = [8, 6, 4];
+        for(var cvi=0;cvi<3;cvi++){
+          var cry = vy + 30 + cvi*10;
+          drawGFXText(hrsV[cvi], vx+3, cry+5, GFX_FONTS.micro, false, [90,235,255]);
+          fillSolidBlend(vx+12, cry+1, cbw[cvi], 3, [80,220,255]);
+          drawGFXText(tpsV[cvi], vx+21, cry+5, GFX_FONTS.micro, false, [255,255,255]);
+        }
+      } else if(lay === 16){
+        fillGlassPill(vx+1, vy+1, 28, 24, 3, wxPillTint, 0.48);
+        drawMainIcon11x9(vx+10, vy+3);
+        for(var fvx=vx+1;fvx<vx+29;fvx++) blendPx(fvx, vy+12, [0,0,0], uiAlpha);
+        drawGFXCentered('24C', vcX, vy+21, GFX_FONTS.micro, false, [255,255,255]);
+        for(var fvi=0;fvi<3;fvi++){
+          var fry = vy + 27 + fvi*11;
+          fillGlassPill(vx+1, fry, 13, 9, 2, wxPillTint, 0.46);
+          fillGlassPill(vx+16, fry, 13, 9, 2, wxPillTint, 0.46);
+          drawGFXText(hrsV[fvi]+'H', vx+2, fry+7, GFX_FONTS.micro, false, [180,190,215]);
+          drawGFXText(tpsV[fvi]+'C', vx+17, fry+7, GFX_FONTS.micro, false, [255,255,255]);
+        }
+      } else if(lay === 17){
+        fillGlassPill(vx+1, vy+1, 28, 8, 2, wxPillTint, 0.40);
+        drawGFXCentered('CLIMA', vcX, vy+7, GFX_FONTS.micro, false, [255,255,255]);
+        drawMainIcon11x9(vx+3, vy+11);
+        drawGFXText('24C', vx+15, vy+19, GFX_FONTS.micro, false, [255,255,255]);
+        fillSolidBlend(vx+2, vy+24, 26, 2, [255,255,255]);
+        for(var bbi=0;bbi<3;bbi++){
+          var bbry = vy + 29 + bbi*10;
+          drawGFXText(hrsV[bbi]+'H', vx+3, bbry+5, GFX_FONTS.micro, false, [180,190,215]);
+          drawGFXText(tpsV[bbi]+'C', vx+17, bbry+5, GFX_FONTS.micro, false, [255,255,255]);
+        }
+      } else if(lay === 18){
+        fillGlassPill(vx+1, vy+1, 28, 23, 4, wxPillTint, 0.38);
+        drawMainIcon11x9(vx+10, vy+3);
+        drawGFXCentered('24C', vcX, vy+20, GFX_FONTS.micro, false, [255,255,255]);
+        var gbh = [14, 9, 5];
+        var dCols = [vx+6, vx+15, vx+24];
+        for(var dvi=0;dvi<3;dvi++){
+          drawGFXCentered(hrsV[dvi], dCols[dvi], vy+32, GFX_FONTS.micro, false, [180,190,215]);
+          fillGlassPill(dCols[dvi]-2, vy+35, 4, 14, 1, [0,0,0], 0.48);
+          fillSolidBlend(dCols[dvi]-2, vy+49-gbh[dvi], 4, gbh[dvi], [90,235,255]);
+          drawGFXCentered(tpsV[dvi], dCols[dvi], vy+58, GFX_FONTS.micro, false, [255,255,255]);
         }
       } else if(lay === 19){
-        fillGlassPill(vx+1, vy+2, 28, 23, 5, wxPillTint, 0.44);
-        drawMainIcon11x9(vcX-5, vy+4);
-        drawGFXCentered('24C', vcX, vy+21, GFX_FONTS.micro, false, [255,255,255]);
-        fillGlassPill(vx+1, vy+27, 28, 33, 5, wxPillTint, 0.38);
+        fillGlassPill(vx+1, vy+1, 28, 23, 4, wxPillTint, 0.36);
+        drawMainIcon11x9(vx+10, vy+3);
+        drawGFXCentered('24C', vcX, vy+20, GFX_FONTS.micro, false, [255,255,255]);
+        fillSolidBlend(vx+15, vy+28, 1, 28, [140,150,180]);
         for(var zvi=0;zvi<3;zvi++){
-          var zvry = vy + 35 + zvi*10;
-          drawGFXText(hrsV[zvi], vx+3, zvry, GFX_FONTS.micro, false, [180,190,215]);
-          drawMiniIcon5x5(vx+12, zvry-5, zvi===2?1:0);
-          drawGFXText(tpsV[zvi], vx+20, zvry, GFX_FONTS.micro, false, [255,255,255]);
-          if(zvi < 2) fillSolidBlend(vx+5, zvry+2, 20, 1, sepLine);
+          var zvry = vy + 29 + zvi*10;
+          drawGFXText(hrsV[zvi]+'H', vx+2, zvry+5, GFX_FONTS.micro, false, [180,190,215]);
+          blendPx(vx+15, zvry+2, [90,235,255], uiAlpha);
+          drawGFXText(tpsV[zvi]+'C', vx+18, zvry+5, GFX_FONTS.micro, false, [255,255,255]);
         }
       } else {
         drawMainIcon11x9(vcX-5, vy+4);
@@ -4114,7 +4144,7 @@ function applyClockConfigData(ip, d, silent){
     if(d.clock_bg !== undefined) state.clockBg = Number(d.clock_bg);
     if(d.full_screen !== undefined) state.fullScreen = Number(d.full_screen);
     if(d.frost_clk !== undefined) state.frostClk = Number(d.frost_clk);
-    if(d.layout !== undefined) state.layout = normalizeLayoutJS(d.layout);
+    if(d.layout !== undefined) state.layout = Number(d.layout);
     if(d.anim_mode !== undefined) state.animMode = Number(d.anim_mode);
     if(d.boot_mode !== undefined) state.bootMode = Number(d.boot_mode);
     if(d.fw_ver){
