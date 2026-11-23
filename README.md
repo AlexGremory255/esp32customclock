@@ -9,7 +9,7 @@ Reloj inteligente y estación de clima para paneles LED RGB **64×64** con **ESP
 ![Panel](https://img.shields.io/badge/panel-64x64_HUB75-1e293b?style=flat-square)
 ![Fluidez](https://img.shields.io/badge/fluidez-120_FPS-0284c7?style=flat-square)
 [![Estudio Web](https://img.shields.io/badge/Estudio_Web-Simulador_en_vivo-2563eb?style=flat-square)](https://alexgremory255.github.io/esp32customclock/)
-[![Instalador USB](https://img.shields.io/badge/Instalar-Flashear_por_USB-059669?style=flat-square)](https://alexgremory255.github.io/esp32customclock/#flash)
+[![Instalador USB](https://img.shields.io/badge/Instalar-Flashear_por_USB-059669?style=flat-square)](https://alexgremory255.github.io/esp32customclock/?flash=1#flash)
 
 </div>
 
@@ -75,7 +75,7 @@ Usa el mapa de pines estándar de **Clockwise / WiseShield-32** definido en `src
 
 Para cargar el firmware completo en un ESP32 sin configurar directamente desde el navegador:
 
-1. Conecta tu ESP32 por USB y abre **[alexgremory255.github.io/esp32customclock/#flash](https://alexgremory255.github.io/esp32customclock/#flash)** en **Google Chrome** o **Microsoft Edge**.
+1. Conecta tu ESP32 por USB y abre **[alexgremory255.github.io/esp32customclock/?flash=1#flash](https://alexgremory255.github.io/esp32customclock/?flash=1#flash)** en **Google Chrome** o **Microsoft Edge**.
 2. Presiona **Flashear USB**, elige el puerto de tu placa y espera a que termine el proceso *(si tu placa no entra sola en modo descarga, mantén presionado el botón `BOOT` mientras inicia)*.
 3. Al encender por primera vez, el reloj abrirá la red Wi-Fi **`ESP32-Clock`**. Conéctate desde tu teléfono para guardar tu Wi-Fi, ciudad y zona horaria.
 4. Cuando se conecte a tu red, abre la IP mostrada en pantalla (o `http://esp32clock.local`) o entra al **Estudio Web** para elegir tu diseño, fondo, colores y brillo.
