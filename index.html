@@ -2128,7 +2128,7 @@ dialog {
               <div class="sys-row">
                 <div>
                   <div class="sys-title">Firmware</div>
-                  <div class="sys-meta num" id="sys_fw_meta">v1.0.22</div>
+                  <div class="sys-meta num" id="sys_fw_meta">v1.0.29</div>
                 </div>
                 <button type="button" class="btn-glass glass-btn-base glint-target" onclick="requestClockOta()">Actualizar</button>
               </div>
@@ -2269,7 +2269,7 @@ var state = {
   simMode: 'live',
   bootSimStart: 0,
   connectedIp: initialIp,
-  fwVer: '1.0.22',
+  fwVer: '1.0.29',
   latestCloudVer: '',
   activeTab: 'layouts'
 };
@@ -3519,10 +3519,27 @@ function renderMatrixFrame(){
     var dStr = (now.getDate() < 10 ? '0' : '') + now.getDate() + '/' + ((now.getMonth()+1) < 10 ? '0' : '') + (now.getMonth()+1);
     var dDay = (now.getDate() < 10 ? '0' : '') + now.getDate();
 
+    function evalGeminiFlowColorJS(idx, len){
+      var stops = [[66,133,244], [155,114,203], [217,101,112]];
+      var tPhase = ((performance.now() * 768 / 4800) | 0) % 768;
+      var xPhase = ((idx * 768) / len) | 0;
+      var pos = (xPhase - tPhase + 768) % 768;
+      var seg = pos >> 8;
+      var nextSeg = (seg === 2) ? 0 : (seg + 1);
+      var u = pos & 255;
+      var sm = (u * u * (768 - (u << 1))) >> 16;
+      var invSm = 256 - sm;
+      return [
+        (stops[seg][0] * invSm + stops[nextSeg][0] * sm) >> 8,
+        (stops[seg][1] * invSm + stops[nextSeg][1] * sm) >> 8,
+        (stops[seg][2] * invSm + stops[nextSeg][2] * sm) >> 8
+      ];
+    }
+
     if(!isVert){
       var barW = (s === 0) ? 1 : s;
       function drawBottomSecBarJS(){
-        fillSolidBlend(2, 31, barW, 1, inkCyan);
+        fillSolidBlend(2, 31, barW, 1, [255,255,255]);
       }
 
       // ── 10 DISEÑOS DE RELOJ HORIZONTAL (0, 2..10) ──
@@ -3533,15 +3550,15 @@ function renderMatrixFrame(){
         drawGFXText(dStr, 41, 8, GFX_FONTS.micro, false, inkSub);
         drawGFXText(timeStr, 6, 24, GFX_FONTS.bento, isFrost, inkMain);
         fillGlassPill(48, 12, 12, 10, 3, clkPillTint, 0.50);
-        drawGFXText(sPad, 51, 19, GFX_FONTS.micro, false, [140,210,255]);
-        for(var gx=4;gx<60;gx++) blendPx(gx, 29, gx<24?[66,133,244]:(gx<44?[155,114,203]:[217,101,112]), uiAlpha);
+        drawGFXText(sPad, 51, 19, GFX_FONTS.micro, false, inkMain);
+        for(var gx=4;gx<60;gx++) blendPx(gx, 29, evalGeminiFlowColorJS(gx - 4, 56), uiAlpha);
       } else if(lay === 3){
         fillGlassPill(2, 1, 17, 7, 2, clkPillTint, 0.36);
         fillGlassPill(21, 1, 22, 7, 2, clkPillTint, 0.30);
         fillGlassPill(45, 1, 17, 7, 2, clkPillTint, 0.36);
         drawGFXText(wday, 5, 7, GFX_FONTS.micro, false, inkCyan);
         drawGFXText(dStr, 23, 7, GFX_FONTS.micro, false, inkMain);
-        drawGFXText(':'+sPad, 48, 7, GFX_FONTS.micro, false, inkCyan);
+        drawGFXText(':'+sPad, 48, 7, GFX_FONTS.micro, false, inkMain);
         fillGlassPill(4, 10, 56, 18, 4, clkPillTint, 0.28);
         drawGFXCentered(timeStr, 32, 25, GFX_FONTS.bento, isFrost, inkMain);
         drawBottomSecBarJS();
@@ -3577,7 +3594,7 @@ function renderMatrixFrame(){
         fillGlassPill(49, 12, 12, 16, 2, clkPillTint, 0.50);
         drawGFXCentered(hPad, 13, 25, GFX_FONTS.bento, isFrost, inkMain);
         drawGFXCentered(mPad, 36, 25, GFX_FONTS.bento, isFrost, inkMain);
-        drawGFXText(sPad, 52, 23, GFX_FONTS.micro, false, inkCyan);
+        drawGFXText(sPad, 52, 23, GFX_FONTS.micro, false, inkMain);
         for(var fx=3;fx<61;fx++) blendPx(fx, 18, [0,0,0], uiAlpha);
         drawBottomSecBarJS();
       } else if(lay === 8){
@@ -3591,8 +3608,8 @@ function renderMatrixFrame(){
         drawGFXCentered(timeStr, 32, 16, GFX_FONTS.bento, isFrost, inkMain);
         for(var zx=6;zx<58;zx++) blendPx(zx, 20, inkSub, uiAlpha);
         var orbX = 6 + Math.floor((s * 51) / 59);
-        blendPx(orbX, 20, inkCyan, uiAlpha);
-        blendPx(orbX - 1, 20, inkCyan, uiAlpha);
+        blendPx(orbX, 20, [255,255,255], uiAlpha);
+        blendPx(orbX - 1, 20, [255,255,255], uiAlpha);
         drawGFXText(wday, 10, 28, GFX_FONTS.micro, false, inkSub);
         drawGFXText(dStr, 36, 28, GFX_FONTS.micro, false, inkSub);
       } else if(lay === 10){
@@ -3601,7 +3618,7 @@ function renderMatrixFrame(){
         fillGlassPill(3, 10, 58, 18, 6, clkPillTint, 0.34);
         drawGFXText(timeStr, 6, 25, GFX_FONTS.bento, isFrost, inkMain);
         fillGlassPill(47, 13, 12, 12, 4, clkPillTint, 0.45);
-        drawGFXText(sPad, 50, 22, GFX_FONTS.micro, false, inkCyan);
+        drawGFXText(sPad, 50, 22, GFX_FONTS.micro, false, inkMain);
         drawBottomSecBarJS();
       } else {
         drawGFXText(dStr, 23, 7, GFX_FONTS.micro, isFrost, inkMain);
@@ -3738,19 +3755,18 @@ function renderMatrixFrame(){
     } else {
       var barH = (s === 0) ? 1 : Math.min(62, Math.floor((s * 62) / 59));
       function drawVertSecBarJS(){
-        fillSolidBlend(31, 1, 1, barH, inkCyan);
+        fillSolidBlend(31, 1, 1, barH, [255,255,255]);
       }
 
       // ── 10 DISEÑOS DE RELOJ VERTICAL (1, 11..19) ──
       if(lay === 11){
         fillGlassPill(2, 2, 27, 60, 5, clkPillTint, 0.42);
-        drawSparkle(7, 7);
-        drawGFXText(dStr, 10, 10, GFX_FONTS.micro, false, [195,165,255]);
+        drawGFXText(dStr, 6, 10, GFX_FONTS.micro, false, [195,165,255]);
         drawGFXCentered(hPad, 15, 27, GFX_FONTS.bento, isFrost, inkMain);
-        for(var gx3=5;gx3<=25;gx3++) blendPx(gx3, 31, gx3<12?[66,133,244]:(gx3<19?[155,114,203]:[217,101,112]), uiAlpha);
+        for(var gx3=5;gx3<=25;gx3++) blendPx(gx3, 31, evalGeminiFlowColorJS(gx3 - 5, 21), uiAlpha);
         drawGFXCentered(mPad, 15, 47, GFX_FONTS.bento, isFrost, inkMain);
         fillGlassPill(6, 51, 19, 8, 3, clkPillTint, 0.50);
-        drawGFXText(':'+sPad, 10, 58, GFX_FONTS.micro, false, [140,210,255]);
+        drawGFXText(':'+sPad, 10, 58, GFX_FONTS.micro, false, inkMain);
         drawVertSecBarJS();
       } else if(lay === 12){
         fillGlassPill(3, 2, 25, 10, 3, clkPillTint, 0.35);
@@ -3776,7 +3792,7 @@ function renderMatrixFrame(){
         drawGFXCentered(hPad, 16, 28, GFX_FONTS.swiss, isFrost, inkMain);
         fillSolidBlend(7, 31, 19, 1, inkCyan);
         drawGFXCentered(mPad, 16, 49, GFX_FONTS.swiss, isFrost, inkMain);
-        drawGFXText(':'+sPad, 11, 57, GFX_FONTS.micro, false, inkCyan);
+        drawGFXText(':'+sPad, 11, 57, GFX_FONTS.micro, false, inkMain);
         drawVertSecBarJS();
       } else if(lay === 15){
         fillGlassPill(2, 2, 27, 60, 0, clkPillTint, 0.36);
@@ -3811,16 +3827,15 @@ function renderMatrixFrame(){
         else if(perimPos < 82){ cxP = 28; cyP = 3 + (perimPos - 25); }
         else if(perimPos < 107){ cxP = 28 - (perimPos - 82); cyP = 61; }
         else { cxP = 2; cyP = 61 - (perimPos - 107); }
-        fillSolidBlend(cxP, cyP, 2, 2, inkCyan);
+        fillSolidBlend(cxP, cyP, 2, 2, [255,255,255]);
         drawGFXText(dStr, 6, 10, GFX_FONTS.micro, false, inkSub);
         drawGFXCentered(hPad, 15, 28, GFX_FONTS.bento, isFrost, inkMain);
         drawGFXCentered(mPad, 15, 48, GFX_FONTS.bento, isFrost, inkMain);
-        drawGFXText(sPad, 12, 58, GFX_FONTS.micro, false, inkCyan);
+        drawGFXText(sPad, 12, 58, GFX_FONTS.micro, false, inkMain);
         drawVertSecBarJS();
       } else if(lay === 19){
         drawGFXText(wday, 10, 9, GFX_FONTS.micro, false, inkSub);
         drawGFXCentered(hPad, 15, 25, GFX_FONTS.bento, isFrost, inkMain);
-        blendPx(15, 29, inkCyan, uiAlpha);
         drawGFXCentered(mPad, 15, 45, GFX_FONTS.bento, isFrost, inkMain);
         drawGFXText(dStr, 6, 58, GFX_FONTS.micro, false, inkSub);
         drawVertSecBarJS();
@@ -3940,7 +3955,6 @@ function renderMatrixFrame(){
         for(var zvi=0;zvi<3;zvi++){
           var zvry = vy + 29 + zvi*10;
           drawGFXText(hrsV[zvi]+'H', vx+2, zvry+5, GFX_FONTS.micro, false, [180,190,215]);
-          blendPx(vx+15, zvry+2, [90,235,255], uiAlpha);
           drawGFXText(tpsV[zvi]+'C', vx+18, zvry+5, GFX_FONTS.micro, false, [255,255,255]);
         }
       } else {
