@@ -1,0 +1,16 @@
+{
+  "name": "ESP32 HUB75 Clock Studio",
+  "version": "1.0.30",
+  "new_install_prompt_erase": true,
+  "builds": [
+    {
+      "chipFamily": "ESP32",
+      "parts": [
+        { "path": "flash/bootloader.bin", "offset": 4096 },
+        { "path": "flash/partitions.bin", "offset": 32768 },
+        { "path": "flash/boot_app0.bin", "offset": 57344 },
+        { "path": "firmware.bin", "offset": 65536 }
+      ]
+    }
+  ]
+}
