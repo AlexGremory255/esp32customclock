@@ -2219,6 +2219,27 @@ dialog {
   </div>
 </dialog>
 
+<dialog id="flash_dialog" closedby="any" aria-labelledby="flash_dialog_title">
+  <div class="dialog-body">
+    <div class="dialog-hdr">
+      <h2 id="flash_dialog_title">Instalar firmware por USB</h2>
+      <button type="button" class="icon-close" onclick="closeTopLayer($('flash_dialog'))" aria-label="Cerrar">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+          <path d="M3 3L11 11M11 3L3 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+    <p style="margin:0;color:var(--text-muted);font-size:0.875rem">Carga el firmware completo desde cero en cualquier ESP32 nuevo sin instalar programas en tu computadora.</p>
+    <ol style="margin:0;padding-inline-start:1.25rem;display:grid;gap:0.35rem;font-size:0.8125rem;color:var(--text-muted)">
+      <li>Conecta tu ESP32 por cable USB (asegúrate de que sea cable de datos).</li>
+      <li>Haz clic en <strong>Flashear ESP32 por USB</strong> y elige el puerto serie de tu placa.</li>
+      <li>Al reiniciar, conéctate al Wi-Fi <code class="num">ESP32-Clock</code> para configurar tu red y ciudad.</li>
+    </ol>
+    <div id="flash_dialog_slot" class="dialog-actions" style="justify-content:flex-start"></div>
+    <p style="margin:0;font-size:0.75rem;color:var(--text-muted)">Requiere Google Chrome o Microsoft Edge en escritorio. Si la carga no inicia sola, mantén presionado el botón <code class="num">BOOT</code> al conectar.</p>
+  </div>
+</dialog>
+
 <dialog id="confirm_dialog" closedby="closerequest" aria-labelledby="confirm_dialog_title">
   <div class="dialog-body">
     <div class="dialog-hdr">
@@ -2919,7 +2940,7 @@ async function closeTopLayer(dialog){
 }
 
 (function initDialogs(){
-  var dialogs = [$('device_dialog'), $('confirm_dialog')];
+  var dialogs = [$('device_dialog'), $('confirm_dialog'), $('flash_dialog')];
   dialogs.forEach(function(dlg){
     if(!dlg) return;
     dlg.addEventListener('cancel', function(e){
@@ -4814,27 +4835,61 @@ requestAnimationFrame(animLoop);
 
 (function initUsbFlasher(){
   var slot = $('usb_flash_slot');
-  if(!slot) return;
+  var dlgSlot = $('flash_dialog_slot');
   var canUseWebSerial = (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1');
+  var manifestUrl = (location.hostname.indexOf('github.io') >= 0)
+    ? 'https://alexgremory255.github.io/esp32customclock/manifest.json'
+    : 'manifest.json';
+
   if(canUseWebSerial){
-    var sc = document.createElement('script');
-    sc.type = 'module';
-    sc.src = 'https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module';
-    document.head.appendChild(sc);
-    slot.innerHTML = '<esp-web-install-button manifest="manifest.json">' +
-      '<button slot="activate" type="button" class="btn-glass glass-btn-base glint-target">Flashear USB</button>' +
-      '<span slot="unsupported" class="sys-meta">Requiere Chrome o Edge</span>' +
-    '</esp-web-install-button>';
-  } else {
-    slot.innerHTML = '<a class="btn-glass glass-btn-base glint-target" href="https://alexgremory255.github.io/esp32customclock/#flash" target="_blank" rel="noopener">Abrir instalador</a>';
+    if(!document.querySelector('script[data-ewt-flasher]')){
+      var sc = document.createElement('script');
+      sc.type = 'module';
+      sc.setAttribute('data-ewt-flasher', '1');
+      sc.src = 'https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module';
+      document.head.appendChild(sc);
+    }
+    if(slot){
+      slot.innerHTML = '<button type="button" class="btn-glass glass-btn-base glint-target" onclick="openUsbFlashDialog()">Flashear USB</button>';
+    }
+    if(dlgSlot){
+      dlgSlot.innerHTML = '<esp-web-install-button manifest="' + manifestUrl + '">' +
+        '<button slot="activate" type="button" class="btn-solid" onclick="setTimeout(function(){ closeTopLayer($(\'flash_dialog\')); }, 80)">Flashear ESP32 por USB</button>' +
+        '<span slot="unsupported" class="sys-meta">Tu navegador no soporta WebSerial. Usa Google Chrome o Microsoft Edge en escritorio.</span>' +
+      '</esp-web-install-button>';
+    }
+  } else if(slot){
+    slot.innerHTML = '<a class="btn-glass glass-btn-base glint-target" href="https://alexgremory255.github.io/esp32customclock/?flash=1#flash" target="_blank" rel="noopener">Abrir instalador</a>';
   }
-  if(location.hash === '#flash'){
-    switchMainTab('settings', true);
-    setTimeout(function(){
-      var row = $('usb_flash_row');
-      if(row) row.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }, 120);
+
+  window.openUsbFlashDialog = function(){
+    if(!canUseWebSerial){
+      window.open('https://alexgremory255.github.io/esp32customclock/?flash=1#flash', '_blank', 'noopener');
+      return;
+    }
+    var dlg = $('flash_dialog');
+    if(dlg){
+      dlg.removeAttribute('data-closing');
+      if(!dlg.open) dlg.showModal();
+    }
+  };
+
+  function handleFlashRoute(){
+    if(location.hash === '#flash' || location.search.indexOf('flash=1') >= 0){
+      switchMainTab('settings', true);
+      if(canUseWebSerial){
+        setTimeout(function(){ window.openUsbFlashDialog(); }, 60);
+      } else {
+        setTimeout(function(){
+          var row = $('usb_flash_row');
+          if(row) row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 120);
+      }
+    }
   }
+
+  handleFlashRoute();
+  window.addEventListener('hashchange', handleFlashRoute);
 })();
 
 if(IS_LOCAL_HOST){
