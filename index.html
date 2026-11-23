@@ -2132,6 +2132,13 @@ dialog {
                 </div>
                 <button type="button" class="btn-glass glass-btn-base glint-target" onclick="requestClockOta()">Actualizar</button>
               </div>
+              <div class="sys-row" id="usb_flash_row">
+                <div>
+                  <div class="sys-title">Instalar en ESP32 nuevo (USB)</div>
+                  <div class="sys-meta">Flashea un ESP32 desde cero por cable USB (Chrome/Edge)</div>
+                </div>
+                <div id="usb_flash_slot"></div>
+              </div>
               <div class="sys-row">
                 <div>
                   <div class="sys-title">Reiniciar reloj</div>
@@ -4804,6 +4811,31 @@ updateDevicePill();
 renderAllControls();
 commitSnapshot();
 requestAnimationFrame(animLoop);
+
+(function initUsbFlasher(){
+  var slot = $('usb_flash_slot');
+  if(!slot) return;
+  var canUseWebSerial = (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1');
+  if(canUseWebSerial){
+    var sc = document.createElement('script');
+    sc.type = 'module';
+    sc.src = 'https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module';
+    document.head.appendChild(sc);
+    slot.innerHTML = '<esp-web-install-button manifest="manifest.json">' +
+      '<button slot="activate" type="button" class="btn-glass glass-btn-base glint-target">Flashear USB</button>' +
+      '<span slot="unsupported" class="sys-meta">Requiere Chrome o Edge</span>' +
+    '</esp-web-install-button>';
+  } else {
+    slot.innerHTML = '<a class="btn-glass glass-btn-base glint-target" href="https://alexgremory255.github.io/esp32customclock/#flash" target="_blank" rel="noopener">Abrir instalador</a>';
+  }
+  if(location.hash === '#flash'){
+    switchMainTab('settings', true);
+    setTimeout(function(){
+      var row = $('usb_flash_row');
+      if(row) row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 120);
+  }
+})();
 
 if(IS_LOCAL_HOST){
   connectToClock(HOST_NAME, false);
