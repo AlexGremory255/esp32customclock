@@ -2128,7 +2128,7 @@ dialog {
               <div class="sys-row">
                 <div>
                   <div class="sys-title">Firmware</div>
-                  <div class="sys-meta num" id="sys_fw_meta">v1.0.29</div>
+                  <div class="sys-meta num" id="sys_fw_meta">v1.0.30</div>
                 </div>
                 <button type="button" class="btn-glass glass-btn-base glint-target" onclick="requestClockOta()">Actualizar</button>
               </div>
@@ -2269,7 +2269,7 @@ var state = {
   simMode: 'live',
   bootSimStart: 0,
   connectedIp: initialIp,
-  fwVer: '1.0.29',
+  fwVer: '1.0.30',
   latestCloudVer: '',
   activeTab: 'layouts'
 };
@@ -3511,6 +3511,7 @@ function renderMatrixFrame(){
     var h = now.getHours() % 12; if(h === 0) h = 12;
     var m = now.getMinutes();
     var s = now.getSeconds();
+    var sFrac = s + (now.getMilliseconds() / 1000.0);
     var wday = WDAY_NAMES[now.getDay()];
     var hPad = (h < 10 ? '0' : '') + h;
     var mPad = (m < 10 ? '0' : '') + m;
@@ -3537,9 +3538,14 @@ function renderMatrixFrame(){
     }
 
     if(!isVert){
-      var barW = (s === 0) ? 1 : s;
+      var barExactW = 1.0 + (sFrac * 59.0 / 60.0);
+      var barW = Math.max(1, Math.min(60, Math.floor(barExactW)));
+      var barTipA = barExactW - barW;
       function drawBottomSecBarJS(){
         fillSolidBlend(2, 31, barW, 1, [255,255,255]);
+        if(barTipA > 0.01 && barW < 60){
+          blendPx(2 + barW, 31, [255,255,255], uiAlpha * barTipA);
+        }
       }
 
       // ── 10 DISEÑOS DE RELOJ HORIZONTAL (0, 2..10) ──
@@ -3577,7 +3583,7 @@ function renderMatrixFrame(){
         drawGFXText(timeStr, 5, 25, GFX_FONTS.swiss, isFrost, inkMain);
         fillGlassPill(45, 8, 17, 17, 8, clkPillTint, 0.42);
         for(var a=0;a<12;a++){ var rA=a*Math.PI/6; blendPx(Math.round(53+Math.cos(rA)*7), Math.round(16+Math.sin(rA)*7), inkSub, uiAlpha); }
-        var sA = (s - 15) * Math.PI / 30;
+        var sA = (sFrac - 15) * Math.PI / 30;
         drawLinePx(53, 16, Math.round(53+Math.cos(sA)*6), Math.round(16+Math.sin(sA)*6), [255,60,60]);
         drawBottomSecBarJS();
       } else if(lay === 6){
@@ -3607,9 +3613,12 @@ function renderMatrixFrame(){
       } else if(lay === 9){
         drawGFXCentered(timeStr, 32, 16, GFX_FONTS.bento, isFrost, inkMain);
         for(var zx=6;zx<58;zx++) blendPx(zx, 20, inkSub, uiAlpha);
-        var orbX = 6 + Math.floor((s * 51) / 59);
-        blendPx(orbX, 20, [255,255,255], uiAlpha);
-        blendPx(orbX - 1, 20, [255,255,255], uiAlpha);
+        var orbPos = (sFrac * 50.0) / 60.0;
+        var orbX = 6 + Math.floor(orbPos);
+        var orbFrac = orbPos - Math.floor(orbPos);
+        blendPx(orbX, 20, [255,255,255], uiAlpha * (1.0 - orbFrac));
+        blendPx(orbX + 1, 20, [255,255,255], uiAlpha);
+        if(orbFrac > 0.01 && orbX + 2 <= 57) blendPx(orbX + 2, 20, [255,255,255], uiAlpha * orbFrac);
         drawGFXText(wday, 10, 28, GFX_FONTS.micro, false, inkSub);
         drawGFXText(dStr, 36, 28, GFX_FONTS.micro, false, inkSub);
       } else if(lay === 10){
@@ -3753,9 +3762,14 @@ function renderMatrixFrame(){
         }
       }
     } else {
-      var barH = (s === 0) ? 1 : Math.min(62, Math.floor((s * 62) / 59));
+      var barExactH = 1.0 + (sFrac * 61.0 / 60.0);
+      var barH = Math.max(1, Math.min(62, Math.floor(barExactH)));
+      var barTipV = barExactH - barH;
       function drawVertSecBarJS(){
         fillSolidBlend(31, 1, 1, barH, [255,255,255]);
+        if(barTipV > 0.01 && barH < 62){
+          blendPx(31, 1 + barH, [255,255,255], uiAlpha * barTipV);
+        }
       }
 
       // ── 10 DISEÑOS DE RELOJ VERTICAL (1, 11..19) ──
@@ -3821,7 +3835,7 @@ function renderMatrixFrame(){
       } else if(lay === 18){
         fillGlassPill(2, 2, 27, 60, 2, clkPillTint, 0.34);
         strokeRect(2, 2, 27, 60, inkSub);
-        var perimPos = Math.floor((s * 164) / 60);
+        var perimPos = Math.floor((sFrac * 164) / 60);
         var cxP = 2, cyP = 15;
         if(perimPos < 25){ cxP = 3 + perimPos; cyP = 2; }
         else if(perimPos < 82){ cxP = 28; cyP = 3 + (perimPos - 25); }
@@ -4049,7 +4063,7 @@ var _isCoarsePtr = (window.matchMedia && window.matchMedia('(pointer: coarse)').
 
 function animLoop(ts){
   var now = ts || performance.now();
-  var minGap = _isCoarsePtr ? 33 : 20;
+  var minGap = _isCoarsePtr ? 16 : 0;
   if(_immediateDraw || (_canvasVisible && !(_isCoarsePtr && _isScrolling) && (now - _lastMatrixDraw >= minGap))){
     _immediateDraw = false;
     _lastMatrixDraw = now;
